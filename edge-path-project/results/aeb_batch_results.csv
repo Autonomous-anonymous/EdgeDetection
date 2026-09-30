@@ -1,0 +1,6 @@
+timestamp,test_name,result,throttle,aeb_trigger_distance_m,actual_trigger_distance_m,speed_at_trigger_kmh,controller_processing_latency_ms,stopping_time_s,stopping_distance_m,final_obstacle_distance_m,collision
+2026-09-30T16:28:29,test_01,PASS,0.25,10.0,9.807,15.93,6.988,0.7,2.076,7.512,False
+2026-09-30T16:28:30,test_02,PASS,0.35,10.0,9.909,18.641,7.059,0.5,1.579,8.067,False
+2026-09-30T16:28:31,test_03,PASS,0.45,10.0,9.842,25.534,7.145,0.6,2.858,6.624,False
+2026-09-30T16:28:32,test_04,PASS,0.55,10.0,9.699,32.818,7.048,0.9,5.838,3.407,False
+2026-09-30T16:28:32,test_05,PASS,0.65,10.0,9.458,39.826,6.774,1.2,9.041,0.0,False

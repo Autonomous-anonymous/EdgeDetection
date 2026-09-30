@@ -1,0 +1,2 @@
+timestamp,result,trigger_distance_m,speed_at_trigger_kmh,controller_latency_ms,stopping_time_s,stopping_distance_m,collision
+2026-09-30T16:20:44,PASS,10.0,27.678,6.661,1.433,6.393,False

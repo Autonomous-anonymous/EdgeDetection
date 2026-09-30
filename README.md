@@ -1,38 +1,119 @@
-# Edge Detection + Path Prediction
+# CARLA ADAS Testing – Edge Detection, Path Prediction and Automatic Emergency Braking
 
-Konenäköprojekti ajo- ja peruutuskameran kuvan analysointiin.
+Projektissa kehitetään ja testataan autonomisen ajoneuvon ADAS-toimintoja
+CARLA-simulaatioympäristössä.
 
-Projektin tavoitteena on tunnistaa kamerakuvasta ajettavan reitin tai kaistan reunat ja arvioida niiden perusteella ajoneuvon tavoiteltu ajosuunta.
+Projektin ensimmäinen vaihe toteutetaan Software-in-the-Loop (SIL)
+-testauksena. Python-ohjelmat kommunikoivat CARLA-simulaattorin kanssa,
+lukevat virtuaalisten sensoreiden dataa ja toteuttavat yksinkertaisia
+ADAS-toimintoja.
 
-Projektissa käytetään Pythonia ja OpenCV:tä. Python-ympäristöä hallitaan Miniforgella ja projektin versionhallintaan käytetään Gitiä.
+Projektissa on tällä hetkellä kaksi pääkokonaisuutta:
 
----
+1. kameraperusteinen edge detection ja path prediction
+2. Automatic Emergency Braking (AEB)
 
-## Projektin tavoite
-
-Projektissa toteutetaan kamerakuvaa hyödyntävä järjestelmä, joka:
-
-1. lukee ajoneuvon kamerakuvaa tai videotallennetta
-2. tunnistaa kuvasta reunoja
-3. rajaa käsiteltäväksi vain tien kannalta kiinnostavan alueen
-4. tunnistaa vasemman ja oikean kaista- tai reunaviivan
-5. arvioi niiden perusteella ajettavan reitin keskikohdan
-6. muodostaa ennustetun ajolinjan
-7. arvioi tarvittavan ohjaussuunnan ja ohjauskulman
-8. visualisoi tulokset videon päälle
-9. tallentaa käsitellyn videon myöhempää tarkastelua varten
-
-Projektin myöhemmissä vaiheissa tarkoituksena on käyttää simulaatioympäristöstä kerättyä kameradataa, suorittaa erilaisia simulaatioajoja sekä mitata ja optimoida toteutuksen suorituskykyä.
+Projektin myöhemmässä vaiheessa tavoitteena on tarkastella controllerin
+siirtämistä sulautetulle järjestelmälle ja siirtymistä
+Hardware-in-the-Loop (HIL) -testaukseen.
 
 ---
 
-# Version 0.1 – Proof of Concept
+# Projektin tavoite
 
-Version 0.1 tarkoituksena on toimia ensimmäisenä toimivana prototyyppinä.
+Projektin tavoitteena on rakentaa helposti toistettava testausympäristö,
+jossa autonomisen ajoneuvon toimintoja voidaan kehittää ja validoida
+vaiheittain.
 
-Tässä vaiheessa järjestelmää testataan valmiilla ajovideolla. Tarkoituksena on ensin varmistaa, että käytetyt konenäkömenetelmät toimivat ennen niiden liittämistä simulaatioympäristöön.
+Nykyinen kokonaisuus:
 
-Nykyinen käsittelyketju on:
+```text
+CARLA-simulaatio
+        ↓
+Virtuaalinen ajoneuvo
+        ↓
+Virtuaalisensorit
+        ↓
+Python-controllerit
+        ↓
+ADAS-toiminnot
+        ↓
+Automaattiset SIL-testit
+        ↓
+Tulosten tallennus
+        ↓
+Analysointi ja optimointi
+        ↓
+Mahdollinen HIL-validointi
+```
+
+---
+
+# Projektin nykyinen tila
+
+Projektissa on toteutettu seuraavat toiminnot:
+
+- OpenCV Proof of Concept valmiilla ajovideolla
+- CARLA Python API -yhteys
+- virtuaalisen ajoneuvon luominen
+- CARLA autopilot
+- RGB-etukamera
+- reaaliaikainen kameradatan käsittely Pythonilla
+- Canny Edge Detection
+- Region of Interest
+- Hough Line Transform
+- kaistaviivojen tunnistus
+- path prediction
+- ohjaussuunnan arviointi
+- obstacle sensor
+- collision sensor
+- Automatic Emergency Braking
+- automaattinen PASS/FAIL-testaus
+- CSV-testitulosten tallennus
+- CARLA synchronous mode
+- kiinteä simulaatioaskel
+- automatisoitu AEB-testisarja
+
+---
+
+# Projektin rakenne
+
+```text
+EdgeDetection/
+│
+├── README.md
+│
+└── edge-path-project/
+    │
+    ├── main.py
+    ├── carla_connect.py
+    ├── carla_vehicle.py
+    ├── carla_camera.py
+    ├── carla_path_prediction.py
+    ├── carla_emergency_brake.py
+    ├── carla_aeb_test.py
+    ├── carla_aeb_batch_test.py
+    │
+    ├── environment.yml
+    ├── .gitignore
+    │
+    ├── videos/
+    ├── output/
+    │
+    └── results/
+        ├── aeb_results.csv
+        └── aeb_batch_results.csv
+```
+
+---
+
+# Tiedostojen tarkoitus
+
+## `main.py`
+
+Projektin ensimmäinen OpenCV Proof of Concept.
+
+Ohjelma käsittelee valmista ajovideota ja suorittaa seuraavat vaiheet:
 
 ```text
 Ajovideo
@@ -49,402 +130,587 @@ Hough Line Transform
     ↓
 Vasemman ja oikean kaistaviivan arviointi
     ↓
-Ajolinjan arviointi
+Path Prediction
     ↓
-Ohjauskulman laskenta
+Ohjauskulman arviointi
     ↓
 LEFT / STRAIGHT / RIGHT
-    ↓
-Tuloksen visualisointi ja tallennus
 ```
 
----
+Tämän tiedoston tarkoituksena oli ensin testata konenäköalgoritmin
+toimintaa ilman simulaatioympäristöä.
 
-# Toteutetut ominaisuudet
-
-## 1. Videon lukeminen OpenCV:llä
-
-Ohjelma käyttää OpenCV:n `VideoCapture`-toimintoa videon avaamiseen.
-
-Video käsitellään yksi kuva eli frame kerrallaan.
-
-Tämä mahdollistaa saman algoritmin käyttämisen myöhemmin myös live-kamerakuvan tai simulaatiosta saatavan videovirran kanssa.
-
----
-
-## 2. Harmaasävymuunnos
-
-Alkuperäinen värikuva muutetaan harmaasävykuvaksi OpenCV:n `cvtColor`-toiminnolla.
-
-Värikuva sisältää kolme värikanavaa:
-
-- sininen
-- vihreä
-- punainen
-
-Reunantunnistuksessa kaikkia värikanavia ei tarvita, joten harmaasävy vähentää käsiteltävän datan määrää.
-
-Käsittely:
-
-```text
-Värikuva
-   ↓
-Harmaasävykuva
-```
-
----
-
-## 3. Gaussian Blur
-
-Harmaasävykuvaa pehmennetään Gaussian Blur -suodatuksella.
-
-Pehmennyksen tarkoituksena on vähentää:
-
-- kuvakohinaa
-- pieniä yksityiskohtia
-- epäolennaisia reunoja
-
-Tämä auttaa reunantunnistusta löytämään tärkeämmät ja selkeämmät rakenteet kuvasta.
-
-Projektissa käytetään tällä hetkellä 5 × 5 -kokoista Gaussian-suodatinta.
-
----
-
-## 4. Canny Edge Detection
-
-Canny Edge Detection -algoritmilla etsitään kuvasta kohtia, joissa kuvan kirkkaus muuttuu nopeasti.
-
-Tällaisia kohtia ovat esimerkiksi:
-
-- kaistaviivojen reunat
-- tien reunat
-- ajoneuvojen reunat
-- kaiteet
-- rakennusten reunat
-
-Tuloksena syntyy mustavalkoinen kuva, jossa tunnistetut reunat näkyvät valkoisina viivoina.
-
-```text
-Alkuperäinen kuva
-
-      tie
-   \       /
-    \     /
-     \   /
-
-        ↓
-
-Edge Detection
-
-   \       /
-    \     /
-     \   /
-```
-
-Nykyiset Canny-raja-arvot ovat:
-
-```text
-50 ja 150
-```
-
-Näitä voidaan myöhemmin säätää eri ympäristöihin sopiviksi.
-
----
-
-## 5. Region of Interest (ROI)
-
-Edge Detection löytää myös paljon reunoja, jotka eivät ole ajamisen kannalta kiinnostavia.
-
-Tällaisia voivat olla esimerkiksi:
-
-- taivas
-- puut
-- rakennukset
-- vastaantulevat autot
-- liikennemerkit
-
-Tämän vuoksi kuvasta rajataan vain kiinnostava alue eli Region of Interest.
-
-Tässä projektissa ROI on kuvan alaosassa oleva trapetsin muotoinen alue, jossa ajettava tie oletetaan olevan.
-
-```text
-+-----------------------+
-|                       |
-|                       |
-|          /\           |
-|         /  \          |
-|        /    \         |
-|       /      \        |
-|______/________\_______|
-```
-
-Kaikki tämän alueen ulkopuolella olevat reunat jätetään käsittelemättä.
-
----
-
-## 6. Hough Line Transform
-
-Canny Edge Detection tuottaa yksittäisiä reunapisteitä.
-
-Hough Line Transform yrittää muodostaa näistä pisteistä suoria viivoja.
-
-Tämän avulla voidaan löytää esimerkiksi tien tai kaistamerkintöjen suuntaisia viivoja.
-
-Projektissa käytetään OpenCV:n:
-
-```python
-cv2.HoughLinesP()
-```
-
--toimintoa.
-
-Se palauttaa joukon lyhyitä viivasegmenttejä.
-
----
-
-## 7. Vasemman ja oikean kaistaviivan arviointi
-
-Hough Transform löytää yleensä useita pieniä viivasegmenttejä.
-
-Ohjelma jakaa nämä kahteen ryhmään niiden kulmakertoimen perusteella:
-
-```text
-negatiivinen kulmakerroin
-        ↓
-vasen kaistaviiva
-
-positiivinen kulmakerroin
-        ↓
-oikea kaistaviiva
-```
-
-Lähes vaakasuorat viivat jätetään huomiotta.
-
-Vasemman puolen viivoista lasketaan keskimääräinen vasen kaistaviiva ja oikean puolen viivoista keskimääräinen oikea kaistaviiva.
-
-Tuloksena saadaan kaksi yhtenäistä viivaa:
-
-```text
-\             /
- \           /
-  \         /
-   \       /
-```
-
-Nämä piirretään videolle vihreällä.
-
----
-
-## 8. Ajolinjan arviointi
-
-Kun vasen ja oikea kaistaviiva on tunnistettu, niiden välistä voidaan laskea kaistan keskikohta.
-
-Kaistan keskikohtaa käytetään tavoitepisteenä.
-
-Ohjelma olettaa kameran ja ajoneuvon sijaitsevan kuvan alareunan keskellä.
-
-Näiden pisteiden välille piirretään ennustettu ajolinja.
-
-```text
-          tavoitepiste
-               ●
-              /
-             /
-            /
-           /
-          ●
-      ajoneuvo
-```
-
-Ajolinja piirretään videolle punaisella.
-
-Tämä on yksinkertainen geometriaan perustuva path prediction -menetelmä.
-
----
-
-## 9. Ohjauskulman laskenta
-
-Ohjelma vertaa tavoitepisteen sijaintia kameran keskikohtaan.
-
-Lasketaan:
-
-```text
-dx = tavoitepisteen vaakasuuntainen ero
-
-dy = tavoitepisteen pystysuuntainen etäisyys
-```
-
-Näiden perusteella arvioidaan ohjauskulma käyttäen `atan2`-funktiota.
-
-Tuloksena saadaan kulma asteina.
-
-Esimerkiksi:
-
-```text
--8.4 astetta
-```
-
-tarkoittaa, että tavoitepiste sijaitsee vasemmalla.
-
-```text
-+6.2 astetta
-```
-
-tarkoittaa, että tavoitepiste sijaitsee oikealla.
-
-Tämä ei vielä ole ajoneuvon fyysinen ohjauspyörän kulma, vaan kamerakuvan geometriasta laskettu suunta-arvio.
-
----
-
-## 10. LEFT / STRAIGHT / RIGHT -luokittelu
-
-Ohjauskulman perusteella ohjelma muodostaa yksinkertaisen ajosuuntaluokituksen.
-
-Nykyiset rajat ovat:
-
-```text
-kulma < -3°
-    → LEFT
-
--3° ... +3°
-    → STRAIGHT
-
-kulma > +3°
-    → RIGHT
-```
-
-Videolla voidaan tämän vuoksi näyttää esimerkiksi:
-
-```text
-Direction: LEFT
-Steering angle: -7.2 deg
-```
-
-tai:
-
-```text
-Direction: STRAIGHT
-Steering angle: 1.4 deg
-```
-
-Raja-arvoja voidaan myöhemmin testata ja säätää simulaatioajojen perusteella.
-
----
-
-## 11. Ohjauskulman vakautus
-
-Yksittäisten videoframien välillä tunnistetut kaistaviivat voivat hieman vaihdella.
-
-Tämä aiheuttaa sen, että laskettu ohjauskulma voi hypellä nopeasti esimerkiksi:
-
-```text
-2°
-5°
--1°
-3°
-```
-
-Tämän vähentämiseksi ohjelma tallentaa viimeiset 10 ohjauskulmaa.
-
-Niistä lasketaan keskiarvo:
-
-```text
-viimeiset 10 kulmaa
-        ↓
-keskiarvo
-        ↓
-vakautettu ohjauskulma
-```
-
-Tämä tekee videolla näkyvästä suunnasta ja ohjauskulmasta tasaisemman.
-
----
-
-## 12. Tulosten visualisointi
-
-Tunnistetut tiedot piirretään alkuperäisen videon päälle.
-
-Nykyisessä toteutuksessa:
-
-```text
-vihreä
-→ tunnistetut kaistaviivat
-
-punainen
-→ ennustettu ajolinja
-
-keltainen teksti
-→ ajosuunta ja ohjauskulma
-```
-
-Näin algoritmin toimintaa voidaan tarkastella visuaalisesti.
-
----
-
-## 13. Käsitellyn videon tallentaminen
-
-Ohjelma tallentaa käsitellyn videon MP4-muodossa.
-
-Nykyinen tulostiedosto on:
+Ohjelma pystyy myös tallentamaan käsitellyn videon esimerkiksi:
 
 ```text
 output/path_prediction.mp4
 ```
 
-Tallennettu video sisältää:
+---
 
-- alkuperäisen kamerakuvan
-- tunnistetut kaistaviivat
-- ennustetun ajolinjan
-- ajosuunnan
-- ohjauskulman
+## `carla_connect.py`
 
-Tätä voidaan käyttää myöhemmin algoritmin toiminnan arviointiin ja projektin esittelyyn.
+Ensimmäinen CARLA-yhteystesti.
+
+Tiedosto:
+
+- muodostaa yhteyden käynnissä olevaan CARLA-palvelimeen
+- käyttää oletuksena osoitetta `localhost`
+- käyttää CARLAn oletusporttia `2000`
+- hakee nykyisen CARLA-maailman
+- tulostaa käytössä olevan kartan
+- tulostaa maailmassa olevien actorien määrän
+
+Tämän tiedoston tarkoituksena on varmistaa, että Python API ja
+CARLA-simulaattori kommunikoivat oikein.
+
+Käsittely:
+
+```text
+Python
+   ↓
+CARLA Client
+   ↓
+localhost:2000
+   ↓
+CARLA Server
+```
 
 ---
 
-# Projektin rakenne
+## `carla_vehicle.py`
+
+Luo CARLA-simulaatioon virtuaalisen ajoneuvon.
+
+Tiedosto:
+
+- muodostaa yhteyden CARLAan
+- hakee saatavilla olevat ajoneuvot
+- valitsee nelipyöräisen ajoneuvon
+- etsii vapaan spawn-pisteen
+- luo ajoneuvon simulaatioon
+- käynnistää CARLAn autopilotin
+- lukee ajoneuvon nopeuden
+- näyttää nopeuden terminaalissa
+- poistaa ajoneuvon ohjelman lopuksi
+
+Tämän avulla saatiin ensimmäinen varsinainen simulaatioajo toimimaan.
+
+---
+
+## `carla_camera.py`
+
+Lisää CARLA-ajoneuvoon virtuaalisen RGB-etukameran.
+
+Tiedosto:
+
+- luo Tesla Model 3 -ajoneuvon
+- luo `sensor.camera.rgb`-sensorin
+- kiinnittää kameran ajoneuvoon
+- vastaanottaa kamerakuvat CARLAsta
+- muuntaa CARLAn BGRA-kuvan OpenCV:n BGR-muotoon
+- näyttää kamerakuvan reaaliajassa
+- näyttää ajoneuvon nopeuden kamerakuvan päällä
+
+Käsittelyketju:
 
 ```text
-edge-path-project/
-│
-├── main.py
-├── README.md
-├── environment.yml
-├── .gitignore
-│
-├── videos/
-│   └── test_video.mp4
-│
-├── output/
-│   └── path_prediction.mp4
-│
-└── results/
+CARLA
+  ↓
+Virtuaalinen auto
+  ↓
+RGB-kamera
+  ↓
+Python callback
+  ↓
+NumPy
+  ↓
+OpenCV
+  ↓
+Live-kamerakuva
 ```
 
-## main.py
+Tämä osoittaa, että CARLAn virtuaalisensorista saatavaa dataa voidaan
+käsitellä reaaliaikaisesti Pythonissa.
 
-Sisältää nykyisen konenäkö- ja path prediction -toteutuksen.
+---
 
-## environment.yml
+## `carla_path_prediction.py`
 
-Sisältää projektissa käytettävän Python-version ja tarvittavat Python-kirjastot.
+Yhdistää alkuperäisen OpenCV-prototyypin CARLAn live-kameradataan.
 
-Tämän avulla sama ympäristö voidaan muodostaa toiselle tietokoneelle.
+Tiedosto käyttää CARLAn RGB-etukameraa ja suorittaa kamerakuvalle:
 
-## videos/
+- harmaasävymuunnoksen
+- Gaussian Blur -suodatuksen
+- Canny Edge Detectionin
+- Region of Interest -rajauksen
+- Hough Line Transformin
+- vasemman ja oikean kaistaviivan arvioinnin
+- ajolinjan arvioinnin
+- ohjauskulman laskennan
+- LEFT / STRAIGHT / RIGHT -luokittelun
 
-Sisältää ohjelman käsittelemät testivideot.
+Käsittely:
 
-Videot eivät kuulu Git-versionhallintaan niiden suuren tiedostokoon vuoksi.
+```text
+CARLA RGB Camera
+        ↓
+OpenCV
+        ↓
+Edge Detection
+        ↓
+Lane Detection
+        ↓
+Path Prediction
+        ↓
+Direction Estimate
+```
 
-## output/
+Kaistaviivat piirretään vihreällä ja arvioitu ajolinja punaisella.
 
-Sisältää ohjelman tuottamat käsitellyt videot.
+Tässä vaiheessa CARLAn autopilot vastaa edelleen ajoneuvon varsinaisesta
+ohjaamisesta. Path prediction toimii perception-prototyyppinä eikä
+vielä ohjaa ajoneuvoa.
 
-## results/
+---
 
-Tarkoitettu myöhemmin suorituskykymittausten, testitulosten ja muiden tulosten tallentamiseen.
+## `carla_emergency_brake.py`
+
+Projektin ensimmäinen oma ADAS-controller.
+
+Toteuttaa yksinkertaisen Automatic Emergency Braking -toiminnon.
+
+Ajoneuvoon lisätään CARLAn:
+
+```text
+sensor.other.obstacle
+```
+
+Sensorin avulla mitataan ajoneuvon edessä olevan esteen etäisyyttä.
+
+Ensimmäisen controllerin logiikka on:
+
+```text
+Este kauempana kuin 8 m
+        ↓
+Autopilot jatkaa ajoa
+
+Este enintään 8 m päässä
+        ↓
+Autopilot pois päältä
+        ↓
+Throttle = 0
+Brake = 1.0
+        ↓
+Täysi hätäjarrutus
+```
+
+Tämä oli ensimmäinen yksinkertainen collision avoidance /
+emergency braking -prototyyppi.
+
+---
+
+## `carla_aeb_test.py`
+
+Ensimmäinen kontrolloitu AEB SIL -testi.
+
+Ohjelma luo simulaatioon kaksi ajoneuvoa:
+
+```text
+EGO VEHICLE  → → → → →      OBSTACLE VEHICLE
+                               paikallaan
+```
+
+Tiedosto:
+
+- etsii suoran tieosuuden
+- luo ego-ajoneuvon
+- luo pysähtyneen esteajoneuvon
+- lisää obstacle sensorin
+- lisää collision sensorin
+- ajaa ego-ajoneuvoa kohti estettä
+- aktivoi AEB:n määritetyllä etäisyydellä
+- mittaa ajoneuvon pysähtymisen
+- tarkistaa tapahtuiko törmäys
+- muodostaa PASS/FAIL-tuloksen
+- tallentaa tulokset CSV-tiedostoon
+
+Mitattavia arvoja ovat:
+
+- nopeus AEB:n aktivoituessa
+- AEB:n laukaisuetäisyys
+- Python-controllerin käsittelyviive
+- pysähtymisaika
+- pysähtymismatka
+- törmäys / ei törmäystä
+
+Tulokset tallennetaan:
+
+```text
+results/aeb_results.csv
+```
+
+---
+
+## `carla_aeb_batch_test.py`
+
+Projektin tämänhetkinen kehittynein AEB-testiohjelma.
+
+Ohjelma suorittaa useita AEB-testejä automaattisesti.
+
+Tärkeä ero aikaisempaan versioon on CARLAn synchronous mode.
+
+Simulaatiossa käytetään:
+
+```text
+fixed_delta_seconds = 0.05 s
+```
+
+Tämä tarkoittaa:
+
+```text
+20 simulation steps / second
+```
+
+Jokainen `world.tick()` vie simulaatiota täsmälleen 0,05 sekuntia
+eteenpäin.
+
+Tämän tavoitteena on parantaa testien:
+
+- toistettavuutta
+- vertailukelpoisuutta
+- ajallista determinismiä
+
+Nykyinen testisarja käyttää:
+
+```text
+AEB trigger distance = 10 m
+```
+
+ja suorittaa viisi testiä eri throttle-arvoilla.
+
+Testit:
+
+```text
+test_01 → throttle 0.25
+test_02 → throttle 0.35
+test_03 → throttle 0.45
+test_04 → throttle 0.55
+test_05 → throttle 0.65
+```
+
+Jokaisessa testissä tallennetaan:
+
+- testin nimi
+- throttle
+- AEB:n määritetty laukaisuetäisyys
+- todellinen laukaisuetäisyys
+- nopeus laukaisuhetkellä
+- controller processing latency
+- pysähtymisaika
+- pysähtymismatka
+- loppuetäisyys esteeseen
+- collision-event
+- PASS/FAIL-tulos
+
+Tulokset tallennetaan:
+
+```text
+results/aeb_batch_results.csv
+```
+
+---
+
+# OpenCV-perception
+
+Projektin alkuperäinen osa käsittelee kamerakuvaa klassisilla
+konenäkömenetelmillä.
+
+## Harmaasävymuunnos
+
+RGB/BGR-värikuva muutetaan harmaasävyksi.
+
+Tämä yksinkertaistaa reunantunnistusta ja vähentää käsiteltävän datan
+määrää.
+
+---
+
+## Gaussian Blur
+
+Kuvaa pehmennetään ennen reunantunnistusta.
+
+Tarkoituksena on vähentää:
+
+- kohinaa
+- pieniä yksityiskohtia
+- epäolennaisia reunoja
+
+Nykyinen kernel-koko on:
+
+```text
+5 × 5
+```
+
+---
+
+## Canny Edge Detection
+
+Canny-algoritmi tunnistaa kuvasta voimakkaita kirkkausmuutoksia.
+
+Nykyiset raja-arvot:
+
+```text
+50
+150
+```
+
+Tuloksena saadaan mustavalkoinen reunakuva.
+
+---
+
+## Region of Interest
+
+Koko kuvaa ei analysoida.
+
+Käsittely rajataan kuvan alaosassa olevaan alueeseen, jossa tien
+oletetaan olevan.
+
+Näin esimerkiksi:
+
+- taivas
+- rakennukset
+- puut
+- muut epäolennaiset alueet
+
+voidaan jättää analyysin ulkopuolelle.
+
+---
+
+## Hough Line Transform
+
+Canny Edge Detection tuottaa reunapisteitä.
+
+Hough Line Transform muodostaa näistä viivasegmenttejä.
+
+Projektissa käytetään:
+
+```python
+cv2.HoughLinesP()
+```
+
+Tunnistetut viivat jaetaan vasemman ja oikean kaistan viivoihin
+kulmakertoimen perusteella.
+
+---
+
+## Path Prediction
+
+Vasemman ja oikean kaistaviivan perusteella lasketaan kaistan
+keskikohta.
+
+Kameran oletetaan sijaitsevan auton keskellä.
+
+Näiden pisteiden perusteella muodostetaan arvioitu ajolinja.
+
+```text
+          target
+            ●
+           /
+          /
+         /
+        ●
+      vehicle
+```
+
+Tämän perusteella arvioidaan myös suunta:
+
+```text
+angle < -3°
+→ LEFT
+
+-3° ... +3°
+→ STRAIGHT
+
+angle > +3°
+→ RIGHT
+```
+
+Tämä on geometrinen suunta-arvio eikä ajoneuvon fyysinen
+ohjauspyörän kulma.
+
+---
+
+# Automatic Emergency Braking
+
+Projektin toinen pääkokonaisuus on AEB.
+
+Nykyinen baseline-controller käyttää kiinteää etäisyysrajaa:
+
+```text
+distance > 10 m
+        ↓
+normal driving
+
+distance <= 10 m
+        ↓
+throttle = 0
+brake = 1.0
+```
+
+Tämä toimii baseline-ratkaisuna, johon myöhempiä controller-versioita
+voidaan verrata.
+
+---
+
+# Ensimmäinen automatisoitu AEB-testisarja
+
+Ensimmäisessä synchronous mode -testisarjassa saatiin seuraavat tulokset:
+
+| Testi | Nopeus AEB:n laukaisuhetkellä | Todellinen laukaisuetäisyys | Pysähtymismatka | Loppuetäisyys | Collision |
+|---|---:|---:|---:|---:|---|
+| test_01 | 15.93 km/h | 9.81 m | 2.08 m | 7.51 m | Ei |
+| test_02 | 18.64 km/h | 9.91 m | 1.58 m | 8.07 m | Ei |
+| test_03 | 25.53 km/h | 9.84 m | 2.86 m | 6.62 m | Ei |
+| test_04 | 32.82 km/h | 9.70 m | 5.84 m | 3.41 m | Ei |
+| test_05 | 39.83 km/h | 9.46 m | 9.04 m | 0.00 m | Ei |
+
+Kaikki testit saivat nykyisellä collision-eventtiin perustuvalla
+logiikalla tuloksen `PASS`.
+
+Viides testi osoitti kuitenkin nykyisen PASS/FAIL-kriteerin
+rajoituksen.
+
+Vaikka CARLA ei ilmoittanut collision-eventtiä:
+
+```text
+final obstacle distance = 0.00 m
+```
+
+Turvallisuusmarginaalia ei käytännössä jäänyt.
+
+Tämän vuoksi seuraavassa testiversiossa PASS-kriteeriin lisätään
+vähimmäisturvallisuusetäisyys.
+
+---
+
+# Baseline-testien havaintoja
+
+Kiinteä 10 metrin AEB-raja toimii eri tavalla eri nopeuksilla.
+
+Pienellä nopeudella:
+
+```text
+10 m
+→ suuri turvallisuusmarginaali
+```
+
+Suuremmalla nopeudella:
+
+```text
+10 m
+→ pysähtymismatka kasvaa
+→ turvallisuusmarginaali pienenee
+```
+
+Suurimmassa nykyisessä testissä:
+
+```text
+Trigger speed:
+39.83 km/h
+
+Stopping distance:
+9.04 m
+
+Final obstacle distance:
+0.00 m
+```
+
+Tämä osoittaa, että pelkkä kiinteä etäisyysraja ei ole riittävä
+ratkaisu kaikille ajonopeuksille.
+
+---
+
+# Synchronous Mode ja toistettavuus
+
+CARLAn normaalissa asynchronous mode -tilassa simulaation eteneminen
+voi riippua tietokoneen suorituskyvystä.
+
+Testisarjassa käytetään tämän vuoksi synchronous modea:
+
+```python
+settings.synchronous_mode = True
+settings.fixed_delta_seconds = 0.05
+```
+
+Tämän avulla:
+
+```text
+1 simulation tick = 0.05 s
+```
+
+Simulaation taajuus on:
+
+```text
+20 Hz
+```
+
+Tämä tekee testien ajallisesta etenemisestä paremmin toistettavaa.
+
+---
+
+# Controller processing latency
+
+AEB-testissä mitataan myös Python-controllerin käsittelyviivettä.
+
+Ensimmäisessä testisarjassa arvot olivat noin:
+
+```text
+6.8–7.2 ms
+```
+
+Tämä mittaus kuvaa sensorin callback-tapahtuman ja controllerin
+päätöksenteon välistä Python-prosessin käsittelyaikaa.
+
+Se ei tarkoita koko järjestelmän todellista sensor-to-brake-viivettä.
+
+---
+
+# Tulostiedostot
+
+## `results/aeb_results.csv`
+
+Sisältää yksittäisellä AEB-testiohjelmalla tuotettuja tuloksia.
+
+---
+
+## `results/aeb_batch_results.csv`
+
+Sisältää automatisoidun testisarjan tulokset.
+
+Tallennettavia kenttiä ovat esimerkiksi:
+
+```text
+timestamp
+test_name
+result
+throttle
+aeb_trigger_distance_m
+actual_trigger_distance_m
+speed_at_trigger_kmh
+controller_processing_latency_ms
+stopping_time_s
+stopping_distance_m
+final_obstacle_distance_m
+collision
+```
+
+CSV-muoto mahdollistaa tulosten myöhemmän:
+
+- analysoinnin
+- visualisoinnin
+- vertailun
+- tilastollisen käsittelyn
 
 ---
 
@@ -455,24 +721,19 @@ Projektissa käytetään tällä hetkellä:
 - Python 3.12
 - OpenCV
 - NumPy
+- CARLA Simulator
+- CARLA Python API
 - Miniforge / Conda
 - Git
-
-Myöhemmissä vaiheissa mukaan tulee simulaatioympäristö, esimerkiksi:
-
-- Mevea
-
-tai mahdollisesti:
-
-- CARLA
+- GitHub
 
 ---
 
-# Python-ympäristön asentaminen
+# Python-ympäristö
 
-Projektissa käytetään Miniforgea Python-ympäristön hallintaan.
+Projektissa käytetään Miniforgea Python-ympäristöjen hallintaan.
 
-Luo ympäristö tiedostosta:
+Luo ympäristö:
 
 ```bash
 conda env create -f environment.yml
@@ -484,192 +745,335 @@ Aktivoi ympäristö:
 conda activate edgepath
 ```
 
-Tarkista Python-versio:
+Tarkista Python:
 
 ```bash
 python --version
 ```
 
----
-
-# Ohjelman käynnistäminen
-
-Lisää testivideo `videos`-kansioon.
-
-Nykyinen `main.py` käyttää esimerkiksi tiedostoa:
-
-```text
-videos/solidWhiteRight.mp4
-```
-
-Käynnistä ohjelma:
+CARLA Python API:n toiminnan voi tarkistaa:
 
 ```bash
-python main.py
+python -c "import carla; print('CARLA Python API OK')"
 ```
 
-Ohjelma näyttää käsitellyn videon ruudulla.
-
-Ohjelma voidaan lopettaa painamalla:
-
-```text
-Q
-```
-
-Käsitelty video tallennetaan:
-
-```text
-output/path_prediction.mp4
-```
-
----
-
-# Toistettavuus
-
-Projektin yksi tavoite on, että toteutus voidaan suorittaa myös toisella tietokoneella ilman vaikeita riippuvuuksia.
-
-Tarvittavat Python-riippuvuudet määritellään `environment.yml`-tiedostossa.
-
-Uudella tietokoneella projektin pitäisi olla mahdollista ottaa käyttöön seuraavasti:
+Jos CARLA-pakettia ei ole ympäristössä:
 
 ```bash
-conda env create -f environment.yml
-conda activate edgepath
-python main.py
+pip install carla==0.9.16
 ```
 
 ---
 
-# Nykyisen version rajoitukset
+# CARLAn käynnistäminen
 
-Version 0.1 toteutus on tarkoituksella yksinkertainen ensimmäinen prototyyppi.
+CARLA-simulaattori täytyy käynnistää ennen Python-ohjelmia.
 
-Nykyisiä rajoituksia ovat esimerkiksi:
+Windowsissa esimerkiksi:
 
-- algoritmi olettaa tien reunojen tai kaistaviivojen olevan melko selkeitä
-- algoritmi perustuu suoriin Hough-viivoihin
-- voimakkaasti kaartuvat tiet voivat aiheuttaa ongelmia
-- valaistusolosuhteiden muutoksia ei vielä käsitellä erityisesti
-- varjot voivat aiheuttaa ylimääräisiä reunoja
-- ROI on tällä hetkellä kiinteä
-- path prediction perustuu yksinkertaiseen geometriaan
-- todellista ajoneuvon ohjausmallia ei vielä käytetä
-- algoritmia ei vielä testata simulaatiodatalla
-- suorituskykyä ei vielä mitata systemaattisesti
+```text
+CarlaUE4.exe
+```
 
-Näitä kohtia voidaan käyttää myöhemmin kehitys- ja optimointikohteina.
+Python-client yhdistää CARLAan:
+
+```text
+localhost:2000
+```
 
 ---
 
-# Seuraavat vaiheet
+# Suositeltu ohjelmien suoritusjärjestys
 
-## Version 0.2 – Simulaatiodata
+Projektin toimintaan voi tutustua vaiheittain:
 
-Seuraavaksi tarkoituksena on siirtyä valmiista testivideoista simulaatioympäristöön.
+```text
+1. carla_connect.py
+        ↓
+2. carla_vehicle.py
+        ↓
+3. carla_camera.py
+        ↓
+4. carla_path_prediction.py
+        ↓
+5. carla_emergency_brake.py
+        ↓
+6. carla_aeb_test.py
+        ↓
+7. carla_aeb_batch_test.py
+```
 
-Tavoitteet:
+## 1. Testaa CARLA-yhteys
 
-- tutustua valittuun simulaatioympäristöön
-- käynnistää simulaatioajo
-- käyttää ajoneuvon ajo- tai peruutuskameraa
-- tallentaa kameradataa
-- käyttää simulaatiosta kerättyä videota nykyisen algoritmin syötteenä
+```bash
+python carla_connect.py
+```
+
+## 2. Testaa virtuaaliauto
+
+```bash
+python carla_vehicle.py
+```
+
+## 3. Testaa RGB-kamera
+
+```bash
+python carla_camera.py
+```
+
+## 4. Testaa live path prediction
+
+```bash
+python carla_path_prediction.py
+```
+
+## 5. Testaa yksinkertainen emergency braking
+
+```bash
+python carla_emergency_brake.py
+```
+
+## 6. Suorita yksi kontrolloitu AEB-testi
+
+```bash
+python carla_aeb_test.py
+```
+
+## 7. Suorita automatisoitu AEB-testisarja
+
+```bash
+python carla_aeb_batch_test.py
+```
 
 ---
 
-## Version 0.3 – Algoritmin kehitys
+# Git-versionhallinta
 
-Tavoitteet:
+Projektin lähdekoodi, asetukset ja pienet testitulokset tallennetaan
+GitHubiin.
 
-- testata useita erilaisia ajoja
-- testata suoria ja mutkaisia osuuksia
-- säätää ROI-aluetta
-- säätää Canny-parametreja
-- säätää Hough-parametreja
-- parantaa kaistaviivojen vakautta
-- parantaa path prediction -menetelmää
+Git-versionhallintaan kuuluvat esimerkiksi:
 
----
+```text
+*.py
+README.md
+environment.yml
+.gitignore
+results/*.csv
+```
 
-## Version 0.4 – Suorituskykymittaukset
-
-Tavoitteet:
-
-- mitata FPS
-- mitata yhden framen käsittelyaika
-- selvittää ohjelman hitaimmat vaiheet
-- tallentaa mittaustulokset `results`-kansioon
+Suuria videoita ei tallenneta Git-repositorioon.
 
 Esimerkiksi:
 
 ```text
-FPS: 42.5
+videos/*.mp4
+output/*.mp4
+```
 
-Keskimääräinen käsittelyaika:
-23.5 ms / frame
+pidetään paikallisina tiedostoina.
+
+---
+
+# Nykyiset rajoitukset
+
+Projektissa on vielä useita kehityskohteita.
+
+## Path Prediction
+
+Nykyinen algoritmi:
+
+- perustuu suoriin Hough-viivoihin
+- käyttää kiinteää ROI-aluetta
+- voi toimia huonosti voimakkaissa mutkissa
+- voi tulkita muita tien rakenteita kaistaviivoiksi
+- ei vielä ohjaa ajoneuvoa
+
+---
+
+## AEB
+
+Nykyinen baseline-controller:
+
+- käyttää kiinteää 10 metrin etäisyysrajaa
+- ei huomioi nopeutta päätöksenteossa
+- ei vielä huomioi suhteellista nopeutta
+- käyttää täyttä `brake = 1.0` -jarrutusta
+- ei vielä käytä realistista turvallisuusmarginaalia PASS/FAIL-kriteerissä
+
+---
+
+## Testinopeudet
+
+Nykyinen batch-testi käyttää throttle-arvoja:
+
+```text
+0.25
+0.35
+0.45
+0.55
+0.65
+```
+
+Throttle ei kuitenkaan vastaa suoraan tiettyä ajonopeutta.
+
+Tämän vuoksi seuraavissa testeissä käytetään kontrolloituja
+tavoitenopeuksia.
+
+---
+
+# Seuraavat kehitysvaiheet
+
+## 1. Kontrolloidut tavoitenopeudet
+
+Seuraava AEB-testiversio käyttää esimerkiksi:
+
+```text
+20 km/h
+30 km/h
+40 km/h
+50 km/h
+```
+
+Tällöin testejä voidaan vertailla luotettavammin.
+
+---
+
+## 2. Parempi PASS/FAIL-kriteeri
+
+Pelkkä collision-event ei riitä.
+
+Testiin lisätään vähimmäisturvallisuusetäisyys.
+
+Esimerkiksi:
+
+```text
+collision == False
+
+JA
+
+final_distance >= safety_margin
 ```
 
 ---
 
-## Version 0.5 – Optimointi
+## 3. TTC-pohjainen AEB
 
-Tavoitteet:
+Nykyinen:
 
-- vähentää käsittelyaikaa
-- vertailla eri resoluutioita
-- optimoida ROI:n kokoa
-- optimoida kuvankäsittelyvaiheita
-- vertailla suorituskykyä ennen ja jälkeen optimoinnin
+```text
+distance <= 10 m
+→ brake
+```
 
-Mahdollisesti voidaan myöhemmin tutkia myös GPU- tai NPU-kiihdytystä.
+korvataan myöhemmin dynaamisemmalla päätöksellä.
 
----
+Time To Collision:
 
-## Version 1.0 – Lopullinen toteutus
+```text
+TTC = distance / relative_speed
+```
 
-Lopullisen version tavoitteena on sisältää:
+Tällöin AEB ottaa huomioon sekä etäisyyden että lähestymisnopeuden.
 
-- simulaatioajo
-- simulaatiosta kerätty kameradata
-- edge detection
-- reuna- tai kaistaviivojen tunnistus
-- path prediction
-- ohjaussuunnan arviointi
-- suorituskykymittaukset
-- testaus erilaisissa tilanteissa
-- optimointi
-- dokumentointi
-- Git-versionhallinta
-- toistettava Python-ympäristö
+Tavoitteena on verrata:
 
-Mahdollisuuksien mukaan toteutus validoidaan myös sulautetulla järjestelmällä.
+```text
+Fixed-distance AEB
+        VS
+TTC-based AEB
+```
 
 ---
 
-# Projektin alustava kokonaisuus
+## 4. Suorituskykymittaukset
+
+Myöhemmissä vaiheissa voidaan mitata esimerkiksi:
+
+- Python-controllerin käsittelyaikaa
+- sensorien päivitystaajuutta
+- FPS-arvoa
+- OpenCV-kuvankäsittelyn aikaa
+- CARLA-clientin kuormitusta
+
+---
+
+## 5. HIL – Hardware-in-the-Loop
+
+Projektin myöhemmässä vaiheessa controller voidaan siirtää
+sulautetulle järjestelmälle.
+
+Mahdollinen kokonaisuus:
+
+```text
+CARLA
+  ↓
+Virtual sensors
+  ↓
+CAN / communication interface
+  ↓
+Raspberry Pi
+  ↓
+ADAS Controller
+  ↓
+Brake command
+  ↓
+CARLA
+```
+
+Tavoitteena on käyttää mahdollisimman pitkälle samaa controller-logiikkaa
+sekä SIL- että HIL-vaiheessa.
+
+---
+
+# Projektin kehityspolku
 
 ```text
 OpenCV Proof of Concept
         ↓
-Simulaatioympäristö
+CARLA Python API
         ↓
-Simulaatioajo
+Virtual Vehicle
         ↓
-Kameradatan kerääminen
+RGB Camera
         ↓
-Edge Detection
-        ↓
-Reuna-/kaistaviivojen tunnistus
+Live Edge Detection
         ↓
 Path Prediction
         ↓
-Ohjaussuunnan arviointi
+Obstacle Sensor
         ↓
-Testiajot
+Collision Sensor
         ↓
-FPS ja käsittelyajan mittaus
+AEB Controller
         ↓
-Optimointi
+Controlled SIL Test
         ↓
-Mahdollinen sulautetun järjestelmän validointi
+Synchronous Batch Testing
+        ↓
+Target-Speed Tests
+        ↓
+TTC-Based AEB
+        ↓
+Performance Analysis
+        ↓
+HIL Validation
 ```
+
+---
+
+# Projektin tavoiteltu lopputulos
+
+Lopullisen projektin tavoitteena on muodostaa dokumentoitu ja
+toistettava ADAS-testauksen työnkulku, jossa:
+
+1. ADAS-logiikka kehitetään Pythonilla
+2. controller testataan CARLA-simulaatiossa
+3. testit suoritetaan automaattisesti
+4. tulokset tallennetaan ja analysoidaan
+5. controlleria kehitetään tulosten perusteella
+6. samaa logiikkaa voidaan myöhemmin testata sulautetulla laitteella
+
+Tavoitteena ei ole rakentaa täydellistä autonomista ajoneuvoa, vaan
+luoda vaiheittainen, mitattava ja helposti toistettava menetelmä
+ADAS-toimintojen kehittämiseen ja validointiin.
