@@ -1,0 +1,5 @@
+timestamp,route_length_m,target_speed_kmh,aeb_triggered,trigger_speed_kmh,trigger_gap_m,trigger_ttc_s,minimum_gap_m,obstacle_cleared,goal_reached,final_goal_distance_m,collision,controller_processing_ms,controller_round_trip_ms,result
+2026-10-07T19:47:32,120.0,30.0,True,24.538,11.394,1.6716,2.003,True,True,4.804,False,0.012,0.193,PASS
+2026-10-07T19:50:15,120.0,30.0,True,24.538,11.394,1.6716,2.003,True,True,4.804,False,0.022,0.327,PASS
+2026-10-07T19:50:33,120.0,30.0,True,24.538,11.394,1.6716,2.003,True,True,4.804,False,0.01,0.173,PASS
+2026-10-07T19:54:01,120.0,30.0,True,24.538,11.394,1.6716,8.949,False,True,True,4.747,False,0.017,0.255,PASS

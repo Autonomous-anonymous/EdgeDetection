@@ -1,0 +1,4 @@
+timestamp,route_a_length_m,route_b_length_m,start_separation_m,merge_probe_distance_m,vehicle_a_speed_kmh,vehicle_b_speed_kmh,vehicle_a_start_delay_s,safety_interrupt_count,first_trigger_speed_a_kmh,first_trigger_speed_b_kmh,first_trigger_relative_speed_kmh,first_trigger_gap_m,first_trigger_ttc_s,minimum_gap_m,vehicle_a_merged,vehicle_b_merged,vehicle_a_goal_reached,vehicle_b_goal_reached,collision_a,collision_b,controller_processing_ms,controller_round_trip_ms,result
+2026-10-07T20:21:29,207.751,204.973,70.317,20.0,30.0,18.0,6.724,4,24.896,14.714,10.182,2.915,1.0307,0.915,True,True,True,True,False,False,0.017,0.27,FAIL
+2026-10-07T20:29:05,207.751,204.973,70.317,20.0,30.0,18.0,8.724,0,,,,,,13.945,True,True,False,True,False,False,,,FAIL
+2026-10-07T20:32:55,207.751,204.973,70.317,20.0,30.0,18.0,8.724,0,,,,,,13.224,True,True,True,True,False,False,,,PASS
