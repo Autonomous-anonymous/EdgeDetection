@@ -1,0 +1,2 @@
+timestamp,target_speed_mps,ttc_threshold_s,aeb_triggered,trigger_distance_m,trigger_speed_mps,trigger_ttc_s,final_lidar_distance_m,final_bumper_gap_m,final_speed_mps,estimated_collision,result
+2026-10-12T16:18:54,2.000,1.700,True,3.374,2.000,1.687,2.853,2.553,0.000,False,PASS
