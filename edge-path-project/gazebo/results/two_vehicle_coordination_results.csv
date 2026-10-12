@@ -1,0 +1,6 @@
+timestamp,vehicle_a_goal,vehicle_b_goal,coordination_wait_events,vehicle_a_aeb_interrupts,vehicle_b_aeb_interrupts,minimum_center_distance_m,estimated_collision,duration_s,result
+2026-10-12T16:56:19,False,False,0,0,0,0.000,True,0.202,FAIL
+2026-10-12T16:59:07,False,True,1,0,0,1.290,True,24.364,FAIL
+2026-10-12T17:02:41,False,False,0,0,0,1.282,True,15.976,FAIL
+2026-10-12T17:06:32,False,True,1,0,0,1.810,False,75.243,FAIL
+2026-10-12T17:09:27,True,True,1,0,0,4.000,False,20.944,PASS

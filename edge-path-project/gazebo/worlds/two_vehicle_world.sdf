@@ -1,0 +1,373 @@
+<?xml version="1.0"?>
+
+<sdf version="1.10">
+
+  <world name="two_vehicle_world">
+
+
+    <!-- ================================================== -->
+    <!-- GAZEBO SYSTEMS                                     -->
+    <!-- ================================================== -->
+
+    <plugin
+      filename="gz-sim-physics-system"
+      name="gz::sim::systems::Physics">
+    </plugin>
+
+    <plugin
+      filename="gz-sim-user-commands-system"
+      name="gz::sim::systems::UserCommands">
+    </plugin>
+
+    <plugin
+      filename="gz-sim-scene-broadcaster-system"
+      name="gz::sim::systems::SceneBroadcaster">
+    </plugin>
+
+    <plugin
+      filename="gz-sim-sensors-system"
+      name="gz::sim::systems::Sensors">
+
+      <render_engine>
+        ogre2
+      </render_engine>
+
+    </plugin>
+
+
+    <!-- ================================================== -->
+    <!-- PHYSICS                                            -->
+    <!-- ================================================== -->
+
+    <physics
+      name="physics"
+      type="ignored">
+
+      <max_step_size>
+        0.001
+      </max_step_size>
+
+      <real_time_factor>
+        1.0
+      </real_time_factor>
+
+    </physics>
+
+    <gravity>
+      0 0 -9.81
+    </gravity>
+
+
+    <!-- ================================================== -->
+    <!-- SCENE                                              -->
+    <!-- ================================================== -->
+
+    <scene>
+
+      <ambient>
+        0.4 0.4 0.4 1
+      </ambient>
+
+      <background>
+        0.7 0.8 1.0 1
+      </background>
+
+      <shadows>
+        true
+      </shadows>
+
+    </scene>
+
+
+    <!-- ================================================== -->
+    <!-- SUN                                                -->
+    <!-- ================================================== -->
+
+    <light
+      type="directional"
+      name="sun">
+
+      <cast_shadows>
+        true
+      </cast_shadows>
+
+      <pose>
+        0 0 10 0 0 0
+      </pose>
+
+      <diffuse>
+        0.9 0.9 0.9 1
+      </diffuse>
+
+      <specular>
+        0.2 0.2 0.2 1
+      </specular>
+
+      <direction>
+        -0.5 0.1 -0.9
+      </direction>
+
+    </light>
+
+
+    <!-- ================================================== -->
+    <!-- GROUND                                             -->
+    <!-- ================================================== -->
+
+    <model name="ground">
+
+      <static>
+        true
+      </static>
+
+      <pose>
+        0 0 -0.1 0 0 0
+      </pose>
+
+      <link name="ground_link">
+
+        <collision name="ground_collision">
+
+          <geometry>
+
+            <box>
+              <size>
+                100 40 0.2
+              </size>
+            </box>
+
+          </geometry>
+
+        </collision>
+
+
+        <visual name="ground_visual">
+
+          <geometry>
+
+            <box>
+              <size>
+                100 40 0.2
+              </size>
+            </box>
+
+          </geometry>
+
+          <material>
+
+            <ambient>
+              0.25 0.25 0.25 1
+            </ambient>
+
+            <diffuse>
+              0.35 0.35 0.35 1
+            </diffuse>
+
+          </material>
+
+        </visual>
+
+      </link>
+
+    </model>
+
+
+    <!-- ================================================== -->
+    <!-- VEHICLE A                                          -->
+    <!-- ================================================== -->
+
+    <!--
+      Vehicle A starts on the left-hand lane.
+    -->
+
+    <include>
+
+      <uri>
+        model://aeb_vehicle
+      </uri>
+
+      <name>
+        aeb_vehicle
+      </name>
+
+      <pose>
+        0 2 0 0 0 0
+      </pose>
+
+    </include>
+
+
+    <!-- ================================================== -->
+    <!-- VEHICLE B                                          -->
+    <!-- ================================================== -->
+
+    <!--
+      Vehicle B starts on the right-hand lane.
+    -->
+
+    <include>
+
+      <uri>
+        model://aeb_vehicle_b
+      </uri>
+
+      <name>
+        aeb_vehicle_b
+      </name>
+
+      <pose>
+        0 -2 0 0 0 0
+      </pose>
+
+    </include>
+
+
+    <!-- ================================================== -->
+    <!-- COMMON LOADING ZONE                                -->
+    <!-- ================================================== -->
+
+    <!--
+      Tätä käytetään myöhemmin yhteisenä kohdealueena.
+      Se on nyt vain vihreä visuaalinen merkki.
+    -->
+
+    <model name="loading_zone">
+
+      <static>
+        true
+      </static>
+
+      <pose>
+        30 0 0.01 0 0 0
+      </pose>
+
+      <link name="loading_zone_link">
+
+        <visual name="loading_zone_visual">
+
+          <geometry>
+
+            <box>
+              <size>
+                6 6 0.02
+              </size>
+            </box>
+
+          </geometry>
+
+
+          <material>
+
+            <ambient>
+              0.1 0.8 0.1 1
+            </ambient>
+
+            <diffuse>
+              0.1 0.8 0.1 1
+            </diffuse>
+
+          </material>
+
+        </visual>
+
+      </link>
+
+    </model>
+
+
+    <!-- ================================================== -->
+    <!-- START MARKER A                                     -->
+    <!-- ================================================== -->
+
+    <model name="start_marker_a">
+
+      <static>
+        true
+      </static>
+
+      <pose>
+        0 2 0.01 0 0 0
+      </pose>
+
+      <link name="link">
+
+        <visual name="visual">
+
+          <geometry>
+
+            <box>
+              <size>
+                3 2 0.02
+              </size>
+            </box>
+
+          </geometry>
+
+          <material>
+
+            <ambient>
+              0.1 0.3 0.9 1
+            </ambient>
+
+            <diffuse>
+              0.1 0.3 0.9 1
+            </diffuse>
+
+          </material>
+
+        </visual>
+
+      </link>
+
+    </model>
+
+
+    <!-- ================================================== -->
+    <!-- START MARKER B                                     -->
+    <!-- ================================================== -->
+
+    <model name="start_marker_b">
+
+      <static>
+        true
+      </static>
+
+      <pose>
+        0 -2 0.01 0 0 0
+      </pose>
+
+      <link name="link">
+
+        <visual name="visual">
+
+          <geometry>
+
+            <box>
+              <size>
+                3 2 0.02
+              </size>
+            </box>
+
+          </geometry>
+
+          <material>
+
+            <ambient>
+              0.9 0.6 0.1 1
+            </ambient>
+
+            <diffuse>
+              0.9 0.6 0.1 1
+            </diffuse>
+
+          </material>
+
+        </visual>
+
+      </link>
+
+    </model>
+
+  </world>
+
+</sdf>
