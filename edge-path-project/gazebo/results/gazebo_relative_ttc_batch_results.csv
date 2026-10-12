@@ -1,0 +1,6 @@
+batch_id,timestamp,scenario,ego_target_speed_mps,obstacle_target_speed_mps,expected_closing_speed_mps,expected_aeb,aeb_triggered,trigger_distance_m,trigger_ego_speed_mps,trigger_closing_speed_mps,trigger_ttc_s,minimum_lidar_distance_m,minimum_bumper_gap_m,estimated_collision,end_reason,result
+20261012_163958,2026-10-12T16:39:58,ego3_obstacle1,3.000,1.000,2.000,True,True,3.364,3.000,2.010,1.674,2.796,2.496,False,ego_stopped,PASS
+20261012_163958,2026-10-12T16:39:58,ego4_obstacle1,4.000,1.000,3.000,True,True,5.022,4.000,3.010,1.669,3.802,3.502,False,ego_stopped,PASS
+20261012_163958,2026-10-12T16:39:58,ego5_obstacle2,5.000,2.000,3.000,True,True,4.999,5.000,3.010,1.661,3.784,3.484,False,ego_stopped,PASS
+20261012_163958,2026-10-12T16:39:58,ego5_obstacle3,5.000,3.000,2.000,True,True,3.407,5.000,2.010,1.695,2.839,2.539,False,ego_stopped,PASS
+20261012_163958,2026-10-12T16:39:58,ego4_obstacle4,4.000,4.000,0.000,False,False,,,,,13.000,12.700,False,no_aeb_observation_complete,PASS
