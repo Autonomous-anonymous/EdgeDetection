@@ -1,2 +1,3 @@
 timestamp,vehicle_a_goal,vehicle_b_goal,coordination_wait_events,vehicle_a_aeb_interrupts,vehicle_b_aeb_interrupts,minimum_center_distance_m,estimated_collision,duration_s,result
 2026-10-12T17:14:29,True,True,1,0,0,4.000,False,26.422,PASS
+2026-10-12T17:17:07,True,True,1,0,0,4.000,False,32.545,PASS
