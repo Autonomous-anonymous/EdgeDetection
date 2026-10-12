@@ -1,0 +1,2 @@
+timestamp,ego_target_speed_mps,obstacle_target_speed_mps,expected_relative_speed_mps,ttc_threshold_s,aeb_triggered,trigger_distance_m,trigger_ego_speed_mps,trigger_closing_speed_mps,trigger_ttc_s,minimum_lidar_distance_m,minimum_bumper_gap_m,final_ego_speed_mps,estimated_collision,end_reason,result
+2026-10-12T16:35:37,5.000,2.000,3.000,1.700,True,5.026,5.000,3.010,1.670,3.796,3.496,0.000,False,ego_stopped,PASS

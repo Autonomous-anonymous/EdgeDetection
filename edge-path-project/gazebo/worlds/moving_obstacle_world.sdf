@@ -1,0 +1,298 @@
+<?xml version="1.0"?>
+
+<sdf version="1.10">
+
+  <world name="moving_obstacle_world">
+
+
+    <!-- ================================================== -->
+    <!-- GAZEBO SYSTEMS                                     -->
+    <!-- ================================================== -->
+
+    <plugin
+      filename="gz-sim-physics-system"
+      name="gz::sim::systems::Physics">
+    </plugin>
+
+    <plugin
+      filename="gz-sim-user-commands-system"
+      name="gz::sim::systems::UserCommands">
+    </plugin>
+
+    <plugin
+      filename="gz-sim-scene-broadcaster-system"
+      name="gz::sim::systems::SceneBroadcaster">
+    </plugin>
+
+    <plugin
+      filename="gz-sim-sensors-system"
+      name="gz::sim::systems::Sensors">
+
+      <render_engine>
+        ogre2
+      </render_engine>
+
+    </plugin>
+
+
+    <!-- ================================================== -->
+    <!-- PHYSICS                                            -->
+    <!-- ================================================== -->
+
+    <physics
+      name="physics"
+      type="ignored">
+
+      <max_step_size>
+        0.001
+      </max_step_size>
+
+      <real_time_factor>
+        1.0
+      </real_time_factor>
+
+    </physics>
+
+    <gravity>
+      0 0 -9.81
+    </gravity>
+
+
+    <!-- ================================================== -->
+    <!-- SCENE                                              -->
+    <!-- ================================================== -->
+
+    <scene>
+
+      <ambient>
+        0.4 0.4 0.4 1
+      </ambient>
+
+      <background>
+        0.7 0.8 1.0 1
+      </background>
+
+      <shadows>
+        true
+      </shadows>
+
+    </scene>
+
+
+    <!-- ================================================== -->
+    <!-- SUN                                                -->
+    <!-- ================================================== -->
+
+    <light
+      type="directional"
+      name="sun">
+
+      <cast_shadows>
+        true
+      </cast_shadows>
+
+      <pose>
+        0 0 10 0 0 0
+      </pose>
+
+      <diffuse>
+        0.9 0.9 0.9 1
+      </diffuse>
+
+      <specular>
+        0.2 0.2 0.2 1
+      </specular>
+
+      <direction>
+        -0.5 0.1 -0.9
+      </direction>
+
+    </light>
+
+
+    <!-- ================================================== -->
+    <!-- GROUND                                             -->
+    <!-- ================================================== -->
+
+    <model name="ground">
+
+      <static>
+        true
+      </static>
+
+      <pose>
+        0 0 -0.1 0 0 0
+      </pose>
+
+      <link name="ground_link">
+
+        <collision name="ground_collision">
+
+          <geometry>
+
+            <box>
+              <size>
+                100 30 0.2
+              </size>
+            </box>
+
+          </geometry>
+
+        </collision>
+
+
+        <visual name="ground_visual">
+
+          <geometry>
+
+            <box>
+              <size>
+                100 30 0.2
+              </size>
+            </box>
+
+          </geometry>
+
+          <material>
+
+            <ambient>
+              0.25 0.25 0.25 1
+            </ambient>
+
+            <diffuse>
+              0.35 0.35 0.35 1
+            </diffuse>
+
+          </material>
+
+        </visual>
+
+      </link>
+
+    </model>
+
+
+    <!-- ================================================== -->
+    <!-- EGO VEHICLE                                        -->
+    <!-- ================================================== -->
+
+    <include>
+
+      <uri>
+        model://aeb_vehicle
+      </uri>
+
+      <name>
+        aeb_vehicle
+      </name>
+
+      <pose>
+        0 0 0 0 0 0
+      </pose>
+
+    </include>
+
+
+    <!-- ================================================== -->
+    <!-- MOVING OBSTACLE                                    -->
+    <!-- ================================================== -->
+
+    <!--
+      Liikkuva este aloittaa 15 metrin kohdalta.
+
+      Python-testi komentaa sille nopeuden 2 m/s.
+
+      Tämä on tarkoituksella yksinkertainen suorakulmainen
+      "lead vehicle", koska tässä testataan AEB-logiikkaa,
+      ei esteajoneuvon dynamiikkaa.
+    -->
+
+    <model name="moving_obstacle">
+
+      <pose>
+        15 0 0.75 0 0 0
+      </pose>
+
+
+      <link name="body">
+
+        <inertial>
+
+          <mass>
+            100
+          </mass>
+
+          <inertia>
+            <ixx>30</ixx>
+            <iyy>50</iyy>
+            <izz>50</izz>
+          </inertia>
+
+        </inertial>
+
+
+        <collision name="collision">
+
+          <geometry>
+
+            <box>
+              <size>
+                2.0 1.8 1.5
+              </size>
+            </box>
+
+          </geometry>
+
+        </collision>
+
+
+        <visual name="visual">
+
+          <geometry>
+
+            <box>
+              <size>
+                2.0 1.8 1.5
+              </size>
+            </box>
+
+          </geometry>
+
+
+          <material>
+
+            <ambient>
+              0.85 0.30 0.05 1
+            </ambient>
+
+            <diffuse>
+              0.85 0.30 0.05 1
+            </diffuse>
+
+          </material>
+
+        </visual>
+
+      </link>
+
+
+      <!--
+        VelocityControl liikuttaa estettä suoraan
+        /model/moving_obstacle/cmd_vel topicista.
+      -->
+
+      <plugin
+        filename="gz-sim-velocity-control-system"
+        name="gz::sim::systems::VelocityControl">
+
+        <topic>
+          /model/moving_obstacle/cmd_vel
+        </topic>
+
+      </plugin>
+
+    </model>
+
+  </world>
+
+</sdf>

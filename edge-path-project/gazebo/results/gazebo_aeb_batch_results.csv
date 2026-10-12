@@ -1,0 +1,6 @@
+batch_id,timestamp,target_speed_mps,ttc_threshold_s,aeb_triggered,trigger_distance_m,trigger_speed_mps,trigger_ttc_s,final_lidar_distance_m,final_bumper_gap_m,final_speed_mps,estimated_collision,end_reason,result
+20261012_162839,2026-10-12T16:28:39,1.000,1.700,True,1.623,1.000,1.623,1.491,1.191,0.000,False,vehicle_stopped,PASS
+20261012_162839,2026-10-12T16:28:39,2.000,1.700,True,3.304,2.000,1.652,2.723,2.423,0.000,False,vehicle_stopped,PASS
+20261012_162839,2026-10-12T16:28:39,3.000,1.700,True,4.994,3.000,1.665,3.783,3.483,0.000,False,vehicle_stopped,PASS
+20261012_162839,2026-10-12T16:28:39,4.000,1.700,True,6.781,4.000,1.695,4.731,4.431,0.000,False,vehicle_stopped,PASS
+20261012_162839,2026-10-12T16:28:39,5.000,1.700,True,8.484,5.000,1.697,5.252,4.952,0.000,False,vehicle_stopped,PASS
