@@ -1,0 +1,2 @@
+timestamp,obstacle_detected,avoidance_started,avoidance_direction,obstacle_passed,returned_to_lane,goal_reached,aeb_interrupts,minimum_front_lidar_distance_m,minimum_obstacle_center_distance_m,estimated_collision,duration_s,result
+2026-10-13T14:03:54,True,True,LEFT,True,True,True,0,5.035,2.240,False,38.858,PASS
