@@ -1,0 +1,4 @@
+timestamp,scenario,expected_direction,actual_direction,obstacle_detected,avoidance_started,obstacle_passed,returned_to_lane,goal_reached,aeb_interrupts,minimum_front_lidar_distance_m,minimum_obstacle_distance_m,estimated_collision,end_reason,duration_s,result
+2026-10-13T14:19:11,both_sides_open,LEFT,LEFT,True,True,True,True,True,0,5.063,2.244,False,goal_reached,41.616,PASS
+2026-10-13T14:19:11,left_side_blocked,RIGHT,RIGHT,True,True,True,True,True,0,5.143,2.248,False,goal_reached,44.697,PASS
+2026-10-13T14:19:11,right_side_blocked,LEFT,LEFT,True,True,True,True,True,0,5.045,2.243,False,goal_reached,45.186,PASS
