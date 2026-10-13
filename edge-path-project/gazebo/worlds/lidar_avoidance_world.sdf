@@ -1,0 +1,352 @@
+<?xml version="1.0"?>
+
+<sdf version="1.10">
+
+  <world name="lidar_avoidance_world">
+
+    <!-- ================================================== -->
+    <!-- GAZEBO SYSTEMS                                     -->
+    <!-- ================================================== -->
+
+    <plugin
+      filename="gz-sim-physics-system"
+      name="gz::sim::systems::Physics">
+    </plugin>
+
+    <plugin
+      filename="gz-sim-user-commands-system"
+      name="gz::sim::systems::UserCommands">
+    </plugin>
+
+    <plugin
+      filename="gz-sim-scene-broadcaster-system"
+      name="gz::sim::systems::SceneBroadcaster">
+    </plugin>
+
+    <plugin
+      filename="gz-sim-sensors-system"
+      name="gz::sim::systems::Sensors">
+
+      <render_engine>
+        ogre2
+      </render_engine>
+
+    </plugin>
+
+
+    <!-- ================================================== -->
+    <!-- PHYSICS                                            -->
+    <!-- ================================================== -->
+
+    <physics
+      name="physics"
+      type="ignored">
+
+      <max_step_size>
+        0.001
+      </max_step_size>
+
+      <real_time_factor>
+        1.0
+      </real_time_factor>
+
+    </physics>
+
+    <gravity>
+      0 0 -9.81
+    </gravity>
+
+
+    <!-- ================================================== -->
+    <!-- SCENE                                              -->
+    <!-- ================================================== -->
+
+    <scene>
+
+      <ambient>
+        0.4 0.4 0.4 1
+      </ambient>
+
+      <background>
+        0.7 0.8 1.0 1
+      </background>
+
+      <shadows>
+        true
+      </shadows>
+
+    </scene>
+
+
+    <!-- ================================================== -->
+    <!-- SUN                                                -->
+    <!-- ================================================== -->
+
+    <light
+      type="directional"
+      name="sun">
+
+      <cast_shadows>
+        true
+      </cast_shadows>
+
+      <pose>
+        0 0 10 0 0 0
+      </pose>
+
+      <diffuse>
+        0.9 0.9 0.9 1
+      </diffuse>
+
+      <specular>
+        0.2 0.2 0.2 1
+      </specular>
+
+      <direction>
+        -0.5 0.1 -0.9
+      </direction>
+
+    </light>
+
+
+    <!-- ================================================== -->
+    <!-- GROUND                                             -->
+    <!-- ================================================== -->
+
+    <model name="ground">
+
+      <static>
+        true
+      </static>
+
+      <pose>
+        20 0 -0.1 0 0 0
+      </pose>
+
+      <link name="ground_link">
+
+        <collision name="ground_collision">
+
+          <geometry>
+
+            <box>
+              <size>
+                60 20 0.2
+              </size>
+            </box>
+
+          </geometry>
+
+        </collision>
+
+
+        <visual name="ground_visual">
+
+          <geometry>
+
+            <box>
+              <size>
+                60 20 0.2
+              </size>
+            </box>
+
+          </geometry>
+
+          <material>
+
+            <ambient>
+              0.30 0.30 0.30 1
+            </ambient>
+
+            <diffuse>
+              0.38 0.38 0.38 1
+            </diffuse>
+
+          </material>
+
+        </visual>
+
+      </link>
+
+    </model>
+
+
+    <!-- ================================================== -->
+    <!-- ORIGINAL DRIVING LANE                              -->
+    <!-- ================================================== -->
+
+    <model name="center_lane">
+
+      <static>
+        true
+      </static>
+
+      <pose>
+        18 0 0.015 0 0 0
+      </pose>
+
+      <link name="link">
+
+        <visual name="visual">
+
+          <geometry>
+
+            <box>
+              <size>
+                40 0.12 0.02
+              </size>
+            </box>
+
+          </geometry>
+
+          <material>
+
+            <ambient>
+              0.9 0.9 0.9 1
+            </ambient>
+
+            <diffuse>
+              0.9 0.9 0.9 1
+            </diffuse>
+
+          </material>
+
+        </visual>
+
+      </link>
+
+    </model>
+
+
+    <!-- ================================================== -->
+    <!-- VEHICLE                                            -->
+    <!-- ================================================== -->
+
+    <include>
+
+      <uri>
+        model://aeb_vehicle
+      </uri>
+
+      <name>
+        aeb_vehicle
+      </name>
+
+      <pose>
+        0 0 0 0 0 0
+      </pose>
+
+    </include>
+
+
+    <!-- ================================================== -->
+    <!-- FIXED OBSTACLE                                     -->
+    <!-- ================================================== -->
+
+    <model name="avoidance_obstacle">
+
+      <static>
+        true
+      </static>
+
+      <pose>
+        15 0 0.75 0 0 0
+      </pose>
+
+      <link name="obstacle_link">
+
+        <collision name="collision">
+
+          <geometry>
+
+            <box>
+              <size>
+                2.0 2.0 1.5
+              </size>
+            </box>
+
+          </geometry>
+
+        </collision>
+
+
+        <visual name="visual">
+
+          <geometry>
+
+            <box>
+              <size>
+                2.0 2.0 1.5
+              </size>
+            </box>
+
+          </geometry>
+
+          <material>
+
+            <ambient>
+              0.85 0.15 0.10 1
+            </ambient>
+
+            <diffuse>
+              0.85 0.15 0.10 1
+            </diffuse>
+
+          </material>
+
+        </visual>
+
+      </link>
+
+    </model>
+
+
+    <!-- ================================================== -->
+    <!-- GOAL ZONE                                          -->
+    <!-- ================================================== -->
+
+    <model name="goal_zone">
+
+      <static>
+        true
+      </static>
+
+      <pose>
+        30 0 0.02 0 0 0
+      </pose>
+
+      <link name="goal_link">
+
+        <visual name="visual">
+
+          <geometry>
+
+            <box>
+              <size>
+                4 4 0.03
+              </size>
+            </box>
+
+          </geometry>
+
+          <material>
+
+            <ambient>
+              0.1 0.8 0.1 1
+            </ambient>
+
+            <diffuse>
+              0.1 0.8 0.1 1
+            </diffuse>
+
+          </material>
+
+        </visual>
+
+      </link>
+
+    </model>
+
+  </world>
+
+</sdf>
