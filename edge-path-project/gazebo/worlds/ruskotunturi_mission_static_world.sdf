@@ -1,0 +1,210 @@
+<?xml version="1.0"?>
+<sdf version="1.10">
+
+  <!--
+    Ruskotunturi autonomous mission - Phase 2
+
+    Baseline:
+      - same lower-area start
+      - same upper-area goal
+      - same terrain-aware waypoint route
+
+    Added:
+      - 3 static route obstacles
+      - box pose Z values are terrain surface + 0.75 m
+      - 1 side blocker
+      - third obstacle moved to a flatter ~8-10 degree terrain section
+      - no visual waypoint marker spheres, because GPU LiDAR may
+        detect visual geometry as range targets
+
+    Moving obstacles are intentionally reserved for Phase 3.
+  -->
+
+  <world name="ruskotunturi_mission_static_world">
+
+    <physics name="1ms" type="ignored">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+    </physics>
+
+    <plugin
+      filename="gz-sim-physics-system"
+      name="gz::sim::systems::Physics">
+    </plugin>
+
+    <plugin
+      filename="gz-sim-user-commands-system"
+      name="gz::sim::systems::UserCommands">
+    </plugin>
+
+    <plugin
+      filename="gz-sim-scene-broadcaster-system"
+      name="gz::sim::systems::SceneBroadcaster">
+    </plugin>
+
+    <plugin
+      filename="gz-sim-sensors-system"
+      name="gz::sim::systems::Sensors">
+      <render_engine>ogre2</render_engine>
+    </plugin>
+
+    <scene>
+      <ambient>0.3 0.3 0.3 1</ambient>
+      <background>0.7 0.8 0.9 1</background>
+      <shadows>true</shadows>
+    </scene>
+
+    <light type="directional" name="sun">
+      <cast_shadows>true</cast_shadows>
+      <pose>0 0 50 0 0 0</pose>
+      <diffuse>0.8 0.8 0.8 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+      <direction>-0.5 0.1 -0.9</direction>
+    </light>
+
+    <include>
+      <uri>model://ruskotunturi_map</uri>
+      <name>ruskotunturi_map</name>
+      <pose>0 0 0 0 0 0</pose>
+    </include>
+
+    <include>
+      <uri>model://aeb_vehicle_360</uri>
+      <name>aeb_vehicle_360</name>
+      <pose>
+        20.000
+        38.000
+        -10.097
+        0 0 -2.6779450446
+      </pose>
+    </include>
+
+
+    <model name="static_obstacle_a">
+      <static>true</static>
+      <pose>6.000000 33.000000 -9.437282 0 0 0</pose>
+
+      <link name="body">
+
+        <collision name="collision">
+          <geometry>
+            <box>
+              <size>1.400 1.400 1.500</size>
+            </box>
+          </geometry>
+        </collision>
+
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>1.400 1.400 1.500</size>
+            </box>
+          </geometry>
+
+          <material>
+            <ambient>0.90 0.12 0.08 1</ambient>
+            <diffuse>0.90 0.12 0.08 1</diffuse>
+            <specular>0.10 0.10 0.10 1</specular>
+          </material>
+        </visual>
+
+      </link>
+    </model>
+
+    <model name="static_obstacle_a_right_blocker">
+      <static>true</static>
+      <pose>4.837245 35.325511 -9.481329 0 0 0</pose>
+
+      <link name="body">
+
+        <collision name="collision">
+          <geometry>
+            <box>
+              <size>1.400 1.400 1.500</size>
+            </box>
+          </geometry>
+        </collision>
+
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>1.400 1.400 1.500</size>
+            </box>
+          </geometry>
+
+          <material>
+            <ambient>0.95 0.45 0.05 1</ambient>
+            <diffuse>0.95 0.45 0.05 1</diffuse>
+            <specular>0.10 0.10 0.10 1</specular>
+          </material>
+        </visual>
+
+      </link>
+    </model>
+
+    <model name="static_obstacle_b">
+      <static>true</static>
+      <pose>-10.000000 22.000000 -9.122023 0 0 0</pose>
+
+      <link name="body">
+
+        <collision name="collision">
+          <geometry>
+            <box>
+              <size>1.400 1.400 1.500</size>
+            </box>
+          </geometry>
+        </collision>
+
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>1.400 1.400 1.500</size>
+            </box>
+          </geometry>
+
+          <material>
+            <ambient>0.90 0.12 0.08 1</ambient>
+            <diffuse>0.90 0.12 0.08 1</diffuse>
+            <specular>0.10 0.10 0.10 1</specular>
+          </material>
+        </visual>
+
+      </link>
+    </model>
+
+    <model name="static_obstacle_c">
+      <static>true</static>
+      <pose>-24.000000 -10.000000 -2.794706 0 0 0</pose>
+
+      <link name="body">
+
+        <collision name="collision">
+          <geometry>
+            <box>
+              <size>1.400 1.400 1.500</size>
+            </box>
+          </geometry>
+        </collision>
+
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>1.400 1.400 1.500</size>
+            </box>
+          </geometry>
+
+          <material>
+            <ambient>0.90 0.12 0.08 1</ambient>
+            <diffuse>0.90 0.12 0.08 1</diffuse>
+            <specular>0.10 0.10 0.10 1</specular>
+          </material>
+        </visual>
+
+      </link>
+    </model>
+
+
+  </world>
+
+</sdf>

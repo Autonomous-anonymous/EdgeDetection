@@ -1,0 +1,15 @@
+timestamp,waypoint_progress,waypoints_total,goal_reached,expected_static_avoidances,completed_avoidances,avoidance_directions,camera_frames,max_abs_roll_deg,max_abs_pitch_deg,world_z_variation_m,minimum_body_clearance_m,required_body_clearance_m,terrain_safety_violation,lidar_safety_violation,no_path_detected,emergency_stop,end_reason,duration_s,result
+2026-10-21T16:01:15,3,23,False,3,0,LEFT,293,2.869,4.713,0.327,0.955,1.000,False,True,False,False,360_body_clearance_stop,20.487,FAIL
+2026-10-21T16:03:49,3,23,False,3,0,RIGHT,289,3.328,3.212,0.244,0.940,1.000,False,True,False,False,360_body_clearance_stop,20.428,FAIL
+2026-10-21T16:06:51,3,23,False,3,0,RIGHT,291,3.352,3.213,0.245,0.891,1.000,False,True,False,False,360_body_clearance_stop,19.518,FAIL
+2026-10-21T16:08:31,3,23,False,3,0,RIGHT,290,3.344,3.215,0.245,0.907,1.000,False,True,False,False,360_body_clearance_stop,21.082,FAIL
+2026-10-21T16:14:58,7,23,False,3,2,"LEFT,RIGHT",2315,5.193,4.453,0.524,1.563,1.000,False,False,True,False,no_safe_side,164.250,FAIL
+2026-10-21T16:20:12,7,23,False,3,1,RIGHT,777,2.906,3.272,0.346,2.425,1.000,False,False,True,False,no_safe_side,55.496,FAIL
+2026-10-21T16:24:35,10,23,False,3,2,"RIGHT,RIGHT",1367,3.087,3.919,0.684,1.677,1.000,False,False,True,False,no_safe_side,99.441,FAIL
+2026-10-21T16:27:23,10,23,False,3,2,"RIGHT,RIGHT",1361,3.038,3.921,0.684,1.666,1.000,False,False,True,False,no_safe_side,115.356,FAIL
+2026-10-21T16:29:31,7,23,False,3,1,"LEFT,RIGHT",936,4.092,5.334,0.566,0.966,1.000,False,True,False,False,360_body_clearance_stop,66.739,FAIL
+2026-10-21T16:36:06,14,23,False,3,2,"LEFT,LEFT,LEFT",2024,17.491,23.937,6.260,0.992,1.000,False,True,False,False,360_body_clearance_stop,152.758,FAIL
+2026-10-21T16:40:23,7,23,False,3,1,LEFT,770,4.975,4.648,0.466,1.941,1.000,False,False,True,False,no_safe_side,56.638,FAIL
+2026-10-21T16:51:52,14,23,False,3,2,"LEFT,LEFT,LEFT",1863,15.910,21.722,6.044,0.924,1.000,False,True,False,False,360_body_clearance_stop,137.397,FAIL
+2026-10-21T17:02:57,14,23,False,3,2,"LEFT,LEFT,LEFT",1863,16.028,21.777,6.043,0.924,1.000,False,True,False,False,360_body_clearance_stop,136.055,FAIL
+2026-10-21T17:12:14,23,23,True,3,3,"LEFT,LEFT,LEFT",2693,16.014,20.140,14.065,1.060,1.000,False,False,False,False,goal_reached,200.504,PASS
