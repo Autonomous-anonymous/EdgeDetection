@@ -1,0 +1,4 @@
+timestamp,avoidance_directions,completed_avoidances,goal_reached,no_path_detected,aeb_interrupts,minimum_body_clearance_m,end_reason,duration_s,result
+2026-10-21T13:57:50,"RIGHT,LEFT",1,False,False,0,0.954,360_side_clearance_stop,30.998,FAIL
+2026-10-21T14:02:49,"RIGHT,LEFT",2,True,False,0,1.176,goal_reached,41.197,PASS
+2026-10-21T14:06:51,"RIGHT,LEFT",2,True,False,0,1.501,1.000,1.250,True,goal_reached,41.840,PASS
