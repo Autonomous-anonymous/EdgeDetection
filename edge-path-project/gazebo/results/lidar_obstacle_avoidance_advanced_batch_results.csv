@@ -1,0 +1,9 @@
+timestamp,scenario,expected_outcome,expected_avoidances,avoidance_count,completed_avoidances,directions,no_path_detected,aeb_interrupts,goal_reached,minimum_front_lidar_distance_m,minimum_body_clearance_m,required_body_clearance_m,safety_margin_ok,closest_obstacle,estimated_collision,end_reason,duration_s,result
+2026-10-21T13:28:49,small_far,GOAL,1,1,1,LEFT,False,0,True,8.923,2.446,1.000,True,small_obstacle,False,goal_reached,25.398,PASS
+2026-10-21T13:28:49,large_close,GOAL,1,1,1,LEFT,False,0,True,8.531,1.543,1.000,True,large_obstacle,False,goal_reached,23.387,PASS
+2026-10-21T13:28:49,two_obstacles,GOAL,2,2,2,"LEFT,LEFT",False,0,True,7.750,1.992,1.000,True,obstacle_two,False,goal_reached,38.268,PASS
+2026-10-21T13:28:49,blocked_both_sides,AEB_STOP,0,0,0,,False,0,False,,,1.000,False,,False,configuration_failed,0.000,FAIL
+2026-10-21T13:33:49,small_far,GOAL,1,1,1,LEFT,False,0,True,8.906,2.466,1.000,True,small_obstacle,False,goal_reached,25.511,PASS
+2026-10-21T13:33:49,large_close,GOAL,1,1,1,LEFT,False,0,True,8.601,1.557,1.000,True,large_obstacle,False,goal_reached,23.482,PASS
+2026-10-21T13:33:49,two_obstacles,GOAL,2,2,2,"LEFT,LEFT",False,0,True,7.773,1.990,1.000,True,obstacle_two,False,goal_reached,38.336,PASS
+2026-10-21T13:33:49,blocked_both_sides,AEB_STOP,0,0,0,,True,1,False,2.695,1.500,1.000,True,left_blocker,False,expected_aeb_stop,6.766,PASS
