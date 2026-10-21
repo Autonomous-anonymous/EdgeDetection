@@ -1,0 +1,2 @@
+timestamp,waypoints_reached,waypoints_total,goal_reached,camera_frames,max_abs_roll_deg,max_abs_pitch_deg,world_z_variation_m,planned_elevation_gain_m,minimum_front_lidar_range_m,terrain_safety_violation,emergency_front_stop,end_reason,duration_s,result
+2026-10-21T15:44:50,23,23,True,1500,9.645,20.462,14.067,14.823,7.178,False,False,goal_reached,107.650,PASS

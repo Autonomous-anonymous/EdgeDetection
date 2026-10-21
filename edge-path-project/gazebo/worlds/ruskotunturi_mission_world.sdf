@@ -1,0 +1,212 @@
+<?xml version="1.0"?>
+<sdf version="1.10">
+
+  <!--
+    Ruskotunturi autonomous mission - Phase 1 baseline.
+
+    Purpose:
+      1. Spawn the 360-degree LiDAR + camera vehicle near the lower area.
+      2. Follow a terrain-aware waypoint route to an upper area.
+      3. Verify the complete route before adding static and moving obstacles.
+
+    Artificial obstacles are intentionally NOT included in Phase 1.
+  -->
+
+  <world name="ruskotunturi_mission_world">
+
+    <physics name="1ms" type="ignored">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+    </physics>
+
+    <plugin
+      filename="gz-sim-physics-system"
+      name="gz::sim::systems::Physics">
+    </plugin>
+
+    <plugin
+      filename="gz-sim-user-commands-system"
+      name="gz::sim::systems::UserCommands">
+    </plugin>
+
+    <plugin
+      filename="gz-sim-scene-broadcaster-system"
+      name="gz::sim::systems::SceneBroadcaster">
+    </plugin>
+
+    <plugin
+      filename="gz-sim-sensors-system"
+      name="gz::sim::systems::Sensors">
+      <render_engine>ogre2</render_engine>
+    </plugin>
+
+    <scene>
+      <ambient>0.3 0.3 0.3 1</ambient>
+      <background>0.7 0.8 0.9 1</background>
+      <shadows>true</shadows>
+    </scene>
+
+    <light type="directional" name="sun">
+      <cast_shadows>true</cast_shadows>
+      <pose>0 0 50 0 0 0</pose>
+      <diffuse>0.8 0.8 0.8 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+      <direction>-0.5 0.1 -0.9</direction>
+    </light>
+
+    <include>
+      <uri>model://ruskotunturi_map</uri>
+      <name>ruskotunturi_map</name>
+      <pose>0 0 0 0 0 0</pose>
+    </include>
+
+    <!--
+      Lower-area mission start.
+      Start route heading is approximately -153.4 degrees.
+    -->
+    <include>
+      <uri>model://aeb_vehicle_360</uri>
+      <name>aeb_vehicle_360</name>
+      <pose>
+        20.000
+        38.000
+        -10.097
+        0 0 -2.6779450446
+      </pose>
+    </include>
+
+    <!--
+      Route markers are visual-only and have no collision geometry.
+      They are included only to make the planned mission route visible.
+    -->
+
+    <model name="mission_start_marker">
+      <static>true</static>
+      <pose>20.000 38.000 -10.067 0 0 0</pose>
+      <link name="marker_link">
+        <visual name="marker_visual">
+          <geometry>
+            <sphere>
+              <radius>0.45</radius>
+            </sphere>
+          </geometry>
+          <material>
+            <ambient>0.1 0.8 0.2 1</ambient>
+            <diffuse>0.1 0.8 0.2 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="mission_route_marker_04">
+      <static>true</static>
+      <pose>4.000 32.000 -9.693 0 0 0</pose>
+      <link name="marker_link">
+        <visual name="marker_visual">
+          <geometry>
+            <sphere>
+              <radius>0.28</radius>
+            </sphere>
+          </geometry>
+          <material>
+            <ambient>0.2 0.6 0.9 1</ambient>
+            <diffuse>0.2 0.6 0.9 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="mission_route_marker_08">
+      <static>true</static>
+      <pose>-12.000 20.000 -9.403 0 0 0</pose>
+      <link name="marker_link">
+        <visual name="marker_visual">
+          <geometry>
+            <sphere>
+              <radius>0.28</radius>
+            </sphere>
+          </geometry>
+          <material>
+            <ambient>0.2 0.6 0.9 1</ambient>
+            <diffuse>0.2 0.6 0.9 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="mission_route_marker_12">
+      <static>true</static>
+      <pose>-18.000 4.000 -6.338 0 0 0</pose>
+      <link name="marker_link">
+        <visual name="marker_visual">
+          <geometry>
+            <sphere>
+              <radius>0.28</radius>
+            </sphere>
+          </geometry>
+          <material>
+            <ambient>0.2 0.6 0.9 1</ambient>
+            <diffuse>0.2 0.6 0.9 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="mission_route_marker_16">
+      <static>true</static>
+      <pose>-26.000 -12.000 -2.677 0 0 0</pose>
+      <link name="marker_link">
+        <visual name="marker_visual">
+          <geometry>
+            <sphere>
+              <radius>0.28</radius>
+            </sphere>
+          </geometry>
+          <material>
+            <ambient>0.2 0.6 0.9 1</ambient>
+            <diffuse>0.2 0.6 0.9 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="mission_route_marker_20">
+      <static>true</static>
+      <pose>-38.000 -28.000 2.231 0 0 0</pose>
+      <link name="marker_link">
+        <visual name="marker_visual">
+          <geometry>
+            <sphere>
+              <radius>0.28</radius>
+            </sphere>
+          </geometry>
+          <material>
+            <ambient>0.2 0.6 0.9 1</ambient>
+            <diffuse>0.2 0.6 0.9 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="mission_goal_marker">
+      <static>true</static>
+      <pose>-40.000 -36.000 4.756 0 0 0</pose>
+      <link name="marker_link">
+        <visual name="marker_visual">
+          <geometry>
+            <sphere>
+              <radius>0.75</radius>
+            </sphere>
+          </geometry>
+          <material>
+            <ambient>0.9 0.7 0.05 1</ambient>
+            <diffuse>0.9 0.7 0.05 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+
+  </world>
+
+</sdf>
