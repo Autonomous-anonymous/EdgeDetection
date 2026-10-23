@@ -1,0 +1,7 @@
+timestamp,waypoint_progress,waypoints_total,goal_reached,expected_static_avoidances,expected_total_avoidances,completed_avoidances,moving_wait_events_completed,moving_overtakes_completed,crossing_event_started,slow_event_started,avoidance_directions,camera_frames,max_abs_roll_deg,max_abs_pitch_deg,world_z_variation_m,minimum_body_clearance_m,required_body_clearance_m,terrain_safety_violation,lidar_safety_violation,no_path_detected,emergency_stop,end_reason,duration_s,result
+2026-10-23T10:14:41,3,23,False,3,4,0,0,0,True,False,RIGHT,428,2.884,3.055,0.246,0.969,1.000,False,True,False,False,360_body_clearance_stop,31.252,FAIL
+2026-10-23T10:23:36,23,23,True,0,1,2,0,1,True,True,"LEFT,RIGHT",2450,18.996,21.182,14.069,1.661,1.000,False,False,False,False,goal_reached,181.211,FAIL
+2026-10-23T10:39:57,23,23,True,0,1,2,0,1,True,True,"LEFT,RIGHT",2470,18.911,21.125,14.063,1.661,1.000,False,False,False,False,goal_reached,181.894,FAIL
+2026-10-23T10:52:25,8,23,False,0,1,1,0,1,False,True,LEFT,904,4.855,5.015,0.593,2.078,1.000,False,False,False,False,sensor_timeout,66.881,FAIL
+2026-10-23T10:55:06,3,23,False,0,1,0,0,0,False,True,RIGHT,501,2.927,3.064,0.294,0.935,1.000,False,True,False,False,360_body_clearance_stop,35.155,FAIL
+2026-10-23T11:00:36,23,23,True,0,1,1,1,1,True,True,LEFT,2210,9.490,20.285,14.080,1.462,1.000,False,False,False,False,goal_reached,158.427,PASS
