@@ -1,0 +1,2 @@
+timestamp,result,duration_s,vehicle_a_goal,vehicle_b_goal,coordinator_wait_events,coordinator_release_events,conflict_overlap_violation,vehicle_a_min_clearance_m,vehicle_b_min_clearance_m,vehicle_a_max_roll_deg,vehicle_a_max_pitch_deg,vehicle_b_max_roll_deg,vehicle_b_max_pitch_deg,terrain_violation,lidar_violation,end_reason
+2026-10-23T12:50:06,PASS,28.217,True,True,1,1,False,4.981,5.725,3.647,3.409,2.859,3.413,False,False,both_goals_reached
