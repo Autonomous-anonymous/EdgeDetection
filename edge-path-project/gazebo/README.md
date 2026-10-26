@@ -1,6 +1,6 @@
 # Gazebo SIL baseline: v6.4
 
-This guide describes the current `sil-development` baseline. Earlier scripts,
+This guide describes the v6.4 SIL baseline merged into `main` from `sil-development`. Earlier scripts,
 worlds and CSV results remain available as development evidence. Mevea is outside
 this project's scope. Raspberry Pi/CAN integration is the later HIL stage.
 
@@ -79,7 +79,7 @@ simultaneous failure still needs an actuator-side timeout for a stronger design.
 
 ## Evidence and regression tests
 
-The operator reported a successful v6.4 Gazebo run with this summary:
+The committed v6.4 result CSV and matching trace document the operator's successful Gazebo run:
 
 | Metric | Reported value |
 | --- | --- |
@@ -97,10 +97,12 @@ The operator reported a successful v6.4 Gazebo run with this summary:
 | Maximum roll/pitch B | 9.972 / 20.273 degrees |
 | Terrain / LiDAR / loading-overlap violation | All NO |
 
-This is a transcription of the operator's shared console result, not a newly
-executed run. The original successful-run CSV and trace are still on the
-operator's PC and are not included in this commit. Preserve and commit those
-files separately; do not reconstruct raw telemetry from this summary.
+The original run evidence is now committed:
+
+- [Result CSV](results/ruskotunturi_final_sil_demo_v6_4_results.csv): PASS, no unmet checks, duration 184.108 s, minimum ground-truth clearance 1.902952 m.
+- [Matching per-step trace](results/final_sil_v6_4_trace_20261026T133025_782767.csv), named by the result CSV's `trace_file` field.
+
+The table rounds values for readability. These files document the operator's run; updating this guide did not execute a new simulation.
 
 New runs write into `results/`:
 

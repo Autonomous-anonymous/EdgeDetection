@@ -2,7 +2,7 @@
 
 This repository documents a staged autonomous-vehicle testing workflow developed with **CARLA** and **Gazebo Harmonic**. The project progresses from early perception and Automatic Emergency Braking (AEB) experiments to off-road sensor fusion, obstacle avoidance and multi-vehicle coordination in the Ruskotunturi environment.
 
-The current baseline on `sil-development` is the **v6.4 multi-vehicle Software-in-the-Loop (SIL) demo in Gazebo**. See [the current Gazebo SIL guide](edge-path-project/gazebo/README.md) for architecture, safety assumptions, validation evidence and startup instructions. The next planned stage is deployment toward **Hardware-in-the-Loop (HIL)** using a Raspberry Pi and CAN interface.
+The current SIL baseline on `main`, developed on `sil-development`, is the **v6.4 multi-vehicle Software-in-the-Loop (SIL) demo in Gazebo**. See [the current Gazebo SIL guide](edge-path-project/gazebo/README.md) for architecture, safety assumptions, validation evidence and startup instructions. The next planned stage is deployment toward **Hardware-in-the-Loop (HIL)** using a Raspberry Pi and CAN interface.
 
 ## Project goals
 
@@ -151,7 +151,9 @@ The earlier committed result files and the operator-reported v6.4 run include PA
 
 Earlier results remain in `edge-path-project/gazebo/results/ruskotunturi_final_sil_demo_results.csv`.
 
-The v6.4 controller writes `ruskotunturi_final_sil_demo_v6_4_results.csv` and `final_sil_v6_4_trace_*.csv` in the same directory. The successful run's original CSV and trace remain on the operator's PC and are not included in this commit; the reported summary is documented in the Gazebo SIL guide.
+The successful v6.4 run is committed as the [result CSV](edge-path-project/gazebo/results/ruskotunturi_final_sil_demo_v6_4_results.csv) and its [matching trace](edge-path-project/gazebo/results/final_sil_v6_4_trace_20261026T133025_782767.csv). The CSV records PASS in 184.108 s with 1.902952 m minimum ground-truth clearance. The [Gazebo SIL guide](edge-path-project/gazebo/README.md) summarizes the evidence and its scope.
+
+New runs write `ruskotunturi_final_sil_demo_v6_4_results.csv` and `final_sil_v6_4_trace_*.csv` in the same results directory.
 
 ## Running the final Gazebo SIL demo
 
@@ -254,7 +256,7 @@ edge-path-project/gazebo/results/   # Gazebo / Ruskotunturi SIL
 
 ## Next stage: HIL
 
-The next project stage is Hardware-in-the-Loop validation.
+The next project stage is Hardware-in-the-Loop validation on `hil-development`, starting from the verified SIL code and committed results. Branch synchronization establishes a starting point; it does not itself validate hardware operation.
 
 The intended architecture is:
 
