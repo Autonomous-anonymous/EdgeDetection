@@ -1,0 +1,143 @@
+<?xml version="1.0"?>
+<sdf version="1.10">
+  <!--
+    RUSKOTUNTURI FINAL SIL DEMO v6.0
+
+    CAMINO-style geometry: Vehicle A and Vehicle B start on the
+    same side of the map, approach a common merge at (-4,28),
+    then use the exact same validated baseline route to the
+    common summit loading zone at (-40,-36).
+
+    Vehicle A private branch contains a static orange obstacle
+    near (8,34). Camera + LiDAR fusion starts local avoidance.
+
+    Vehicle B private branch contains a scripted moving obstacle
+    crossing near (8,24). Vehicle B sees it only with local LiDAR.
+
+    Execution: controller + independent obstacle harness + command watchdog.
+    Geometry remains the original scenario; v6 validates conservative planar envelopes.
+
+    Coordinator:
+      * Vehicle A has merge priority.
+      * There is no dedicated waiting area.
+      * Vehicle B receives a dynamic velocity profile.
+      * B stops near the merge only if safe headway requires it.
+
+    Loading zone:
+      * Common summit loading zone at (-40,-36).
+      * Vehicle A visits first, dwells briefly, then exits toward
+        (-48,-36).
+      * Vehicle B then reaches the same loading zone.
+  -->
+
+  <world name="ruskotunturi_final_sil_demo_v6_world">
+    <physics name="1ms" type="ignored">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+    </physics>
+
+    <plugin filename="gz-sim-physics-system" name="gz::sim::systems::Physics"/>
+    <plugin filename="gz-sim-user-commands-system" name="gz::sim::systems::UserCommands"/>
+    <plugin filename="gz-sim-scene-broadcaster-system" name="gz::sim::systems::SceneBroadcaster"/>
+    <plugin filename="gz-sim-sensors-system" name="gz::sim::systems::Sensors">
+      <render_engine>ogre2</render_engine>
+    </plugin>
+
+    <scene>
+      <ambient>0.3 0.3 0.3 1</ambient>
+      <background>0.70 0.80 0.90 1</background>
+      <shadows>true</shadows>
+    </scene>
+
+    <light type="directional" name="sun">
+      <cast_shadows>true</cast_shadows>
+      <pose>0 0 60 0 0 0</pose>
+      <diffuse>0.8 0.8 0.8 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+      <direction>-0.5 0.1 -0.9</direction>
+    </light>
+
+    <include>
+      <uri>model://ruskotunturi_map</uri>
+      <name>ruskotunturi_map</name>
+      <pose>0 0 0 0 0 0</pose>
+    </include>
+
+    <include>
+      <uri>model://aeb_vehicle_360</uri>
+      <name>aeb_vehicle_360</name>
+      <pose>20.000 40.000 -10.181084 0 0 -2.6779450446</pose>
+    </include>
+
+    <include>
+      <uri>model://aeb_vehicle_360_b</uri>
+      <name>aeb_vehicle_360_b</name>
+      <pose>20.000 24.000 -9.417004 0 0 3.1415926536</pose>
+    </include>
+
+    <model name="final_static_obstacle">
+      <static>true</static>
+      <pose>8.0 34.0 -9.523325 0 0 0</pose>
+      <link name="body">
+        <collision name="collision">
+          <geometry><box><size>1.60 1.60 1.50</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>1.60 1.60 1.50</size></box></geometry>
+          <material>
+            <ambient>0.90 0.28 0.08 1</ambient>
+            <diffuse>0.90 0.28 0.08 1</diffuse>
+            <specular>0.10 0.10 0.10 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="final_moving_obstacle">
+      <static>true</static>
+      <pose>8.0 20.0 -8.490700 0 0 1.570796</pose>
+      <link name="body">
+        <collision name="collision">
+          <geometry><box><size>1.40 1.40 1.40</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>1.40 1.40 1.40</size></box></geometry>
+          <material>
+            <ambient>0.95 0.70 0.08 1</ambient>
+            <diffuse>0.95 0.70 0.08 1</diffuse>
+            <specular>0.10 0.10 0.10 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="merge_zone_marker">
+      <static>true</static>
+      <pose>-4.0 28.0 -10.106475 0 0 0</pose>
+      <link name="marker">
+        <visual name="visual">
+          <geometry><cylinder><radius>3.0</radius><length>0.05</length></cylinder></geometry>
+          <material>
+            <ambient>0.85 0.35 0.05 0.30</ambient>
+            <diffuse>0.85 0.35 0.05 0.30</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="loading_zone_marker">
+      <static>true</static>
+      <pose>-40.0 -36.0 4.345869 0 0 0</pose>
+      <link name="marker">
+        <visual name="visual">
+          <geometry><cylinder><radius>3.5</radius><length>0.05</length></cylinder></geometry>
+          <material>
+            <ambient>0.10 0.65 0.15 0.35</ambient>
+            <diffuse>0.10 0.65 0.15 0.35</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+  </world>
+</sdf>
+

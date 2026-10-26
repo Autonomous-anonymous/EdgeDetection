@@ -2,7 +2,7 @@
 
 This repository documents a staged autonomous-vehicle testing workflow developed with **CARLA** and **Gazebo Harmonic**. The project progresses from early perception and Automatic Emergency Braking (AEB) experiments to off-road sensor fusion, obstacle avoidance and multi-vehicle coordination in the Ruskotunturi environment.
 
-The current baseline is a **multi-vehicle Software-in-the-Loop (SIL) demo in Gazebo**. The next planned stage is deployment toward **Hardware-in-the-Loop (HIL)** using a Raspberry Pi and CAN interface.
+The current baseline on `sil-development` is the **v6.4 multi-vehicle Software-in-the-Loop (SIL) demo in Gazebo**. See [the current Gazebo SIL guide](edge-path-project/gazebo/README.md) for architecture, safety assumptions, validation evidence and startup instructions. The next planned stage is deployment toward **Hardware-in-the-Loop (HIL)** using a Raspberry Pi and CAN interface.
 
 ## Project goals
 
@@ -130,7 +130,7 @@ The merge is managed by a coordinator rather than a dedicated waiting area.
 - B receives merge permission after A creates sufficient headway.
 - After the merge, both vehicles follow the same route.
 
-Local safety remains independent of the coordinator. Each vehicle has a 360-degree LiDAR hard-safety layer that can stop the mission if the required body clearance is violated.
+A separate watchdog arbitrates vehicle commands. LiDAR checks and a conservative ground-truth planar-envelope oracle can stop the mission. These simulation safety mechanisms are not certified hardware safety systems.
 
 ### Final SIL safety requirement
 
@@ -138,7 +138,7 @@ Local safety remains independent of the coordinator. Each vehicle has a 360-degr
 Required body clearance: 1.00 m
 ```
 
-The final recorded runs include successful PASS executions with:
+The earlier committed result files and the operator-reported v6.4 run include PASS outcomes. The v6.4 run reported 184.11 s duration and 1.903 m minimum ground-truth clearance, with:
 
 - both vehicles completing their mission,
 - static avoidance completed,
@@ -149,11 +149,9 @@ The final recorded runs include successful PASS executions with:
 - no terrain safety violation,
 - no 360-degree LiDAR safety violation.
 
-The corresponding CSV is:
+Earlier results remain in `edge-path-project/gazebo/results/ruskotunturi_final_sil_demo_results.csv`.
 
-```text
-edge-path-project/gazebo/results/ruskotunturi_final_sil_demo_results.csv
-```
+The v6.4 controller writes `ruskotunturi_final_sil_demo_v6_4_results.csv` and `final_sil_v6_4_trace_*.csv` in the same directory. The successful run's original CSV and trace remain on the operator's PC and are not included in this commit; the reported summary is documented in the Gazebo SIL guide.
 
 ## Running the final Gazebo SIL demo
 
@@ -174,22 +172,22 @@ cd ~/edge-path-project-git
 Set the Gazebo model resource path:
 
 ```bash
-export GZ_SIM_RESOURCE_PATH="$HOME/edge-path-project-git/edge-path-project/gazebo/models:$GZ_SIM_RESOURCE_PATH"
+export GZ_SIM_RESOURCE_PATH="$PWD/edge-path-project/gazebo/models${GZ_SIM_RESOURCE_PATH:+:$GZ_SIM_RESOURCE_PATH}"
 ```
 
 Start the final Ruskotunturi world:
 
 ```bash
-gz sim edge-path-project/gazebo/worlds/ruskotunturi_final_sil_demo_world.sdf
+gz sim -r edge-path-project/gazebo/worlds/ruskotunturi_final_sil_demo_v6_world.sdf
 ```
 
-Press **Play** in Gazebo.
+Wait for the world to load. Close and reopen Gazebo for every trial; v6.4 verifies a fresh initial scene and does not request a full-world reset. Run only one demo at a time because vehicle topics are shared.
 
 Open a second WSL terminal and run:
 
 ```bash
 cd ~/edge-path-project-git
-python3 edge-path-project/gazebo/scripts/ruskotunturi_final_sil_demo.py
+python3 edge-path-project/gazebo/scripts/ruskotunturi_final_sil_demo_v6.py
 ```
 
 A successful run ends with:
@@ -197,6 +195,12 @@ A successful run ends with:
 ```text
 *** FINAL SIL DEMO COMPLETE ***
 RESULT: PASS
+```
+
+Run the transport-free regression checks from the repository root:
+
+```bash
+python3 -m unittest discover -s tests -p 'test_final_sil_v6.py' -v
 ```
 
 ## Repository structure
@@ -287,3 +291,4 @@ Planned HIL work includes:
 **Gazebo SIL:** implemented  
 **Ruskotunturi final multi-vehicle SIL demo:** PASS baseline available  
 **Raspberry Pi / CAN HIL:** next phase
+
