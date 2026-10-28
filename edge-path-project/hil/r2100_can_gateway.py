@@ -64,9 +64,15 @@ def unpack_can_frame(frame: bytes) -> tuple[int, bytes]:
 
 
 class R2100CANGateway:
-    def __init__(self, can_interface: str, udp_port: int) -> None:
+    def __init__(
+        self,
+        can_interface: str,
+        udp_port: int,
+        external_perception: bool = False,
+    ) -> None:
         self.can_interface = can_interface
         self.udp_port = udp_port
+        self.external_perception = external_perception
 
         self.can_sock = socket.socket(
             socket.AF_CAN,
@@ -147,10 +153,12 @@ class R2100CANGateway:
             CAN_ID_VEHICLE_SPEED,
             encode_vehicle_speed(float(speed_mps)),
         )
-        self.send_can(
-            CAN_ID_OBSTACLE_DISTANCE,
-            encode_obstacle_distance(distance),
-        )
+
+        if not self.external_perception:
+            self.send_can(
+                CAN_ID_OBSTACLE_DISTANCE,
+                encode_obstacle_distance(distance),
+            )
 
     def handle_can(self) -> None:
         frame = self.can_sock.recv(CAN_FRAME_SIZE)
@@ -197,10 +205,16 @@ class R2100CANGateway:
             else f"{self.last_distance_m:.3f} m"
         )
 
+        distance_label = (
+            "bridge_distance"
+            if self.external_perception
+            else "distance"
+        )
+
         print(
             f"UDP sensor age={age_text:>7s} | "
             f"speed={speed_text:>10s} | "
-            f"distance={distance_text:>12s} | "
+            f"{distance_label}={distance_text:>12s} | "
             f"brake={int(self.last_brake_active)} | "
             f"reason={brake_reason_text(self.last_brake_reason)} | "
             f"counter={self.last_brake_counter:3d} | "
@@ -216,6 +230,11 @@ class R2100CANGateway:
         print("========================================")
         print(f"CAN interface : {self.can_interface}")
         print(f"UDP listen    : 0.0.0.0:{self.udp_port}")
+        print(
+            "Perception    : "
+            + ("external (0x101 not transmitted)" if self.external_perception
+               else "gateway distance -> CAN 0x101")
+        )
         print()
         print("Waiting for Gazebo sensor packets. Ctrl+C stops.")
         print()
@@ -251,6 +270,11 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--can-interface", default="can0")
     parser.add_argument("--udp-port", type=int, default=15000)
+    parser.add_argument(
+        "--external-perception",
+        action="store_true",
+        help="do not transmit CAN 0x101; perception process owns that signal",
+    )
     return parser.parse_args()
 
 
@@ -259,6 +283,7 @@ def main() -> None:
     gateway = R2100CANGateway(
         can_interface=args.can_interface,
         udp_port=args.udp_port,
+        external_perception=args.external_perception,
     )
     gateway.run()
 
