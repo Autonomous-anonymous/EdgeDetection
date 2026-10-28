@@ -22,6 +22,7 @@ The physical bench connection remains:
 from __future__ import annotations
 
 import argparse
+import errno
 import math
 import select
 import socket
@@ -93,6 +94,28 @@ class R2100CANGateway:
         self.last_brake_counter = 0
 
         self.last_status_time = 0.0
+        self.can_tx_drop_count = 0
+
+    def send_can(self, can_id: int, data: bytes) -> bool:
+        try:
+            self.can_sock.send(
+                pack_can_frame(
+                    can_id,
+                    data,
+                )
+            )
+            return True
+
+        except OSError as exc:
+            if exc.errno in {
+                errno.ENOBUFS,
+                errno.EAGAIN,
+                errno.EWOULDBLOCK,
+            }:
+                self.can_tx_drop_count += 1
+                return False
+
+            raise
 
     def handle_udp(self) -> None:
         packet, peer = self.udp_sock.recvfrom(1024)
@@ -120,17 +143,13 @@ class R2100CANGateway:
         self.last_speed_mps = float(speed_mps)
         self.last_distance_m = distance
 
-        self.can_sock.send(
-            pack_can_frame(
-                CAN_ID_VEHICLE_SPEED,
-                encode_vehicle_speed(float(speed_mps)),
-            )
+        self.send_can(
+            CAN_ID_VEHICLE_SPEED,
+            encode_vehicle_speed(float(speed_mps)),
         )
-        self.can_sock.send(
-            pack_can_frame(
-                CAN_ID_OBSTACLE_DISTANCE,
-                encode_obstacle_distance(distance),
-            )
+        self.send_can(
+            CAN_ID_OBSTACLE_DISTANCE,
+            encode_obstacle_distance(distance),
         )
 
     def handle_can(self) -> None:
@@ -184,7 +203,8 @@ class R2100CANGateway:
             f"distance={distance_text:>12s} | "
             f"brake={int(self.last_brake_active)} | "
             f"reason={brake_reason_text(self.last_brake_reason)} | "
-            f"counter={self.last_brake_counter:3d}"
+            f"counter={self.last_brake_counter:3d} | "
+            f"can_tx_drops={self.can_tx_drop_count}"
         )
 
         self.last_status_time = now
