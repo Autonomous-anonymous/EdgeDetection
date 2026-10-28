@@ -29,11 +29,11 @@ from gz.msgs10.odometry_pb2 import Odometry
 from gz.msgs10.twist_pb2 import Twist
 from gz.transport13 import Node
 
-LIDAR_TOPIC = "/aeb/lidar"
-ODOMETRY_TOPIC = "/model/aeb_vehicle/odometry"
-CMD_VEL_TOPIC = "/model/aeb_vehicle/cmd_vel"
+DEFAULT_LIDAR_TOPIC = "/aeb/lidar"
+DEFAULT_ODOMETRY_TOPIC = "/model/aeb_vehicle/odometry"
+DEFAULT_CMD_VEL_TOPIC = "/model/aeb_vehicle/cmd_vel"
 
-TARGET_SPEED_MPS = 2.0
+DEFAULT_TARGET_SPEED_MPS = 2.0
 FRONT_HALF_ANGLE_DEG = 10.0
 
 SENSOR_TIMEOUT_SECONDS = 0.50
@@ -56,14 +56,31 @@ BRAKE_REASON_TEXT = {
 
 
 class GazeboHILBridge:
-    def __init__(self, r2100_host: str, udp_port: int) -> None:
+    def __init__(
+        self,
+        r2100_host: str,
+        udp_port: int,
+        lidar_topic: str,
+        odometry_topic: str,
+        cmd_vel_topic: str,
+        target_speed_mps: float,
+        goal_x_m: float | None = None,
+        goal_tolerance_m: float = 0.40,
+    ) -> None:
         self.r2100_host = r2100_host
         self.udp_port = udp_port
+        self.lidar_topic = lidar_topic
+        self.odometry_topic = odometry_topic
+        self.cmd_vel_topic = cmd_vel_topic
+        self.target_speed_mps = target_speed_mps
+        self.goal_x_m = goal_x_m
+        self.goal_tolerance_m = goal_tolerance_m
 
         self.node = Node()
         self.lock = threading.Lock()
 
         self.speed_mps: float | None = None
+        self.position_x_m: float | None = None
         self.front_distance_m: float | None = None
         self.last_lidar_time: float | None = None
         self.last_odometry_time: float | None = None
@@ -77,28 +94,28 @@ class GazeboHILBridge:
         self.last_print_time = 0.0
 
         self.cmd_publisher = self.node.advertise(
-            CMD_VEL_TOPIC,
+            self.cmd_vel_topic,
             Twist,
         )
 
         lidar_ok = self.node.subscribe(
             LaserScan,
-            LIDAR_TOPIC,
+            self.lidar_topic,
             self.lidar_callback,
         )
         odometry_ok = self.node.subscribe(
             Odometry,
-            ODOMETRY_TOPIC,
+            self.odometry_topic,
             self.odometry_callback,
         )
 
         if not lidar_ok:
             raise RuntimeError(
-                f"failed to subscribe to LiDAR topic: {LIDAR_TOPIC}"
+                f"failed to subscribe to LiDAR topic: {self.lidar_topic}"
             )
         if not odometry_ok:
             raise RuntimeError(
-                f"failed to subscribe to odometry topic: {ODOMETRY_TOPIC}"
+                f"failed to subscribe to odometry topic: {self.odometry_topic}"
             )
 
         self.udp_sock = socket.socket(
@@ -135,10 +152,12 @@ class GazeboHILBridge:
 
     def odometry_callback(self, msg: Odometry) -> None:
         speed = abs(msg.twist.linear.x)
+        position_x = msg.pose.position.x
         now = time.monotonic()
 
         with self.lock:
             self.speed_mps = speed
+            self.position_x_m = position_x
             self.last_odometry_time = now
 
     def sensors_fresh(self, now: float) -> bool:
@@ -247,10 +266,18 @@ class GazeboHILBridge:
         print(" GAZEBO <-> R2100 HIL BRIDGE")
         print("========================================")
         print(f"R2100 gateway : {self.r2100_host}:{self.udp_port}")
-        print(f"LiDAR topic   : {LIDAR_TOPIC}")
-        print(f"Odometry      : {ODOMETRY_TOPIC}")
-        print(f"Command       : {CMD_VEL_TOPIC}")
-        print(f"Drive speed   : {TARGET_SPEED_MPS:.2f} m/s")
+        print(f"LiDAR topic   : {self.lidar_topic}")
+        print(f"Odometry      : {self.odometry_topic}")
+        print(f"Command       : {self.cmd_vel_topic}")
+        print(f"Drive speed   : {self.target_speed_mps:.2f} m/s")
+        if self.goal_x_m is None:
+            print("Goal stop     : disabled")
+        else:
+            print(
+                f"Goal stop     : x >= "
+                f"{self.goal_x_m - self.goal_tolerance_m:.2f} m "
+                f"(goal={self.goal_x_m:.2f}, tol={self.goal_tolerance_m:.2f})"
+            )
         print()
         print("Fail-safe: stale sensors or stale R2100 brake response -> STOP")
         print("Ctrl+C stops.")
@@ -288,7 +315,24 @@ class GazeboHILBridge:
                         f"unknown_{self.brake_reason}",
                     )
 
-                command_speed = 0.0 if effective_brake else TARGET_SPEED_MPS
+                with self.lock:
+                    position_x = self.position_x_m
+
+                goal_reached = (
+                    self.goal_x_m is not None
+                    and position_x is not None
+                    and position_x
+                    >= self.goal_x_m - self.goal_tolerance_m
+                )
+
+                if effective_brake:
+                    command_speed = 0.0
+                elif goal_reached:
+                    command_speed = 0.0
+                    state_reason = "goal_reached"
+                else:
+                    command_speed = self.target_speed_mps
+
                 self.publish_speed(command_speed)
 
                 self.print_status(
@@ -323,6 +367,35 @@ def parse_args() -> argparse.Namespace:
         help="R2100 IP address or hostname reachable from the Gazebo PC",
     )
     parser.add_argument("--udp-port", type=int, default=15000)
+    parser.add_argument(
+        "--lidar-topic",
+        default=DEFAULT_LIDAR_TOPIC,
+    )
+    parser.add_argument(
+        "--odometry-topic",
+        default=DEFAULT_ODOMETRY_TOPIC,
+    )
+    parser.add_argument(
+        "--cmd-topic",
+        default=DEFAULT_CMD_VEL_TOPIC,
+    )
+    parser.add_argument(
+        "--target-speed",
+        type=float,
+        default=DEFAULT_TARGET_SPEED_MPS,
+    )
+    parser.add_argument(
+        "--goal-x",
+        type=float,
+        default=None,
+        help="stop when odometry x reaches this goal (disabled by default)",
+    )
+    parser.add_argument(
+        "--goal-tolerance",
+        type=float,
+        default=0.40,
+        help="goal x tolerance in metres (default: 0.40)",
+    )
     return parser.parse_args()
 
 
@@ -331,6 +404,12 @@ def main() -> None:
     bridge = GazeboHILBridge(
         r2100_host=args.r2100_host,
         udp_port=args.udp_port,
+        lidar_topic=args.lidar_topic,
+        odometry_topic=args.odometry_topic,
+        cmd_vel_topic=args.cmd_topic,
+        target_speed_mps=args.target_speed,
+        goal_x_m=args.goal_x,
+        goal_tolerance_m=args.goal_tolerance,
     )
     bridge.run()
 
