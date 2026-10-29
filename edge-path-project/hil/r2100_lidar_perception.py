@@ -29,6 +29,11 @@ DEFAULT_PORT = 15010
 DEFAULT_CAN_INTERFACE = "can0"
 
 MAGIC = b"HILR"
+CHUNK_MAGIC = b"HILC"
+
+# magic, sequence, angle_min, angle_step, range_min, range_max,
+# total_beams, start_index, chunk_beams
+CHUNK_HEADER = struct.Struct("!4sIffffHHH")
 
 # magic, sequence, angle_min, angle_step, range_min, range_max, count
 HEADER = struct.Struct("!4sIffffH")
@@ -36,10 +41,38 @@ HEADER = struct.Struct("!4sIffffH")
 INVALID_RANGE_MM = 0xFFFF
 
 FRONT_HALF_ANGLE_DEG = 10.0
+
+# LiDAR is roof-centred. Convert sensor range to clearance from the
+# physical vehicle body before transmitting CAN 0x101.
+VEHICLE_HALF_LENGTH_M = 1.30
+VEHICLE_HALF_WIDTH_M = 0.60
 SENSOR_TIMEOUT_SECONDS = 0.50
 PRINT_INTERVAL_SECONDS = 1.0
 
 CAN_FRAME_FORMAT = "=IB3x8s"
+
+
+
+def body_radius_for_ray(angle_rad: float) -> float:
+    cos_a = abs(math.cos(angle_rad))
+    sin_a = abs(math.sin(angle_rad))
+
+    candidates = []
+
+    if cos_a > 1e-9:
+        candidates.append(
+            VEHICLE_HALF_LENGTH_M / cos_a
+        )
+
+    if sin_a > 1e-9:
+        candidates.append(
+            VEHICLE_HALF_WIDTH_M / sin_a
+        )
+
+    if not candidates:
+        return 0.0
+
+    return min(candidates)
 
 
 def pack_can_frame(can_id: int, data: bytes) -> bytes:
@@ -88,6 +121,13 @@ class LidarPerceptionCAN:
         self.last_print_time = time.monotonic()
         self.stale_reported = False
 
+        # HIL-9: reassembly state for chunked LiDAR scans.
+        self.chunk_sequence = None
+        self.chunk_meta = None
+        self.chunk_ranges = None
+        self.chunk_received = None
+        self.chunk_received_count = 0
+
     def send_distance_can(
         self,
         distance_m: float | None,
@@ -114,7 +154,7 @@ class LidarPerceptionCAN:
 
             raise
 
-    def process_packet(self, packet: bytes) -> None:
+    def process_legacy_packet(self, packet: bytes) -> None:
         if len(packet) < HEADER.size:
             print(f"DROP: packet too short ({len(packet)} bytes)")
             return
@@ -178,7 +218,14 @@ class LidarPerceptionCAN:
             if distance_m > range_max:
                 continue
 
-            front_ranges_m.append(distance_m)
+            body_radius_m = body_radius_for_ray(angle)
+
+            clearance_m = max(
+                0.0,
+                distance_m - body_radius_m,
+            )
+
+            front_ranges_m.append(clearance_m)
 
         front_distance_m = (
             min(front_ranges_m)
@@ -222,6 +269,162 @@ class LidarPerceptionCAN:
 
             self.rx_count = 0
             self.last_print_time = now
+
+    def process_chunk_packet(self, packet: bytes) -> None:
+        if len(packet) < CHUNK_HEADER.size:
+            print(
+                f"DROP: chunk packet too short "
+                f"({len(packet)} bytes)"
+            )
+            return
+
+        (
+            magic,
+            sequence,
+            angle_min,
+            angle_step,
+            range_min,
+            range_max,
+            total_beams,
+            start_index,
+            chunk_beams,
+        ) = CHUNK_HEADER.unpack_from(packet)
+
+        if magic != CHUNK_MAGIC:
+            print(f"DROP: wrong chunk magic {magic!r}")
+            return
+
+        if total_beams == 0 or total_beams > 4096:
+            print(
+                f"DROP: invalid total beam count "
+                f"{total_beams}"
+            )
+            return
+
+        if chunk_beams == 0:
+            print("DROP: empty LiDAR chunk")
+            return
+
+        if start_index + chunk_beams > total_beams:
+            print(
+                f"DROP: invalid chunk range "
+                f"start={start_index} "
+                f"count={chunk_beams} "
+                f"total={total_beams}"
+            )
+            return
+
+        expected_size = (
+            CHUNK_HEADER.size
+            + chunk_beams * 2
+        )
+
+        if len(packet) != expected_size:
+            print(
+                f"DROP: wrong chunk size "
+                f"got={len(packet)} "
+                f"expected={expected_size}"
+            )
+            return
+
+        chunk_ranges = struct.unpack_from(
+            f"!{chunk_beams}H",
+            packet,
+            CHUNK_HEADER.size,
+        )
+
+        meta = (
+            angle_min,
+            angle_step,
+            range_min,
+            range_max,
+            total_beams,
+        )
+
+        if (
+            self.chunk_sequence != sequence
+            or self.chunk_meta != meta
+        ):
+            self.chunk_sequence = sequence
+            self.chunk_meta = meta
+            self.chunk_ranges = [None] * total_beams
+            self.chunk_received = bytearray(total_beams)
+            self.chunk_received_count = 0
+
+        assert self.chunk_ranges is not None
+        assert self.chunk_received is not None
+
+        for offset, distance_mm in enumerate(
+            chunk_ranges
+        ):
+            index = start_index + offset
+
+            if not self.chunk_received[index]:
+                self.chunk_ranges[index] = distance_mm
+                self.chunk_received[index] = 1
+                self.chunk_received_count += 1
+
+        if self.chunk_received_count != total_beams:
+            return
+
+        if any(
+            value is None
+            for value in self.chunk_ranges
+        ):
+            print(
+                f"DROP: incomplete reassembly "
+                f"seq={sequence}"
+            )
+            return
+
+        ranges_mm = list(self.chunk_ranges)
+
+        # Clear reassembly state before processing the
+        # completed scan.
+        self.chunk_sequence = None
+        self.chunk_meta = None
+        self.chunk_ranges = None
+        self.chunk_received = None
+        self.chunk_received_count = 0
+
+        legacy_header = HEADER.pack(
+            MAGIC,
+            sequence,
+            angle_min,
+            angle_step,
+            range_min,
+            range_max,
+            total_beams,
+        )
+
+        payload = struct.pack(
+            f"!{total_beams}H",
+            *ranges_mm,
+        )
+
+        self.process_legacy_packet(
+            legacy_header + payload
+        )
+
+    def process_packet(self, packet: bytes) -> None:
+        if len(packet) < 4:
+            print(
+                f"DROP: packet too short "
+                f"({len(packet)} bytes)"
+            )
+            return
+
+        magic = packet[:4]
+
+        if magic == MAGIC:
+            self.process_legacy_packet(packet)
+            return
+
+        if magic == CHUNK_MAGIC:
+            self.process_chunk_packet(packet)
+            return
+
+        print(f"DROP: unknown packet magic {magic!r}")
 
     def check_timeout(self) -> None:
         if self.last_packet_time is None:
