@@ -19,14 +19,11 @@ import socket
 import struct
 import time
 
-from can_protocol import (
-    CAN_ID_OBSTACLE_DISTANCE,
-    encode_obstacle_distance,
-)
+from can_protocol import encode_obstacle_distance
+from signal_mapping import DEFAULT_CONFIG_PATH, load_signal_mapping
 
 
 DEFAULT_PORT = 15010
-DEFAULT_CAN_INTERFACE = "can0"
 
 MAGIC = b"HILR"
 CHUNK_MAGIC = b"HILC"
@@ -92,9 +89,15 @@ class LidarPerceptionCAN:
         self,
         port: int,
         can_interface: str,
+        distance_can_id: int,
+        mapping_profile: str,
+        mapping_bitrate: int,
     ) -> None:
         self.port = port
         self.can_interface = can_interface
+        self.distance_can_id = distance_can_id
+        self.mapping_profile = mapping_profile
+        self.mapping_bitrate = mapping_bitrate
 
         self.sock = socket.socket(
             socket.AF_INET,
@@ -137,7 +140,7 @@ class LidarPerceptionCAN:
         try:
             self.can_sock.send(
                 pack_can_frame(
-                    CAN_ID_OBSTACLE_DISTANCE,
+                    self.distance_can_id,
                     data,
                 )
             )
@@ -262,7 +265,7 @@ class LidarPerceptionCAN:
                 f"beams={count:3d} | "
                 f"sector={sector_beams:2d} | "
                 f"front={distance_text:>9s} | "
-                f"CAN=0x{CAN_ID_OBSTACLE_DISTANCE:03X} | "
+                f"CAN=0x{self.distance_can_id:03X} | "
                 f"rate={rate_hz:4.1f} Hz | "
                 f"can_tx_drops={self.can_tx_drop_count}"
             )
@@ -451,15 +454,17 @@ class LidarPerceptionCAN:
         print("========================================")
         print(" R2100 LIDAR PERCEPTION -> CAN")
         print("========================================")
-        print(f"UDP port      : {self.port}")
-        print(f"CAN interface : {self.can_interface}")
+        print(f"Mapping profile  : {self.mapping_profile}")
+        print(f"UDP port         : {self.port}")
+        print(f"CAN interface    : {self.can_interface}")
+        print(f"Expected bitrate : {self.mapping_bitrate}")
         print(
             f"Front sector  : "
             f"+/-{FRONT_HALF_ANGLE_DEG:.1f} deg"
         )
         print(
-            f"CAN output    : "
-            f"0x{CAN_ID_OBSTACLE_DISTANCE:03X}"
+            f"CAN output       : "
+            f"0x{self.distance_can_id:03X}"
         )
         print()
         print("Ctrl+C lopettaa.")
@@ -486,6 +491,12 @@ def main() -> None:
     parser = argparse.ArgumentParser()
 
     parser.add_argument(
+        "--config",
+        default=str(DEFAULT_CONFIG_PATH),
+        help="path to HIL signal mapping JSON",
+    )
+
+    parser.add_argument(
         "--port",
         type=int,
         default=DEFAULT_PORT,
@@ -493,14 +504,27 @@ def main() -> None:
 
     parser.add_argument(
         "--can-interface",
-        default=DEFAULT_CAN_INTERFACE,
+        default=None,
+        help="override perception CAN interface from mapping",
     )
 
     args = parser.parse_args()
 
+    mapping = load_signal_mapping(args.config)
+    distance_signal = mapping.signal("obstacle_distance")
+
+    can_interface = (
+        args.can_interface
+        if args.can_interface is not None
+        else mapping.can.gateway_interface
+    )
+
     perception = LidarPerceptionCAN(
         port=args.port,
-        can_interface=args.can_interface,
+        can_interface=can_interface,
+        distance_can_id=distance_signal.can_id,
+        mapping_profile=mapping.profile,
+        mapping_bitrate=mapping.can.bitrate,
     )
 
     perception.run()

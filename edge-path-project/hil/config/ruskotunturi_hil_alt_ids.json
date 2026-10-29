@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "profile": "ruskotunturi_hil_alt_ids",
+  "can": {
+    "bitrate": 500000,
+    "gateway_interface": "can0",
+    "controller_interface": "can1"
+  },
+  "signals": {
+    "vehicle_speed": {
+      "can_id": "0x110",
+      "direction": "simulation_to_controller",
+      "source": "gazebo.vehicle_b.odometry.speed",
+      "encoding": "uint16_le",
+      "scale": 0.01,
+      "unit": "m/s"
+    },
+    "obstacle_distance": {
+      "can_id": "0x111",
+      "direction": "perception_to_controller",
+      "source": "r2100.perception.front_clearance",
+      "encoding": "uint16_le",
+      "scale": 0.001,
+      "unit": "m",
+      "no_value_raw": 65535
+    },
+    "brake_command": {
+      "can_id": "0x210",
+      "direction": "controller_to_simulation",
+      "source": "r2100.aeb.brake_command",
+      "encoding": "brake_command_v1"
+    }
+  }
+}
