@@ -2,3 +2,7 @@ __pycache__/
 *.py[cod]
 *:Zone.Identifier
 /FINAL_SIL*.md
+
+# Generated HIL-10 test results
+edge-path-project/gazebo/results/hil10/*.csv
+edge-path-project/gazebo/results/hil10/*.json

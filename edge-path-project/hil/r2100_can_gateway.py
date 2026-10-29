@@ -30,14 +30,12 @@ import struct
 import time
 
 from can_protocol import (
-    CAN_ID_BRAKE_COMMAND,
-    CAN_ID_OBSTACLE_DISTANCE,
-    CAN_ID_VEHICLE_SPEED,
     brake_reason_text,
     decode_brake_command,
     encode_obstacle_distance,
     encode_vehicle_speed,
 )
+from signal_mapping import DEFAULT_CONFIG_PATH, load_signal_mapping
 
 CAN_FRAME_FORMAT = "=IB3x8s"
 CAN_FRAME_SIZE = struct.calcsize(CAN_FRAME_FORMAT)
@@ -68,10 +66,20 @@ class R2100CANGateway:
         self,
         can_interface: str,
         udp_port: int,
+        speed_can_id: int,
+        distance_can_id: int,
+        brake_can_id: int,
+        mapping_profile: str,
+        mapping_bitrate: int,
         external_perception: bool = False,
     ) -> None:
         self.can_interface = can_interface
         self.udp_port = udp_port
+        self.speed_can_id = speed_can_id
+        self.distance_can_id = distance_can_id
+        self.brake_can_id = brake_can_id
+        self.mapping_profile = mapping_profile
+        self.mapping_bitrate = mapping_bitrate
         self.external_perception = external_perception
 
         self.can_sock = socket.socket(
@@ -150,13 +158,13 @@ class R2100CANGateway:
         self.last_distance_m = distance
 
         self.send_can(
-            CAN_ID_VEHICLE_SPEED,
+            self.speed_can_id,
             encode_vehicle_speed(float(speed_mps)),
         )
 
         if not self.external_perception:
             self.send_can(
-                CAN_ID_OBSTACLE_DISTANCE,
+                self.distance_can_id,
                 encode_obstacle_distance(distance),
             )
 
@@ -164,7 +172,7 @@ class R2100CANGateway:
         frame = self.can_sock.recv(CAN_FRAME_SIZE)
         can_id, data = unpack_can_frame(frame)
 
-        if can_id != CAN_ID_BRAKE_COMMAND or len(data) != 8:
+        if can_id != self.brake_can_id or len(data) != 8:
             return
 
         active, reason, counter = decode_brake_command(data)
@@ -228,12 +236,23 @@ class R2100CANGateway:
         print("========================================")
         print(" R2100 HIL CAN GATEWAY")
         print("========================================")
-        print(f"CAN interface : {self.can_interface}")
-        print(f"UDP listen    : 0.0.0.0:{self.udp_port}")
+        print(f"Mapping profile  : {self.mapping_profile}")
+        print(f"CAN interface    : {self.can_interface}")
+        print(f"Expected bitrate : {self.mapping_bitrate}")
+        print(f"Speed CAN ID     : 0x{self.speed_can_id:03X}")
+        print(f"Distance CAN ID  : 0x{self.distance_can_id:03X}")
+        print(f"Brake CAN ID     : 0x{self.brake_can_id:03X}")
+        print(f"UDP listen       : 0.0.0.0:{self.udp_port}")
         print(
-            "Perception    : "
-            + ("external (0x101 not transmitted)" if self.external_perception
-               else "gateway distance -> CAN 0x101")
+            "Perception       : "
+            + (
+                f"external (0x{self.distance_can_id:03X} not transmitted)"
+                if self.external_perception
+                else (
+                    "gateway distance -> "
+                    f"CAN 0x{self.distance_can_id:03X}"
+                )
+            )
         )
         print()
         print("Waiting for Gazebo sensor packets. Ctrl+C stops.")
@@ -268,21 +287,48 @@ class R2100CANGateway:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--can-interface", default="can0")
+    parser.add_argument(
+        "--config",
+        default=str(DEFAULT_CONFIG_PATH),
+        help="path to HIL signal mapping JSON",
+    )
+    parser.add_argument(
+        "--can-interface",
+        default=None,
+        help="override gateway CAN interface from mapping",
+    )
     parser.add_argument("--udp-port", type=int, default=15000)
     parser.add_argument(
         "--external-perception",
         action="store_true",
-        help="do not transmit CAN 0x101; perception process owns that signal",
+        help="do not transmit configured obstacle-distance CAN signal",
     )
     return parser.parse_args()
 
 
 def main() -> None:
     args = parse_args()
+
+    mapping = load_signal_mapping(args.config)
+
+    speed_signal = mapping.signal("vehicle_speed")
+    distance_signal = mapping.signal("obstacle_distance")
+    brake_signal = mapping.signal("brake_command")
+
+    can_interface = (
+        args.can_interface
+        if args.can_interface is not None
+        else mapping.can.gateway_interface
+    )
+
     gateway = R2100CANGateway(
-        can_interface=args.can_interface,
+        can_interface=can_interface,
         udp_port=args.udp_port,
+        speed_can_id=speed_signal.can_id,
+        distance_can_id=distance_signal.can_id,
+        brake_can_id=brake_signal.can_id,
+        mapping_profile=mapping.profile,
+        mapping_bitrate=mapping.can.bitrate,
         external_perception=args.external_perception,
     )
     gateway.run()

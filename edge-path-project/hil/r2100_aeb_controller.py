@@ -18,6 +18,7 @@ The AEB thresholds match the current Gazebo SIL AEB baseline.
 
 from __future__ import annotations
 
+import argparse
 import errno
 import math
 import select
@@ -30,16 +31,12 @@ from can_protocol import (
     BRAKE_REASON_NONE,
     BRAKE_REASON_SENSOR_TIMEOUT,
     BRAKE_REASON_TTC,
-    CAN_ID_BRAKE_COMMAND,
-    CAN_ID_OBSTACLE_DISTANCE,
-    CAN_ID_VEHICLE_SPEED,
     brake_reason_text,
     decode_obstacle_distance,
     decode_vehicle_speed,
     encode_brake_command,
 )
-
-CAN_INTERFACE = "can1"
+from signal_mapping import DEFAULT_CONFIG_PATH, load_signal_mapping
 
 TTC_THRESHOLD_SECONDS = 1.7
 MIN_SPEED_FOR_TTC_MPS = 0.10
@@ -66,8 +63,21 @@ def unpack_can_frame(frame: bytes) -> tuple[int, bytes]:
 
 
 class R2100AEBController:
-    def __init__(self, interface: str = CAN_INTERFACE) -> None:
+    def __init__(
+        self,
+        interface: str,
+        speed_can_id: int,
+        distance_can_id: int,
+        brake_can_id: int,
+        mapping_profile: str,
+        mapping_bitrate: int,
+    ) -> None:
         self.interface = interface
+        self.speed_can_id = speed_can_id
+        self.distance_can_id = distance_can_id
+        self.brake_can_id = brake_can_id
+        self.mapping_profile = mapping_profile
+        self.mapping_bitrate = mapping_bitrate
 
         self.sock = socket.socket(
             socket.AF_CAN,
@@ -93,13 +103,13 @@ class R2100AEBController:
     def handle_frame(self, frame: bytes, now: float) -> None:
         can_id, data = unpack_can_frame(frame)
 
-        if can_id == CAN_ID_VEHICLE_SPEED:
+        if can_id == self.speed_can_id:
             if len(data) != 8:
                 return
             self.speed_mps = decode_vehicle_speed(data)
             self.last_speed_time = now
 
-        elif can_id == CAN_ID_OBSTACLE_DISTANCE:
+        elif can_id == self.distance_can_id:
             if len(data) != 8:
                 return
             self.front_distance_m = decode_obstacle_distance(data)
@@ -176,7 +186,7 @@ class R2100AEBController:
         try:
             self.sock.send(
                 pack_can_frame(
-                    CAN_ID_BRAKE_COMMAND,
+                    self.brake_can_id,
                     data,
                 )
             )
@@ -234,7 +244,12 @@ class R2100AEBController:
         print("========================================")
         print(" R2100 HIL AEB CONTROLLER")
         print("========================================")
+        print(f"Mapping profile    : {self.mapping_profile}")
         print(f"CAN interface      : {self.interface}")
+        print(f"Expected bitrate   : {self.mapping_bitrate}")
+        print(f"Speed CAN ID       : 0x{self.speed_can_id:03X}")
+        print(f"Distance CAN ID    : 0x{self.distance_can_id:03X}")
+        print(f"Brake CAN ID       : 0x{self.brake_can_id:03X}")
         print(f"TTC threshold      : {TTC_THRESHOLD_SECONDS:.2f} s")
         print(f"Emergency distance : {EMERGENCY_DISTANCE_M:.2f} m")
         print(f"Sensor timeout     : {SENSOR_TIMEOUT_SECONDS:.2f} s")
@@ -288,8 +303,44 @@ class R2100AEBController:
             print("Done.")
 
 
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--config",
+        default=str(DEFAULT_CONFIG_PATH),
+        help="path to HIL signal mapping JSON",
+    )
+    parser.add_argument(
+        "--can-interface",
+        default=None,
+        help="override controller CAN interface from mapping",
+    )
+    return parser.parse_args()
+
+
 def main() -> None:
-    controller = R2100AEBController()
+    args = parse_args()
+
+    mapping = load_signal_mapping(args.config)
+
+    speed_signal = mapping.signal("vehicle_speed")
+    distance_signal = mapping.signal("obstacle_distance")
+    brake_signal = mapping.signal("brake_command")
+
+    interface = (
+        args.can_interface
+        if args.can_interface is not None
+        else mapping.can.controller_interface
+    )
+
+    controller = R2100AEBController(
+        interface=interface,
+        speed_can_id=speed_signal.can_id,
+        distance_can_id=distance_signal.can_id,
+        brake_can_id=brake_signal.can_id,
+        mapping_profile=mapping.profile,
+        mapping_bitrate=mapping.can.bitrate,
+    )
     controller.run()
 
 
