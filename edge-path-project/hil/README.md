@@ -4,7 +4,7 @@ This directory documents the Hardware-in-the-Loop implementation used to extend 
 
 The embedded platform is a **Seeed Studio reComputer Industrial R2100**. Gazebo Harmonic runs in WSL and provides the virtual vehicles, terrain, LiDAR and odometry. The R2100 receives simulation data over UDP, maps the relevant signals onto physical CAN, executes the AEB decision, and returns the brake state to the simulator.
 
-The current validated Ruskotunturi milestone is **HIL-10**.
+The current validated Ruskotunturi milestone is **HIL-10**. The HIL path also includes a hardware-validated **Configurable Signal Mapping** work package for selecting the CAN identifiers and CAN interfaces from a shared configuration profile.
 
 This is a research and development setup, not a certified functional-safety implementation.
 
@@ -73,7 +73,11 @@ R2100 and transport components:
 
 ```text
 edge-path-project/hil/
+├── config/
+│   ├── ruskotunturi_hil.json
+│   └── ruskotunturi_hil_alt_ids.json
 ├── can_protocol.py
+├── signal_mapping.py
 ├── gazebo_hil_bridge.py
 ├── gazebo_lidar_sender.py
 ├── r2100_aeb_controller.py
@@ -105,12 +109,16 @@ edge-path-project/gazebo/scripts/
 └── ruskotunturi_hil9e_aeb_test.py
 ```
 
-The HIL-10 automated software tests are:
+The HIL-10 and signal-mapping automated software tests are:
 
 ```text
 tests/
 ├── test_hil10_integration.py
-└── test_hil10_safety.py
+├── test_hil10_safety.py
+├── test_signal_mapping.py
+├── test_signal_mapping_gateway.py
+├── test_signal_mapping_aeb.py
+└── test_signal_mapping_perception.py
 ```
 
 The dedicated AEB obstacle world is:
@@ -121,9 +129,9 @@ edge-path-project/gazebo/worlds/ruskotunturi_hil9e_aeb_world.sdf
 
 ## CAN protocol
 
-The protocol is defined in `can_protocol.py`.
+The protocol payload encoding is defined in `can_protocol.py`. The default CAN identifiers are provided by the active signal-mapping profile.
 
-| CAN ID | Signal | Encoding |
+| Default CAN ID | Signal | Encoding |
 | --- | --- | --- |
 | `0x100` | `VEHICLE_SPEED` | uint16 little-endian, 0.01 m/s per bit |
 | `0x101` | `OBSTACLE_DISTANCE` | uint16 little-endian millimetres, `0xFFFF` = no obstacle |
@@ -147,9 +155,89 @@ Sensor timeout       : 0.50 s
 Control period       : 0.05 s
 ```
 
+## Configurable Signal Mapping
+
+The active HIL CAN identifiers and interface selection are loaded from a shared JSON profile through `signal_mapping.py`. The same profile is consumed by:
+
+```text
+r2100_can_gateway.py
+r2100_lidar_perception.py
+r2100_aeb_controller.py
+```
+
+The normal Ruskotunturi profile is:
+
+```text
+edge-path-project/hil/config/ruskotunturi_hil.json
+```
+
+It defines the current bench mapping:
+
+```text
+gateway / perception interface : can0
+controller interface           : can1
+expected CAN bitrate           : 500000
+vehicle_speed CAN ID           : 0x100
+obstacle_distance CAN ID       : 0x101
+brake_command CAN ID           : 0x200
+```
+
+The profile also records signal direction, source, encoding and scale metadata. At the current implementation stage, CAN-ID and interface selection are active runtime configuration. Payload encoding and numeric scaling are still implemented by `can_protocol.py`; the corresponding profile metadata is validated but is not yet used to replace the codec implementation.
+
+The loader validates the profile before use, including required signals, classic 11-bit CAN-ID range, duplicate CAN identifiers, positive scale values, supported directions, interface names and schema version.
+
+Validate the default profile from the repository root with:
+
+```bash
+python3 edge-path-project/hil/signal_mapping.py
+```
+
+A second profile is committed specifically as proof that the runtime is not tied to the default identifiers:
+
+```text
+edge-path-project/hil/config/ruskotunturi_hil_alt_ids.json
+```
+
+It uses:
+
+```text
+vehicle_speed      : 0x110
+obstacle_distance  : 0x111
+brake_command      : 0x210
+```
+
+The alternate profile was tested on the same R2100 and physical CAN bench. All three R2100 processes were started with the alternate profile, `candump` confirmed physical traffic on `0x110`, `0x111` and `0x210`, and the unchanged HIL-10 route completed with:
+
+```text
+HIL-10 RESULT: PASS
+End reason: route_complete
+```
+
+The default profile was also regression-tested after all three runtime components were converted to shared configuration and completed the normal HIL-10 route with `route_complete` PASS.
+
+Dedicated offline tests cover the loader plus gateway, AEB and perception integration:
+
+```bash
+python3 -m unittest \
+  tests.test_signal_mapping \
+  tests.test_signal_mapping_gateway \
+  tests.test_signal_mapping_aeb \
+  tests.test_signal_mapping_perception \
+  -v
+```
+
+Validated result:
+
+```text
+Ran 12 tests
+OK
+```
+
+This work package therefore demonstrates that the active R2100 processes can share one mapping profile and that the physical CAN identifiers can be changed consistently without editing the Python runtime code.
+
 ## Important distance semantics
 
-`0x101 OBSTACLE_DISTANCE` is treated as **free clearance from the physical vehicle body to the obstacle**, not raw LiDAR-origin range.
+`OBSTACLE_DISTANCE` is treated as **free clearance from the physical vehicle body to the obstacle**, not raw LiDAR-origin range.
 
 Vehicle B uses a roof-centred 360-degree LiDAR. The body model used by HIL perception is:
 
@@ -159,7 +247,7 @@ vehicle half width  : 0.60 m
 front LiDAR sector  : +/-10 deg
 ```
 
-For each valid ray in the front sector, the R2100 perception calculates the vehicle-body radius in that direction and subtracts it from the LiDAR range before transmitting `0x101`.
+For each valid ray in the front sector, the R2100 perception calculates the vehicle-body radius in that direction and subtracts it from the LiDAR range before transmitting the configured obstacle-distance CAN signal.
 
 This correction is safety-critical for the current geometry. Using raw LiDAR-origin range caused TTC braking to trigger too late because the LiDAR is approximately 1.3 m behind the front edge of the vehicle body.
 
@@ -178,7 +266,7 @@ HILC = chunked scan
 
 For the 721-beam Ruskotunturi scan this normally produces two UDP packets per scan. `r2100_lidar_perception.py` reassembles the chunks before evaluating the front sector.
 
-If LiDAR updates become stale, the perception process deliberately stops transmitting `0x101`. The AEB controller then detects stale sensor data and enters the `sensor_timeout` fail-safe brake state.
+If LiDAR updates become stale, the perception process deliberately stops transmitting the obstacle-distance signal. The AEB controller then detects stale sensor data and enters the `sensor_timeout` fail-safe brake state.
 
 HIL-10 integrates the raw LiDAR sender into `ruskotunturi_hil10_b_test.py`; do **not** run a separate `gazebo_lidar_sender.py` during HIL-10 B tests.
 
@@ -292,6 +380,8 @@ gz sim -r \
 
 Restart all three R2100 processes between test runs because the AEB latch and test state must start cleanly.
 
+By default all three processes load `config/ruskotunturi_hil.json`. A different mapping profile can be selected with `--config` on each process.
+
 ```bash
 cd ~/EdgeDetection/edge-path-project/hil
 
@@ -309,6 +399,20 @@ HIL10_GATEWAY_PID=$!
 python3 -u r2100_aeb_controller.py \
   > "$HIL10_LOG_DIR/aeb.log" 2>&1 &
 HIL10_AEB_PID=$!
+```
+
+For the alternate-ID validation profile, pass the same config to all three processes:
+
+```bash
+python3 -u r2100_lidar_perception.py \
+  --config config/ruskotunturi_hil_alt_ids.json
+
+python3 -u r2100_can_gateway.py \
+  --config config/ruskotunturi_hil_alt_ids.json \
+  --external-perception
+
+python3 -u r2100_aeb_controller.py \
+  --config config/ruskotunturi_hil_alt_ids.json
 ```
 
 ### Terminal 3 - WSL / HIL-10
@@ -433,18 +537,9 @@ Each HIL-10 hardware run writes a CSV trace and a matching JSON summary under:
 edge-path-project/gazebo/results/hil10/
 ```
 
-The validated result set contains one evidence pair for each final scenario:
-
-```text
-route
-hybrid
-aeb
-fault-odometry
-fault-brake
-fault-lidar
-```
-
 The JSON records PASS/FAIL, end reason and scenario-specific verification data. The CSV records the time history used to evaluate freshness, commands, brake state and stop verification.
+
+Generated HIL-10 CSV/JSON outputs are ignored by default for new runs so repeated regression tests do not clutter version control. Existing committed evidence may remain in repository history, while significant hardware-validation conclusions are recorded in this README. Keep local CSV traces when time-series analysis is needed and JSON summaries when compact run metadata is useful.
 
 R2100 process logs should also be retained for failed or diagnostic runs.
 
@@ -472,7 +567,7 @@ A 721-beam raw LiDAR scan exceeded the reliable UDP payload size on the original
 
 ### 2. Sensor-origin distance is not body clearance
 
-The first intentional Ruskotunturi AEB test used raw LiDAR-origin range as `0x101`. Because the LiDAR is roof-centred, this did not represent physical bumper clearance. The R2100 perception was changed to transmit body-to-obstacle clearance instead.
+The first intentional Ruskotunturi AEB test used raw LiDAR-origin range as the obstacle-distance signal. Because the LiDAR is roof-centred, this did not represent physical bumper clearance. The R2100 perception was changed to transmit body-to-obstacle clearance instead.
 
 ### 3. Stale data must not be refreshed by cached values
 
@@ -494,12 +589,17 @@ The vehicle remained stopped after each injected fault.
 
 A physical CAN interruption can prevent the SocketCAN transmit queue from draining and produce `ENOBUFS`. The AEB controller must treat this as a transient transport failure rather than terminate. After hardening the send path, the controller survived the interruption and resumed normal operation when the physical CAN connection recovered.
 
+### 6. Shared signal mapping must be validated end to end
+
+Moving CAN IDs into a configuration file is only useful if every active producer and consumer uses the same profile. The gateway, LiDAR perception and AEB controller therefore load the same mapping. The alternate-ID hardware run verified the configured IDs on the physical CAN bus and completed the route without Python runtime edits.
+
 ## Scope and limitations
 
 The six automated HIL-10 fault/functional scenarios use controlled software-level injections around the real R2100 and physical CAN path. A separate manual test additionally validated physical CAN disconnection, bus-off/error-state behavior and recovery without restarting the R2100 processes.
 
 The current validation still does **not** cover every possible hardware or system failure. Examples of remaining follow-on targets include:
 
+- configuration-driven replacement of the current hardcoded payload scaling/codec implementation,
 - arbitrary packet delay/jitter profiles,
 - forced process termination,
 - PC power loss,
@@ -520,6 +620,7 @@ Check that:
 
 - the correct Gazebo world is running,
 - `can0` and `can1` are UP at 500 kbit/s,
+- all three R2100 processes were started with the same mapping profile,
 - the physical CAN H/L loop is connected,
 - the R2100 IP address is reachable,
 - no old HIL controller is still publishing Vehicle B commands,
@@ -538,13 +639,18 @@ CARLA experiments
  -> physical CAN HIL
  -> Ruskotunturi hybrid HIL-9
  -> HIL-10 freshness + communication fault validation
+ -> configurable signal mapping on the R2100 CAN chain
 ```
 
-Current HIL-10 evidence:
+Current evidence:
 
 ```text
-offline software validation        : 42 / 42 PASS
-hardware scenarios                 : 6 / 6 PASS
+HIL-10 offline software validation : 42 / 42 PASS
+HIL-10 hardware scenarios          : 6 / 6 PASS
+signal-mapping offline tests       : 12 / 12 PASS
+default mapping route regression   : PASS
+alternate CAN-ID route             : PASS
+alternate IDs on physical CAN      : 0x110 / 0x111 / 0x210 observed
 wired Ethernet transport           : validated
 physical CAN loop                  : validated
 manual CAN interruption + recovery : PASS
