@@ -1,10 +1,10 @@
 # Hardware-in-the-Loop (HIL) validation
 
-This directory contains the Hardware-in-the-Loop implementation used to extend the Gazebo SIL baseline onto a real embedded controller and physical CAN link.
+This directory documents the Hardware-in-the-Loop implementation used to extend the Gazebo SIL baseline onto a real embedded controller and physical CAN link.
 
-The current embedded platform is a **Seeed Studio reComputer Industrial R2100**. Gazebo Harmonic runs in WSL and provides the virtual vehicles, terrain, LiDAR and odometry. The R2100 receives simulation data over UDP, maps the relevant signals onto physical CAN, executes the AEB decision, and returns the brake state to the simulator.
+The embedded platform is a **Seeed Studio reComputer Industrial R2100**. Gazebo Harmonic runs in WSL and provides the virtual vehicles, terrain, LiDAR and odometry. The R2100 receives simulation data over UDP, maps the relevant signals onto physical CAN, executes the AEB decision, and returns the brake state to the simulator.
 
-The current validated Ruskotunturi milestone is **HIL-9**.
+The current validated Ruskotunturi milestone is **HIL-10**.
 
 This is a research and development setup, not a certified functional-safety implementation.
 
@@ -48,9 +48,28 @@ For the current bench setup:
 - Classic 11-bit CAN is used at **500 kbit/s**.
 - Vehicle B steering stays in the Phase 6 SIL route controller.
 - Vehicle B longitudinal AEB is evaluated on the R2100.
-- Vehicle A remains SIL-controlled in the full hybrid HIL-9D mission.
+- Vehicle A remains SIL-controlled in the full hybrid mission.
+
+## Network transport
+
+HIL-10 was validated with a direct wired Ethernet connection between the WSL/Windows host and the R2100. A private static subnet is recommended because it avoids dependence on WLAN, DHCP or an overlay network during timing-sensitive HIL tests.
+
+Example lab configuration:
+
+```text
+PC Ethernet       : 192.168.50.1/24
+R2100 Ethernet    : 192.168.50.2/24
+Default gateway   : not required
+DNS               : not required
+```
+
+These addresses are only an example private RFC1918 lab subnet. They are not a project requirement. Use the actual R2100 address in commands via `<R2100_IP>` or a shell variable.
+
+WLAN or another management connection may remain enabled in parallel, but HIL UDP traffic should use the selected wired R2100 address when a direct Ethernet link is available.
 
 ## Main files
+
+R2100 and transport components:
 
 ```text
 edge-path-project/hil/
@@ -60,10 +79,24 @@ edge-path-project/hil/
 ├── r2100_aeb_controller.py
 ├── r2100_can_gateway.py
 ├── r2100_lidar_perception.py
+├── HIL10_OFFLINE_VALIDATION.txt
+├── HIL10_TESTING_FI.md
+├── hil10_package_manifest.json
 └── README.md
 ```
 
-Ruskotunturi HIL validation scripts are under:
+HIL-10 runtime and validation scripts:
+
+```text
+edge-path-project/gazebo/scripts/
+├── hil10_preflight.py
+├── hil10_runtime.py
+├── hil10_safety.py
+├── ruskotunturi_hil10_b_test.py
+└── ruskotunturi_hil10_hybrid_test.py
+```
+
+Earlier HIL-9 validation scripts remain available:
 
 ```text
 edge-path-project/gazebo/scripts/
@@ -72,7 +105,15 @@ edge-path-project/gazebo/scripts/
 └── ruskotunturi_hil9e_aeb_test.py
 ```
 
-The dedicated HIL-9E obstacle world is:
+The HIL-10 automated software tests are:
+
+```text
+tests/
+├── test_hil10_integration.py
+└── test_hil10_safety.py
+```
+
+The dedicated AEB obstacle world is:
 
 ```text
 edge-path-project/gazebo/worlds/ruskotunturi_hil9e_aeb_world.sdf
@@ -80,7 +121,7 @@ edge-path-project/gazebo/worlds/ruskotunturi_hil9e_aeb_world.sdf
 
 ## CAN protocol
 
-The current protocol is defined in `can_protocol.py`.
+The protocol is defined in `can_protocol.py`.
 
 | CAN ID | Signal | Encoding |
 | --- | --- | --- |
@@ -110,7 +151,7 @@ Control period       : 0.05 s
 
 `0x101 OBSTACLE_DISTANCE` is treated as **free clearance from the physical vehicle body to the obstacle**, not raw LiDAR-origin range.
 
-Vehicle B uses a roof-centred 360-degree LiDAR. The body model used by the HIL perception is:
+Vehicle B uses a roof-centred 360-degree LiDAR. The body model used by HIL perception is:
 
 ```text
 vehicle half length : 1.30 m
@@ -120,11 +161,11 @@ front LiDAR sector  : +/-10 deg
 
 For each valid ray in the front sector, the R2100 perception calculates the vehicle-body radius in that direction and subtracts it from the LiDAR range before transmitting `0x101`.
 
-This correction is safety-critical for the current geometry. Using raw LiDAR-origin range caused the TTC brake to trigger too late because the LiDAR is approximately 1.3 m behind the front edge of the vehicle body.
+This correction is safety-critical for the current geometry. Using raw LiDAR-origin range caused TTC braking to trigger too late because the LiDAR is approximately 1.3 m behind the front edge of the vehicle body.
 
 ## LiDAR UDP transport
 
-Vehicle B produces a 360-degree scan with **721 beams**. A legacy full scan was about 1468 bytes and was not reliable over the tested WSL/network path.
+Vehicle B produces a 360-degree scan with **721 beams**. A legacy full scan is about 1468 bytes and was not reliable over the original tested WSL/network path.
 
 The LiDAR transport therefore supports two packet formats:
 
@@ -139,9 +180,30 @@ For the 721-beam Ruskotunturi scan this normally produces two UDP packets per sc
 
 If LiDAR updates become stale, the perception process deliberately stops transmitting `0x101`. The AEB controller then detects stale sensor data and enters the `sensor_timeout` fail-safe brake state.
 
+HIL-10 integrates the raw LiDAR sender into `ruskotunturi_hil10_b_test.py`; do **not** run a separate `gazebo_lidar_sender.py` during HIL-10 B tests.
+
+## HIL-10 freshness and fail-safe rules
+
+HIL-10 was introduced after identifying a stale-measurement weakness in the earlier HIL-9D adapter: the odometry timestamp was stored, but the cached speed value could still be reused without checking its age.
+
+The HIL-10 runtime closes that gap with explicit freshness rules:
+
+- Vehicle B odometry and returned brake state have a maximum local age of **0.50 s**.
+- Missing, stale or invalid odometry blocks motion.
+- One odometry speed sample is transmitted to the R2100 at most once; cached speed is not replayed as a heartbeat.
+- If a Gazebo source timestamp is present, it must advance for the sample to count as new.
+- Duplicate, reordered or inconsistent brake replies do not refresh the brake lease.
+- Brake counter wrap from `255` to `0` is accepted.
+- A communication/freshness fault detected after motion begins latches the stop for the remainder of that test run.
+- A stop is verified only from at least **three distinct post-command odometry samples** at or below **0.05 m/s**.
+- Re-reading a cached zero-speed value cannot produce a PASS.
+- The stop observer uses the magnitude of the full linear velocity vector.
+
+These rules are implemented in the HIL-10 runtime rather than by modifying the legacy HIL-9 scripts.
+
 ## CAN interface setup
 
-On the R2100, configure both CAN interfaces at 500 kbit/s before starting the HIL processes:
+On the R2100, configure both CAN interfaces at 500 kbit/s before starting HIL processes:
 
 ```bash
 sudo ip link set can0 down 2>/dev/null || true
@@ -171,211 +233,224 @@ CAN0_H <-> CAN1_H
 CAN0_L <-> CAN1_L
 ```
 
-## Standard three-terminal startup order
+## HIL-10 offline validation
 
-The most reliable workflow uses only three terminals and always starts the components in this order:
+Before hardware execution, run the preflight and software tests from the repository root:
+
+```bash
+cd ~/edge-path-project-git
+python3 edge-path-project/gazebo/scripts/hil10_preflight.py
+python3 -m unittest discover -s tests -p 'test_hil10*.py' -v
+```
+
+Validated result:
+
+```text
+Ran 42 tests
+OK
+```
+
+The tests cover freshness, stale cached speed, duplicate/reordered replies, source timestamps, stop verification, fail-closed behavior and HIL-10 execution/adaptor logic.
+
+A local `DIFFERS` result from `hil10_preflight.py` must be inspected before a hardware run. During HIL-10 development, the known local change to `ruskotunturi_hil_b_route_test.py` added immediate brake-state transition logging for response-time measurement.
+
+## Standard HIL-10 three-terminal workflow
+
+The reliable HIL-10 startup order is:
 
 ```text
 1. WSL: Gazebo world
 2. R2100: perception + CAN gateway + AEB
-3. WSL: LiDAR sender
-4. WSL: mission/test script last
+3. WSL: HIL-10 test script
 ```
 
-Starting the mission last prevents the vehicle from moving before the HIL safety path is ready.
-
-Use the current R2100 address in place of `<R2100_IP>`.
+The HIL-10 B test starts its own raw LiDAR sender, so a fourth LiDAR process is not required.
 
 ### Terminal 1 - WSL / Gazebo
 
-For the HIL-9D Phase 6 hybrid mission:
+Phase 6 world for route, hybrid and fault tests:
 
 ```bash
 cd ~/edge-path-project-git
-
 export GZ_SIM_RESOURCE_PATH="$PWD/edge-path-project/gazebo/models${GZ_SIM_RESOURCE_PATH:+:$GZ_SIM_RESOURCE_PATH}"
 
 gz sim -r \
   edge-path-project/gazebo/worlds/ruskotunturi_phase6_two_vehicle_world.sdf
 ```
 
-For the HIL-9E AEB stop test use the dedicated world instead:
+AEB world:
 
 ```bash
+cd ~/edge-path-project-git
+export GZ_SIM_RESOURCE_PATH="$PWD/edge-path-project/gazebo/models${GZ_SIM_RESOURCE_PATH:+:$GZ_SIM_RESOURCE_PATH}"
+
 gz sim -r \
   edge-path-project/gazebo/worlds/ruskotunturi_hil9e_aeb_world.sdf
 ```
 
 ### Terminal 2 - R2100
 
+Restart all three R2100 processes between test runs because the AEB latch and test state must start cleanly.
+
 ```bash
 cd ~/EdgeDetection/edge-path-project/hil
-mkdir -p ~/hil_test_logs
 
-pkill -f r2100_lidar_perception.py 2>/dev/null
-pkill -f r2100_can_gateway.py 2>/dev/null
-pkill -f r2100_aeb_controller.py 2>/dev/null
+HIL10_LOG_DIR="$HOME/hil_test_logs/hil10_$(date -u +%Y%m%dT%H%M%S)"
+mkdir -p "$HIL10_LOG_DIR"
 
 python3 -u r2100_lidar_perception.py \
-  > ~/hil_test_logs/perception.log 2>&1 &
+  > "$HIL10_LOG_DIR/perception.log" 2>&1 &
+HIL10_PERCEPTION_PID=$!
 
 python3 -u r2100_can_gateway.py --external-perception \
-  > ~/hil_test_logs/gateway.log 2>&1 &
+  > "$HIL10_LOG_DIR/gateway.log" 2>&1 &
+HIL10_GATEWAY_PID=$!
 
 python3 -u r2100_aeb_controller.py \
-  > ~/hil_test_logs/aeb.log 2>&1 &
+  > "$HIL10_LOG_DIR/aeb.log" 2>&1 &
+HIL10_AEB_PID=$!
 ```
 
-### Terminal 3 - WSL / LiDAR sender
+### Terminal 3 - WSL / HIL-10
+
+Set the current R2100 address once:
 
 ```bash
-cd ~/edge-path-project-git/edge-path-project/hil
-
-pkill -f gazebo_lidar_sender.py 2>/dev/null
-
-python3 -u gazebo_lidar_sender.py \
-  --r2100-host <R2100_IP> \
-  --lidar-topic /aeb360b/lidar \
-  > ~/hil_test_logs/lidar_sender.log 2>&1 &
+cd ~/edge-path-project-git
+read -r -p "R2100 IP address: " R2100_IP
 ```
 
-Before starting the mission, verify on the R2100 that complete 721-beam scans are arriving:
+Normal route:
 
 ```bash
-tail -5 ~/hil_test_logs/perception.log
+python3 -u edge-path-project/gazebo/scripts/ruskotunturi_hil10_b_test.py \
+  --mode route \
+  --r2100-host "$R2100_IP"
 ```
 
-Expected output contains values similar to:
-
-```text
-RX lidar | ... | beams=721 | ... | CAN=0x101 | ... | can_tx_drops=0
-```
-
-## HIL-9C - Vehicle B standalone route test
-
-This isolates Vehicle B. Steering is retained from the Phase 6 SIL route controller while longitudinal AEB is handled through the R2100 and physical CAN.
+Hybrid mission:
 
 ```bash
-cd ~/edge-path-project-git/edge-path-project/gazebo/scripts
-
-python3 -u ruskotunturi_hil_b_route_test.py \
-  --r2100-host <R2100_IP>
+python3 -u edge-path-project/gazebo/scripts/ruskotunturi_hil10_hybrid_test.py \
+  --r2100-host "$R2100_IP"
 ```
 
-Vehicle A is not commanded by this script.
-
-The validated normal-route run reached the B goal with no R2100 AEB events.
-
-## HIL-9D - Full hybrid two-vehicle mission
-
-HIL-9D subclasses the verified Phase 6 two-vehicle coordinator rather than reimplementing the SIL scenario.
-
-Vehicle A remains under the Phase 6 SIL controller. Vehicle B keeps Phase 6 route steering, but its longitudinal safety path is routed through the R2100:
-
-```text
-B odometry speed -> UDP -> gateway -> CAN 0x100
-B LiDAR -> chunked UDP -> R2100 perception -> CAN 0x101
-CAN 0x100 + 0x101 -> R2100 AEB -> CAN 0x200
-CAN 0x200 -> gateway -> UDP -> WSL -> B command override
-```
-
-Run:
+Intentional AEB:
 
 ```bash
-cd ~/edge-path-project-git/edge-path-project/gazebo/scripts
-
-python3 -u ruskotunturi_phase6_hybrid_hil_test.py \
-  --r2100-host <R2100_IP>
+python3 -u edge-path-project/gazebo/scripts/ruskotunturi_hil10_b_test.py \
+  --mode aeb \
+  --r2100-host "$R2100_IP"
 ```
 
-Validated HIL-9D result:
-
-```text
-Vehicle A goal reached   : YES
-Vehicle B goal reached   : YES
-Coordinator wait events  : 1
-Coordinator releases     : 1
-Conflict overlap         : NO
-Vehicle A min clearance  : 4.980 m
-Vehicle B min clearance  : 6.022 m
-Required clearance       : 1.000 m
-Terrain safety violation : NO
-LiDAR safety violation   : NO
-End reason               : both_goals_reached
-Duration                 : 39.26 s
-RESULT                    : PASS
-
-Vehicle B final speed    : 0.046 m/s
-Vehicle B stop verified  : YES
-R2100 AEB overrides      : 0
-HIL-9D RESULT            : PASS
-```
-
-The zero AEB override count is expected for the normal mission: HIL-9D verifies that the hybrid architecture does not interfere with a safe Phase 6 mission. Intentional AEB intervention is verified separately by HIL-9E.
-
-## HIL-9E - Automated intentional AEB stop test
-
-HIL-9E places a static obstacle directly on Vehicle B's route and validates an end-to-end R2100 AEB intervention.
-
-The world is:
-
-```text
-edge-path-project/gazebo/worlds/ruskotunturi_hil9e_aeb_world.sdf
-```
-
-The obstacle is centred at:
-
-```text
-(-3.0, 32.25)
-```
-
-Run the automated wrapper after the standard HIL processes and LiDAR sender are active:
+Fault injection tests:
 
 ```bash
-cd ~/edge-path-project-git/edge-path-project/gazebo/scripts
+python3 -u edge-path-project/gazebo/scripts/ruskotunturi_hil10_b_test.py \
+  --mode fault-odometry \
+  --r2100-host "$R2100_IP"
 
-python3 -u ruskotunturi_hil9e_aeb_test.py \
-  --r2100-host <R2100_IP>
+python3 -u edge-path-project/gazebo/scripts/ruskotunturi_hil10_b_test.py \
+  --mode fault-brake \
+  --r2100-host "$R2100_IP"
+
+python3 -u edge-path-project/gazebo/scripts/ruskotunturi_hil10_b_test.py \
+  --mode fault-lidar \
+  --r2100-host "$R2100_IP"
 ```
 
-PASS requires all of the following:
+The fault tests default to a shorter automatic injection delay. The validated hardware runs used `--fault-after 8.0` to allow a longer period of visually observable normal driving before fault injection.
 
-- Vehicle B first enters a normal DRIVE state.
-- A valid R2100 AEB reason is observed (`ttc_threshold` or `emergency_distance`).
-- Vehicle speed falls to at most 0.05 m/s for three consecutive samples.
-- Conservative body-to-obstacle clearance at the confirmed stop is at least 1.00 m.
+## HIL-10 hardware validation summary
 
-Validated HIL-9E result:
+All six planned HIL-10 hardware scenarios passed on the Gazebo -> Ethernet -> R2100 -> physical CAN -> R2100 -> Ethernet -> Gazebo loop.
+
+| Test | Purpose | Result |
+| --- | --- | --- |
+| `route` | Vehicle B normal route and verified final stop | PASS |
+| `hybrid` | Two-vehicle Phase 6 hybrid mission | PASS |
+| `aeb` | Intentional obstacle-triggered R2100 AEB stop | PASS |
+| `fault-odometry` | Remove odometry from HIL command/speed path | PASS |
+| `fault-brake` | Stop accepting returned brake replies | PASS |
+| `fault-lidar` | Stop raw LiDAR transmission to R2100 | PASS |
+
+Validated fault-detection latencies with `--fault-after 8.0` were:
 
 ```text
-Vehicle moved             : YES
-Valid R2100 AEB trigger   : YES
-AEB reason                : ttc_threshold
-AEB trigger s             : 2.740 m
-Confirmed stop s          : 2.740 m
-Final measured speed      : 0.000 m/s
-Body-to-obstacle clearance: 1.160 m
-Required clearance        : 1.000 m
-
-HIL-9E RESULT             : PASS
+fault-odometry : 0.506 s -> odometry_timeout
+fault-brake    : 0.509 s -> brake_timeout
+fault-lidar    : 0.559 s -> sensor_timeout
 ```
 
-This test verifies the complete intervention path:
+Each fault run required the vehicle to move before injection, detect the expected fault within the allowed window, command zero speed and steering, verify stopping from new odometry samples, and hold the verified stop.
+
+The validated fault runs ended with:
 
 ```text
-Gazebo 360 LiDAR
- -> chunked UDP
- -> R2100 perception
- -> physical CAN 0x101
- -> R2100 AEB
- -> physical CAN 0x200
- -> R2100 gateway
- -> UDP
- -> Gazebo Vehicle B command override
- -> vehicle stops before obstacle
+HIL-10 RESULT: PASS
+End reason: fault_stop_and_hold_verified
 ```
+
+The `route`, `hybrid` and `aeb` runs also passed using the same HIL-10 runtime.
+
+## Manual physical CAN interruption and recovery validation
+
+A manual robustness test was also performed by physically interrupting the CAN0-CAN1 bench connection while Vehicle B was driving.
+
+The interruption caused the CAN interface to enter an error state and produced a fail-safe communication timeout in the Gazebo-side controller. During the first experiment, `r2100_aeb_controller.py` terminated because SocketCAN returned `ENOBUFS` (`No buffer space available`) when the disconnected CAN transmit queue could not drain.
+
+The AEB controller was therefore hardened so that transient CAN transmit errors (`ENOBUFS`, `EAGAIN` and `EWOULDBLOCK`) are treated as dropped CAN frames instead of fatal process errors. The brake rolling counter advances only after a successful CAN transmission.
+
+The test was then repeated successfully:
+
+```text
+normal driving
+ -> physical CAN interruption
+ -> fail-safe communication/sensor timeout
+ -> vehicle stop
+ -> CAN bus-off/error state observed
+ -> AEB, gateway and perception processes remained alive
+ -> physical CAN connection restored
+ -> CAN0 and CAN1 returned to ERROR-ACTIVE
+ -> new route run completed without restarting the R2100 processes
+ -> PASS
+```
+
+The recovery route ended with:
+
+```text
+HIL-10 RESULT: PASS
+End reason: route_complete
+```
+
+This manual test is additional robustness validation and is not one of the six automated HIL-10 hardware scenarios listed above.
+
+## HIL-10 result evidence
+
+Each HIL-10 hardware run writes a CSV trace and a matching JSON summary under:
+
+```text
+edge-path-project/gazebo/results/hil10/
+```
+
+The validated result set contains one evidence pair for each final scenario:
+
+```text
+route
+hybrid
+aeb
+fault-odometry
+fault-brake
+fault-lidar
+```
+
+The JSON records PASS/FAIL, end reason and scenario-specific verification data. The CSV records the time history used to evaluate freshness, commands, brake state and stop verification.
+
+R2100 process logs should also be retained for failed or diagnostic runs.
 
 ## HIL-9 validation summary
+
+HIL-9 remains useful as the development history that established the Ruskotunturi hybrid architecture.
 
 | Stage | Purpose | Result |
 | --- | --- | --- |
@@ -385,53 +460,72 @@ Gazebo 360 LiDAR
 | HIL-9D | Full hybrid two-vehicle Phase 6 mission | PASS |
 | HIL-9E | Intentional automated R2100 AEB intervention | PASS |
 
-HIL-9A baseline evidence included both vehicles reaching their goals, one coordinator wait/release event, no conflict overlap, minimum clearances above 4.9 m, and no terrain or LiDAR safety violation.
+The HIL-9E automated stop used TTC intervention and verified **1.160 m** conservative body-to-obstacle clearance against a **1.000 m** requirement.
+
+HIL-10 supersedes the HIL-9 runtime for freshness-sensitive validation because HIL-10 prevents cached speed replay and requires fresh post-stop measurements.
 
 ## Key integration findings
 
 ### 1. UDP MTU / scan size
 
-A 721-beam raw LiDAR scan exceeded the reliable UDP payload size on the tested WSL-to-R2100 path. Small packets arrived while the approximately 1468-byte legacy scan did not. Chunking the scan into payloads no larger than 900 bytes resolved the issue while retaining legacy single-packet support for smaller scans.
+A 721-beam raw LiDAR scan exceeded the reliable UDP payload size on the original tested WSL-to-R2100 path. Chunking the scan into payloads no larger than 900 bytes resolved the problem while retaining legacy single-packet support for smaller scans.
 
 ### 2. Sensor-origin distance is not body clearance
 
-The first intentional Ruskotunturi AEB test used raw LiDAR-origin range as `0x101`. The AEB decision itself triggered correctly, but because the LiDAR is roof-centred, the front of the 2.6 m vehicle body was already approximately 1.3 m closer to the obstacle than the reported sensor range implied.
+The first intentional Ruskotunturi AEB test used raw LiDAR-origin range as `0x101`. Because the LiDAR is roof-centred, this did not represent physical bumper clearance. The R2100 perception was changed to transmit body-to-obstacle clearance instead.
 
-The R2100 perception was therefore changed to transmit body-to-obstacle clearance. After this correction, the automated HIL-9E test stopped Vehicle B with **1.160 m** conservative clearance against a **1.000 m** requirement.
+### 3. Stale data must not be refreshed by cached values
 
-### 3. Fail-safe sensor timeout
+HIL-10 identified and fixed a separate integration issue: locally cached odometry could otherwise be re-sent as if it were a new speed measurement. Freshness must therefore be tied to actual new source samples, not simply to repeated packet transmission.
 
-When LiDAR becomes stale, `r2100_lidar_perception.py` does not replace the missing scan with a synthetic "no obstacle" value. It stops updating `0x101`, allowing `r2100_aeb_controller.py` to detect stale sensor data and command the `sensor_timeout` brake state.
+### 4. Fail-safe behavior is independently testable
+
+HIL-10 verified three independent communication-loss paths:
+
+```text
+odometry loss -> local odometry_timeout -> stop
+brake-return loss -> local brake_timeout -> stop
+LiDAR loss -> R2100 sensor_timeout -> stop
+```
+
+The vehicle remained stopped after each injected fault.
+
+### 5. CAN transmit saturation must not terminate the safety controller
+
+A physical CAN interruption can prevent the SocketCAN transmit queue from draining and produce `ENOBUFS`. The AEB controller must treat this as a transient transport failure rather than terminate. After hardening the send path, the controller survived the interruption and resumed normal operation when the physical CAN connection recovered.
+
+## Scope and limitations
+
+The six automated HIL-10 fault/functional scenarios use controlled software-level injections around the real R2100 and physical CAN path. A separate manual test additionally validated physical CAN disconnection, bus-off/error-state behavior and recovery without restarting the R2100 processes.
+
+The current validation still does **not** cover every possible hardware or system failure. Examples of remaining follow-on targets include:
+
+- arbitrary packet delay/jitter profiles,
+- forced process termination,
+- PC power loss,
+- an external command watchdog outside the current test runtime,
+- broader multi-node CAN fault cases beyond the current two-interface bench loop.
 
 ## Troubleshooting
 
-If the route script remains in `BRAKE | reason=sensor_timeout`, check the chain in this order:
+If a test remains in a fail-safe state at startup, inspect the R2100 chain:
 
 ```bash
-# R2100
-tail -10 ~/hil_test_logs/perception.log
-tail -10 ~/hil_test_logs/gateway.log
-tail -15 ~/hil_test_logs/aeb.log
+tail -20 "$HIL10_LOG_DIR/perception.log"
+tail -20 "$HIL10_LOG_DIR/gateway.log"
+tail -20 "$HIL10_LOG_DIR/aeb.log"
 ```
 
-The perception log should show 721-beam scans and `can_tx_drops=0`.
+Check that:
 
-If no LiDAR scans arrive:
+- the correct Gazebo world is running,
+- `can0` and `can1` are UP at 500 kbit/s,
+- the physical CAN H/L loop is connected,
+- the R2100 IP address is reachable,
+- no old HIL controller is still publishing Vehicle B commands,
+- no separate LiDAR sender is running during a HIL-10 B test.
 
-- verify the Gazebo world is running,
-- verify `/aeb360b/lidar` is the selected topic,
-- verify `gazebo_lidar_sender.py` is running,
-- verify the R2100 address,
-- verify UDP port 15010 is reachable.
-
-If CAN transmission fails:
-
-- verify `can0` and `can1` are UP,
-- verify both are configured for 500 kbit/s,
-- verify the physical H/L loop wiring,
-- inspect CAN error counters with `ip -details link show can0` and `can1`.
-
-Only one process should publish Vehicle B commands during a test. Stop old scenario/controller processes before starting a new run.
+Only one process should publish Vehicle B commands during a test.
 
 ## Current status
 
@@ -443,6 +537,15 @@ CARLA experiments
  -> Ruskotunturi multi-vehicle SIL
  -> physical CAN HIL
  -> Ruskotunturi hybrid HIL-9
+ -> HIL-10 freshness + communication fault validation
 ```
 
-HIL-9 demonstrates both a normal two-vehicle hybrid mission and a deliberately triggered end-to-end embedded AEB intervention with an automated physical-clearance PASS/FAIL criterion.
+Current HIL-10 evidence:
+
+```text
+offline software validation        : 42 / 42 PASS
+hardware scenarios                 : 6 / 6 PASS
+wired Ethernet transport           : validated
+physical CAN loop                  : validated
+manual CAN interruption + recovery : PASS
+```

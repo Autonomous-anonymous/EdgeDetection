@@ -18,6 +18,7 @@ The AEB thresholds match the current Gazebo SIL AEB baseline.
 
 from __future__ import annotations
 
+import errno
 import math
 import select
 import socket
@@ -86,6 +87,7 @@ class R2100AEBController:
         self.latched_reason = BRAKE_REASON_NONE
 
         self.counter = 0
+        self.can_tx_drop_count = 0
         self.last_print_time = 0.0
 
     def handle_frame(self, frame: bytes, now: float) -> None:
@@ -168,16 +170,30 @@ class R2100AEBController:
 
         return False, BRAKE_REASON_NONE, ttc
 
-    def send_brake_command(self, active: bool, reason: int) -> None:
+    def send_brake_command(self, active: bool, reason: int) -> bool:
         data = encode_brake_command(active, reason, self.counter)
-        self.counter = (self.counter + 1) & 0xFF
 
-        self.sock.send(
-            pack_can_frame(
-                CAN_ID_BRAKE_COMMAND,
-                data,
+        try:
+            self.sock.send(
+                pack_can_frame(
+                    CAN_ID_BRAKE_COMMAND,
+                    data,
+                )
             )
-        )
+
+        except OSError as exc:
+            if exc.errno in {
+                errno.ENOBUFS,
+                errno.EAGAIN,
+                errno.EWOULDBLOCK,
+            }:
+                self.can_tx_drop_count += 1
+                return False
+
+            raise
+
+        self.counter = (self.counter + 1) & 0xFF
+        return True
 
     def print_status(
         self,
@@ -265,6 +281,9 @@ class R2100AEBController:
                 )
                 time.sleep(0.02)
 
+            print(
+                f"CAN TX drops during run: {self.can_tx_drop_count}"
+            )
             self.sock.close()
             print("Done.")
 
