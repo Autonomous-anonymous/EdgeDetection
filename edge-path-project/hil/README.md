@@ -334,6 +334,15 @@ Ran 19 tests
 OK
 ```
 
+Independent developer validation was also completed from a second developer machine. The second developer built the deployment package locally, deployed it to the R2100 over SSH/SCP, started the deployed runtime, and completed the unchanged HIL-10 route with:
+
+```text
+HIL-10 RESULT: PASS
+End reason: route_complete
+```
+
+This provides an additional reproducibility check that the deployment workflow is not tied to the original development machine.
+
 This work package therefore demonstrates a repeatable build -> validate -> deploy -> run -> stop -> rollback workflow for the current R2100 HIL runtime.
 
 ## Important distance semantics
@@ -696,7 +705,7 @@ Moving CAN IDs into a configuration file is only useful if every active producer
 
 ### 7. Deployment should not depend on the target Git working tree
 
-The validated embedded deployment packages the runtime into a generated Python zipapp plus external configuration and control scripts. The hardware route was executed from the deployed `~/r2100_hil/current/` release rather than from `~/EdgeDetection`, demonstrating that the target Git working tree is not required for runtime execution.
+The validated embedded deployment packages the runtime into a generated Python zipapp plus external configuration and control scripts. The hardware route was executed from the deployed `~/r2100_hil/current/` release rather than from `~/EdgeDetection`, demonstrating that the target Git working tree is not required for runtime execution. A second developer independently built and deployed the same workflow from another development machine and also completed the HIL-10 route successfully.
 
 ## Scope and limitations
 
@@ -762,6 +771,7 @@ alternate IDs on physical CAN      : 0x110 / 0x111 / 0x210 observed
 embedded package build/check       : PASS
 versioned SSH/SCP deployment       : PASS
 deployed-package HIL route         : PASS
+second-developer deployment route  : PASS
 start / stop / status control      : PASS
 release rollback                   : PASS
 wired Ethernet transport           : validated
