@@ -6,3 +6,6 @@ __pycache__/
 # Generated HIL-10 test results
 edge-path-project/gazebo/results/hil10/*.csv
 edge-path-project/gazebo/results/hil10/*.json
+
+# Generated R2100 deployment artifacts
+edge-path-project/hil/dist/
