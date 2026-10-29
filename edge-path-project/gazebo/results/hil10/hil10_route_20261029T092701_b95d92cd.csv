@@ -1,0 +1,2 @@
+monotonic_s,sample,speed_mps,odom_age_s,brake_age_s,brake_active,brake_reason,brake_counter,requested_mps,applied_mps,gate_reason,fault,sent_speed_packets,stop_samples,observer_sample,observer_speed_mps,observer_age_s,observer_stop_samples,route_s_m,lateral_m,fault_injected_s
+2183.011803953,,,,,True,sensor_timeout,,0.0,0.0,odometry_timeout,,0,0,,,,0,,,

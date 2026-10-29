@@ -1,0 +1,47 @@
+HIL-10 offline validation report
+Date: 2026-10-29
+Baseline: Autonomous-anonymous/EdgeDetection, hil-development
+Commit: 52331fde756991988cbb94f01e6d33d615c8d7df
+
+Validated in a temporary checkout containing exact GitHub baseline dependency
+bytes plus the new package files. Git blob hashes were checked against GitHub.
+Original baseline source files were not edited.
+
+Commands and observed results:
+
+python3 edge-path-project/gazebo/scripts/hil10_preflight.py
+  PASS: all 10 checked source/world dependencies match the baseline.
+
+python3 -m unittest discover -s tests -p 'test_hil10*.py' -v
+  Ran 42 tests in 0.008s
+  OK
+
+python3 -m compileall -q [the five new HIL-10 Python scripts]
+  PASS: exit code 0, no syntax errors.
+
+Coverage includes:
+- Missing/stale/invalid odometry blocks motion and stale speed transmission.
+- Each callback sample is transmitted at most once.
+- Repeated or decreasing source timestamps do not refresh measurement age.
+- Three distinct post-stop low-speed samples are required; cached zero fails.
+- Motion, invalid samples and measurement gaps reset stop confirmation.
+- Duplicate/reordered/malformed brake replies do not refresh freshness.
+- Brake counter wrap is accepted.
+- Late replies and a subsequent DRIVE packet do not clear a latched fault.
+- R2100 AEB logic observes speed and obstacle-distance timeouts.
+- All three deterministic fault-loop cases require detection, stop and hold.
+- Continued/restarted motion, observer loss and absent fault detection fail.
+- AEB test checks the existing one-metre clearance criterion.
+- Hybrid fault stops both vehicles; base scenario failure cannot become PASS.
+- Hybrid PASS requires the additional final-stop verification.
+- CSV and JSON record fresh stop evidence.
+
+Limits:
+These are standard-library unit/controller-loop tests with simulated clocks,
+message/transport stand-ins and a simplified command-following test double.
+They do not simulate Gazebo vehicle dynamics or exercise physical CAN/UDP.
+Gazebo + R2100 hardware validation of HIL-10 remains NOT RUN.
+No GitHub commit, push or pull request was created for this package.
+
+Next: follow HIL10_TESTING_FI.md and retain each hardware run's CSV, JSON and
+R2100 logs. Use the HIL-10 entry points; the older HIL-9 scripts are unchanged.

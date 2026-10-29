@@ -418,6 +418,11 @@ class RuskotunturiHILBRouteTest:
                     or self.brake_active
                 )
 
+                state_changed = (
+                    effective_brake
+                    != self.previous_effective_brake
+                )
+
                 if (
                     effective_brake
                     and not self.previous_effective_brake
@@ -434,6 +439,42 @@ class RuskotunturiHILBRouteTest:
                 else:
                     command_speed = requested_speed
                     command_steering = steering
+
+                # Print brake-state transitions immediately instead of
+                # waiting for the normal periodic status interval.
+                # HIL-10 fault-injection tests use this for response-time
+                # measurement.
+                if state_changed:
+                    with self.lock:
+                        event_x = self.x
+                        event_y = self.y
+                        event_speed = self.speed
+
+                    event_reason = (
+                        "brake_timeout"
+                        if not brake_fresh
+                        else BRAKE_REASON.get(
+                            self.brake_reason,
+                            f"unknown_{self.brake_reason}",
+                        )
+                    )
+
+                    event_state = (
+                        "BRAKE"
+                        if effective_brake
+                        else "DRIVE"
+                    )
+
+                    print(
+                        f"EVENT B x={event_x:6.2f} y={event_y:6.2f} | "
+                        f"s={route_s:5.2f}/{self.route['length']:.2f} | "
+                        f"d={lateral:+5.2f} | "
+                        f"v={event_speed:4.2f} | "
+                        f"cmd={command_speed:4.2f} | "
+                        f"steer={command_steering:+5.3f} | "
+                        f"{event_state} | "
+                        f"reason={event_reason}"
+                    )
 
                 self.publish_b(
                     command_speed,

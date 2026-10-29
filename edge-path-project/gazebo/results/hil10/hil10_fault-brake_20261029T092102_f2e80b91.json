@@ -1,0 +1,20 @@
+{
+  "test": "HIL-10",
+  "mode": "fault-brake",
+  "passed": true,
+  "end_reason": "fault_stop_and_hold_verified",
+  "baseline_commit": "52331fde756991988cbb94f01e6d33d615c8d7df",
+  "odometry_timeout_s": 0.5,
+  "brake_timeout_s": 0.5,
+  "stop_speed_mps": 0.05,
+  "stop_samples_required": 3,
+  "final_speed_mps": 6.394884621840901e-12,
+  "stop_verified": true,
+  "observer_stop_samples": 18,
+  "fault": "brake_timeout",
+  "detection_latency_s": 0.508781006999925,
+  "stop_latency_s": 0.9654433769999287,
+  "detection_limit_s": 1.0,
+  "fault_stop_limit_s": 3.0,
+  "stop_hold_s": 1.0
+}

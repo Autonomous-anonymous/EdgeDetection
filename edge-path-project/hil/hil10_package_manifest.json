@@ -1,0 +1,17 @@
+{
+  "package": "HIL-10 freshness and fault tests",
+  "baseline_commit": "52331fde756991988cbb94f01e6d33d615c8d7df",
+  "hardware_validation": "not_run",
+  "offline_tests_passed": 42,
+  "files": {
+    "edge-path-project/gazebo/scripts/hil10_preflight.py": "0ac4ba88b1cd21e6ccf245e9bd1d79c05f7521c3dc3e7cbe47ce09e09175842f",
+    "edge-path-project/gazebo/scripts/hil10_runtime.py": "3d66ad3541b50dcee00c173436b355bc6e58f2623bffc773d0da34d29cb25fdf",
+    "edge-path-project/gazebo/scripts/hil10_safety.py": "92f2e6c27f9aef8c9cddbaf5dc4434b62bc11b02c7c6b84740c2a0959d66fac4",
+    "edge-path-project/gazebo/scripts/ruskotunturi_hil10_b_test.py": "5b6cac61523aed1af65d6540f17239e4fd02bf3a8c0000f57d3ed98511bdcfdb",
+    "edge-path-project/gazebo/scripts/ruskotunturi_hil10_hybrid_test.py": "780ff3885bb3f191020e03ca000f9b88a28ed367a4f29dd0ef5a3fdaa1046941",
+    "edge-path-project/hil/HIL10_OFFLINE_VALIDATION.txt": "9f09391d815f5e6b42e749d053eaa5ec1e4f449d46d11391a63237de7a2130c6",
+    "edge-path-project/hil/HIL10_TESTING_FI.md": "d68978d02a0fdd4f7771570ceb8234d7c95b9887a136f97fdcf45d64653e842d",
+    "tests/test_hil10_integration.py": "3b5c7114c39eeb3723d7959219afc1b2da880ee83635c5be0bb5817664ff91dc",
+    "tests/test_hil10_safety.py": "b5f4274c6ac858c8ce78d5ce11ab0eab8a25a422d6c3d783f62d96f7af0e314f"
+  }
+}
