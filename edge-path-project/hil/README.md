@@ -393,6 +393,38 @@ End reason: fault_stop_and_hold_verified
 
 The `route`, `hybrid` and `aeb` runs also passed using the same HIL-10 runtime.
 
+## Manual physical CAN interruption and recovery validation
+
+A manual robustness test was also performed by physically interrupting the CAN0-CAN1 bench connection while Vehicle B was driving.
+
+The interruption caused the CAN interface to enter an error state and produced a fail-safe communication timeout in the Gazebo-side controller. During the first experiment, `r2100_aeb_controller.py` terminated because SocketCAN returned `ENOBUFS` (`No buffer space available`) when the disconnected CAN transmit queue could not drain.
+
+The AEB controller was therefore hardened so that transient CAN transmit errors (`ENOBUFS`, `EAGAIN` and `EWOULDBLOCK`) are treated as dropped CAN frames instead of fatal process errors. The brake rolling counter advances only after a successful CAN transmission.
+
+The test was then repeated successfully:
+
+```text
+normal driving
+ -> physical CAN interruption
+ -> fail-safe communication/sensor timeout
+ -> vehicle stop
+ -> CAN bus-off/error state observed
+ -> AEB, gateway and perception processes remained alive
+ -> physical CAN connection restored
+ -> CAN0 and CAN1 returned to ERROR-ACTIVE
+ -> new route run completed without restarting the R2100 processes
+ -> PASS
+```
+
+The recovery route ended with:
+
+```text
+HIL-10 RESULT: PASS
+End reason: route_complete
+```
+
+This manual test is additional robustness validation and is not one of the six automated HIL-10 hardware scenarios listed above.
+
 ## HIL-10 result evidence
 
 Each HIL-10 hardware run writes a CSV trace and a matching JSON summary under:
@@ -458,20 +490,21 @@ LiDAR loss -> R2100 sensor_timeout -> stop
 
 The vehicle remained stopped after each injected fault.
 
+### 5. CAN transmit saturation must not terminate the safety controller
+
+A physical CAN interruption can prevent the SocketCAN transmit queue from draining and produce `ENOBUFS`. The AEB controller must treat this as a transient transport failure rather than terminate. After hardening the send path, the controller survived the interruption and resumed normal operation when the physical CAN connection recovered.
+
 ## Scope and limitations
 
-The HIL-10 fault tests are controlled software-level fault injections around the real R2100 and physical CAN path.
+The six automated HIL-10 fault/functional scenarios use controlled software-level injections around the real R2100 and physical CAN path. A separate manual test additionally validated physical CAN disconnection, bus-off/error-state behavior and recovery without restarting the R2100 processes.
 
-They do **not** yet prove behavior for every possible hardware failure. In particular, the current HIL-10 package does not directly test:
+The current validation still does **not** cover every possible hardware or system failure. Examples of remaining follow-on targets include:
 
-- physical CAN cable disconnection,
-- CAN bus-off,
 - arbitrary packet delay/jitter profiles,
 - forced process termination,
 - PC power loss,
-- an external command watchdog outside the current test runtime.
-
-Those are appropriate follow-on validation targets.
+- an external command watchdog outside the current test runtime,
+- broader multi-node CAN fault cases beyond the current two-interface bench loop.
 
 ## Troubleshooting
 
@@ -510,8 +543,9 @@ CARLA experiments
 Current HIL-10 evidence:
 
 ```text
-offline software validation : 42 / 42 PASS
-hardware scenarios          : 6 / 6 PASS
-wired Ethernet transport    : validated
-physical CAN loop           : validated
+offline software validation        : 42 / 42 PASS
+hardware scenarios                 : 6 / 6 PASS
+wired Ethernet transport           : validated
+physical CAN loop                  : validated
+manual CAN interruption + recovery : PASS
 ```
