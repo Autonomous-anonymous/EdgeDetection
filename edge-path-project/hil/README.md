@@ -4,7 +4,7 @@ This directory documents the Hardware-in-the-Loop implementation used to extend 
 
 The embedded platform is a **Seeed Studio reComputer Industrial R2100**. Gazebo Harmonic runs in WSL and provides the virtual vehicles, terrain, LiDAR and odometry. The R2100 receives simulation data over UDP, maps the relevant signals onto physical CAN, executes the AEB decision, and returns the brake state to the simulator.
 
-The current validated Ruskotunturi milestone is **HIL-10**. The HIL path also includes a hardware-validated **Configurable Signal Mapping** work package for selecting the CAN identifiers and CAN interfaces from a shared configuration profile.
+The current validated Ruskotunturi milestone is **HIL-10**. The HIL path also includes hardware-validated **Configurable Signal Mapping** and **Embedded Deployment** work packages.
 
 This is a research and development setup, not a certified functional-safety implementation.
 
@@ -76,6 +76,13 @@ edge-path-project/hil/
 ├── config/
 │   ├── ruskotunturi_hil.json
 │   └── ruskotunturi_hil_alt_ids.json
+├── deployment/
+│   ├── build_r2100_hil.py
+│   ├── deploy_r2100_hil.sh
+│   ├── r2100_hil_main.py
+│   ├── start_hil.sh
+│   ├── status_hil.sh
+│   └── stop_hil.sh
 ├── can_protocol.py
 ├── signal_mapping.py
 ├── gazebo_hil_bridge.py
@@ -109,7 +116,7 @@ edge-path-project/gazebo/scripts/
 └── ruskotunturi_hil9e_aeb_test.py
 ```
 
-The HIL-10 and signal-mapping automated software tests are:
+The HIL-10, signal-mapping and deployment automated software tests are:
 
 ```text
 tests/
@@ -118,7 +125,8 @@ tests/
 ├── test_signal_mapping.py
 ├── test_signal_mapping_gateway.py
 ├── test_signal_mapping_aeb.py
-└── test_signal_mapping_perception.py
+├── test_signal_mapping_perception.py
+└── test_embedded_deployment.py
 ```
 
 The dedicated AEB obstacle world is:
@@ -234,6 +242,99 @@ OK
 ```
 
 This work package therefore demonstrates that the active R2100 processes can share one mapping profile and that the physical CAN identifiers can be changed consistently without editing the Python runtime code.
+
+## Embedded Deployment
+
+The embedded runtime can be built and deployed as a versioned package instead of copying individual Python source files to the R2100 manually.
+
+The build entry point is:
+
+```text
+edge-path-project/hil/deployment/build_r2100_hil.py
+```
+
+It creates a generated deployment directory under `edge-path-project/hil/dist/r2100_hil/`. The generated `dist/` directory is ignored by Git and is rebuilt from source when needed.
+
+The package contains:
+
+```text
+r2100_hil.pyz
+config/
+├── ruskotunturi_hil.json
+└── ruskotunturi_hil_alt_ids.json
+manifest.json
+start_hil.sh
+status_hil.sh
+stop_hil.sh
+```
+
+`r2100_hil.pyz` is a Python zipapp with one executable entry point for the three R2100 runtime components:
+
+```bash
+r2100_hil.pyz perception
+r2100_hil.pyz gateway
+r2100_hil.pyz aeb
+```
+
+The package can be validated without opening CAN interfaces:
+
+```bash
+r2100_hil.pyz check
+```
+
+The current deployment format intentionally depends on `python3` being installed on the R2100. It is not a standalone native binary and does not claim to remove the target Python runtime dependency.
+
+Build locally from the repository root with:
+
+```bash
+python3 edge-path-project/hil/deployment/build_r2100_hil.py
+```
+
+Deploy the generated package over SSH/SCP with:
+
+```bash
+edge-path-project/hil/deployment/deploy_r2100_hil.sh <R2100_IP>
+```
+
+The deploy script performs the build, creates an archive, transfers it to the R2100, extracts it into a timestamped release directory, runs the deployed `r2100_hil.pyz check`, and updates the `current` symlink only after successful validation.
+
+The resulting target layout is:
+
+```text
+~/r2100_hil/
+├── current -> releases/r2100_hil_<timestamp>/
+└── releases/
+    ├── r2100_hil_<timestamp>/
+    └── ...
+```
+
+The deployed runtime is controlled with:
+
+```bash
+~/r2100_hil/current/start_hil.sh
+~/r2100_hil/current/status_hil.sh
+~/r2100_hil/current/stop_hil.sh
+```
+
+The start script records process IDs and creates a dedicated log directory. The stop script terminates the AEB, gateway and perception processes in a controlled order. The zipapp converts `SIGTERM` into the existing controller shutdown path so the AEB process can execute its final fail-safe brake transmission logic before exiting normally.
+
+Versioned release directories also provide a simple rollback mechanism. Rollback was validated by creating two releases, changing the `current` symlink back to the older release and successfully running its deployment configuration check. The symlink was then returned to the newer validated release.
+
+Hardware validation was performed with the R2100 processes running only from the deployed package under `~/r2100_hil/current/`, rather than from the Git working tree. The unchanged HIL-10 route completed with:
+
+```text
+HIL-10 RESULT: PASS
+End reason: route_complete
+```
+
+Dedicated deployment tests validate the build output, executable permissions, manifest hashes, zipapp check command, component CLI entry points and shell-script syntax. Together with the signal-mapping tests, the validated offline result is:
+
+```text
+Ran 19 tests
+OK
+```
+
+This work package therefore demonstrates a repeatable build -> validate -> deploy -> run -> stop -> rollback workflow for the current R2100 HIL runtime.
 
 ## Important distance semantics
 
@@ -593,6 +694,10 @@ A physical CAN interruption can prevent the SocketCAN transmit queue from draini
 
 Moving CAN IDs into a configuration file is only useful if every active producer and consumer uses the same profile. The gateway, LiDAR perception and AEB controller therefore load the same mapping. The alternate-ID hardware run verified the configured IDs on the physical CAN bus and completed the route without Python runtime edits.
 
+### 7. Deployment should not depend on the target Git working tree
+
+The validated embedded deployment packages the runtime into a generated Python zipapp plus external configuration and control scripts. The hardware route was executed from the deployed `~/r2100_hil/current/` release rather than from `~/EdgeDetection`, demonstrating that the target Git working tree is not required for runtime execution.
+
 ## Scope and limitations
 
 The six automated HIL-10 fault/functional scenarios use controlled software-level injections around the real R2100 and physical CAN path. A separate manual test additionally validated physical CAN disconnection, bus-off/error-state behavior and recovery without restarting the R2100 processes.
@@ -600,6 +705,7 @@ The six automated HIL-10 fault/functional scenarios use controlled software-leve
 The current validation still does **not** cover every possible hardware or system failure. Examples of remaining follow-on targets include:
 
 - configuration-driven replacement of the current hardcoded payload scaling/codec implementation,
+- a standalone native executable that does not require Python on the target,
 - arbitrary packet delay/jitter profiles,
 - forced process termination,
 - PC power loss,
@@ -640,6 +746,7 @@ CARLA experiments
  -> Ruskotunturi hybrid HIL-9
  -> HIL-10 freshness + communication fault validation
  -> configurable signal mapping on the R2100 CAN chain
+ -> reproducible embedded deployment package
 ```
 
 Current evidence:
@@ -648,9 +755,15 @@ Current evidence:
 HIL-10 offline software validation : 42 / 42 PASS
 HIL-10 hardware scenarios          : 6 / 6 PASS
 signal-mapping offline tests       : 12 / 12 PASS
+mapping + deployment offline tests : 19 / 19 PASS
 default mapping route regression   : PASS
 alternate CAN-ID route             : PASS
 alternate IDs on physical CAN      : 0x110 / 0x111 / 0x210 observed
+embedded package build/check       : PASS
+versioned SSH/SCP deployment       : PASS
+deployed-package HIL route         : PASS
+start / stop / status control      : PASS
+release rollback                   : PASS
 wired Ethernet transport           : validated
 physical CAN loop                  : validated
 manual CAN interruption + recovery : PASS
