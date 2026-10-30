@@ -2,45 +2,40 @@
 
 This repository documents a staged autonomous-vehicle development and validation workflow using **CARLA**, **Gazebo Harmonic**, and a real embedded **Seeed Studio reComputer Industrial R2100** connected through physical CAN.
 
-The project progresses from early perception and Automatic Emergency Braking (AEB) experiments to off-road multi-vehicle Software-in-the-Loop (SIL) validation and finally to Hardware-in-the-Loop (HIL) execution in the Ruskotunturi environment.
+The project progresses from perception and ADAS experiments to off-road multi-vehicle Software-in-the-Loop (SIL) validation and Hardware-in-the-Loop (HIL) execution in the Ruskotunturi environment.
 
-Current reference points:
+## Current reference points
 
 - **Gazebo SIL baseline:** v6.4 multi-vehicle Ruskotunturi demo
-- **HIL branch:** `hil-development`
-- **Current HIL milestone:** HIL-9, including a full hybrid two-vehicle mission and an automated end-to-end R2100 AEB stop test
+- **HIL platform:** Ruskotunturi R2100 HIL
+- **Historical functional validation suite:** HIL-10 Freshness and Fault Validation
+- **Development branch:** `hil-development`
+- **Current offline repository suite:** 152 / 152 PASS (2026-10-30)
 
-Detailed guides:
+Detailed documentation:
 
 - [Gazebo SIL guide](edge-path-project/gazebo/README.md)
 - [R2100 HIL guide](edge-path-project/hil/README.md)
+- [Validation and evidence index](VALIDATION.md)
 
 ## Project goals
 
-The project is intended to provide a reproducible staged workflow for autonomous-vehicle function development:
+The project provides a reproducible staged workflow for autonomous-vehicle function development:
 
 1. develop ADAS and navigation logic in simulation,
 2. validate perception and safety functions independently,
 3. integrate navigation, obstacle handling and multi-vehicle coordination,
 4. record repeatable PASS / FAIL evidence,
 5. move selected safety functions onto real embedded hardware,
-6. preserve the same scenario semantics across SIL and HIL where practical.
+6. preserve scenario and signal semantics across SIL and HIL where practical.
 
-Earlier CARLA and Gazebo stages are retained intentionally as development evidence rather than treated as obsolete code.
+Earlier CARLA, Gazebo and HIL stages are retained intentionally as development evidence rather than treated as disposable code.
 
 ## Development stages
 
 ### 1. CARLA perception and AEB
 
-The first stage used CARLA for basic virtual-vehicle and ADAS development. It includes:
-
-- RGB camera processing,
-- edge detection and path prediction,
-- static-obstacle AEB,
-- target-speed and TTC tests,
-- moving-obstacle / relative-TTC tests,
-- route navigation,
-- early multi-vehicle coordination experiments.
+The first stage used CARLA for basic virtual-vehicle and ADAS development, including RGB camera processing, edge detection/path prediction, static-obstacle AEB, TTC tests, moving-obstacle experiments, route navigation and early multi-vehicle coordination.
 
 The main CARLA files are under:
 
@@ -49,18 +44,16 @@ edge-path-project/
 edge-path-project/aeb_sil/
 ```
 
-### 2. Gazebo ADAS port
+### 2. Gazebo ADAS development
 
-The controller workflow was then ported to Gazebo Harmonic. This phase validates the same general ADAS concepts with Gazebo vehicle models and virtual sensors.
-
-Implemented Gazebo functions include:
+The workflow was ported to Gazebo Harmonic and expanded with:
 
 - Automatic Emergency Braking,
-- TTC-based collision avoidance,
+- TTC-based collision handling,
 - LiDAR obstacle avoidance,
 - 360-degree LiDAR safety monitoring,
-- RGB camera input,
-- automated PASS / FAIL tests,
+- RGB camera input and camera + LiDAR fusion work,
+- automated PASS / FAIL checks,
 - CSV result logging.
 
 Gazebo files are organised as:
@@ -75,92 +68,93 @@ edge-path-project/gazebo/
 
 ### 3. Ruskotunturi off-road SIL
 
-The Ruskotunturi terrain is the main off-road validation environment.
+The current committed SIL baseline is **v6.4**. It demonstrates a two-vehicle Ruskotunturi mission with static-obstacle avoidance, moving-obstacle interaction, camera-assisted control, coordination and a common loading-zone objective.
 
-The staged SIL work includes:
+Primary committed evidence:
 
-- terrain navigation,
-- static-obstacle avoidance,
-- moving-obstacle interaction,
-- oncoming TTC testing,
-- camera + LiDAR sensor fusion,
-- adaptive avoidance behaviour,
-- two-vehicle coordination,
-- final integrated multi-vehicle SIL validation.
+```text
+edge-path-project/gazebo/results/ruskotunturi_final_sil_demo_v6_4_results.csv
+edge-path-project/gazebo/results/final_sil_v6_4_trace_20261026T133025_782767.csv
+```
 
-The committed v6.4 baseline completed the integrated Ruskotunturi SIL mission with both vehicles completing their tasks and the required safety criteria satisfied. Detailed architecture, evidence, limitations and startup instructions are maintained in the [Gazebo SIL guide](edge-path-project/gazebo/README.md).
+The v6.4 result records `PASS` with `end_reason=final_demo_complete` and no failed checks.
 
-### 4. R2100 Hardware-in-the-Loop
+See the [Gazebo SIL guide](edge-path-project/gazebo/README.md) for architecture, validation details and startup instructions.
+
+### 4. Ruskotunturi R2100 HIL
 
 The HIL phase moves the longitudinal AEB safety path onto a real reComputer Industrial R2100 while Gazebo continues to provide the virtual world and vehicle dynamics.
 
 The current bench architecture is:
 
 ```text
-Gazebo Vehicle B LiDAR --------------------+
-                                           |
-                                           v
-                                    UDP LiDAR transport
-                                           |
-                                           v
-                                  R2100 LiDAR perception
-                                           |
-                                      CAN 0x101
-                                           |
-                                           v
-Gazebo B speed -> UDP -> R2100 gateway -> CAN0
-                                           |
-                                      physical CAN
-                                           |
-                                          CAN1
-                                           |
-                                           v
-                                  R2100 AEB controller
-                                           |
-                                      CAN 0x200
-                                           |
-                                           v
-                                  R2100 CAN gateway
-                                           |
-                                           v
-                                         UDP
-                                           |
-                                           v
-                                  Gazebo B brake override
+Gazebo Vehicle B LiDAR
+        |
+        v
+UDP LiDAR transport
+        |
+        v
+R2100 LiDAR perception
+        |
+physical CAN
+        |
+R2100 AEB controller
+        |
+physical CAN
+        |
+R2100 CAN gateway
+        |
+        v
+UDP brake state
+        |
+        v
+Gazebo Vehicle B brake override
 ```
 
-The current HIL setup uses classic 11-bit CAN at **500 kbit/s** with CAN0 and CAN1 physically connected on the bench.
+Vehicle speed also travels from Gazebo to the R2100 gateway and onto physical CAN. The bench uses classic 11-bit CAN at **500 kbit/s** with CAN0 and CAN1 physically connected.
 
-Vehicle B retains SIL route steering while its longitudinal AEB decision is evaluated on the R2100. This separation keeps the HIL boundary explicit and makes the embedded safety path independently testable.
+Vehicle B retains SIL route steering while its longitudinal AEB decision is evaluated on the R2100. The current embedded AEB safety path is LiDAR-based; camera + LiDAR fusion is demonstrated on the SIL side rather than claimed as part of the current embedded HIL decision path.
 
-See the [R2100 HIL guide](edge-path-project/hil/README.md) for the CAN protocol, three-terminal startup sequence, troubleshooting and validation evidence.
+## HIL validation progression
 
-## HIL-9 validation
+### HIL-9 development history
 
-HIL-9 extends the verified Ruskotunturi Phase 6 scenario into the embedded HIL setup.
+HIL-9 established the Ruskotunturi hybrid architecture:
 
 | Stage | Purpose | Result |
 | --- | --- | --- |
 | HIL-9A | Ruskotunturi Phase 6 SIL baseline | PASS |
-| HIL-9B | Vehicle B 721-beam LiDAR to R2100 perception | PASS |
+| HIL-9B | Vehicle B raw LiDAR to R2100 perception | PASS |
 | HIL-9C | Vehicle B route with R2100 longitudinal AEB | PASS |
 | HIL-9D | Full hybrid two-vehicle mission | PASS |
-| HIL-9E | Automated intentional end-to-end AEB intervention | PASS |
+| HIL-9E | Intentional end-to-end R2100 AEB intervention | PASS |
 
-The HIL-9D hybrid mission retained the normal Phase 6 behaviour: both vehicles reached their goals, the conflict-zone coordinator performed one wait/release cycle, no conflict overlap occurred, and Vehicle B was verified stopped at mission completion.
+HIL-9 remains useful development history, but it is not the current HIL reference point.
 
-HIL-9E deliberately placed a static obstacle on Vehicle B's route. The embedded R2100 AEB triggered on TTC, Vehicle B stopped at 0.000 m/s, and the automated test measured **1.160 m body-to-obstacle clearance** against a **1.000 m requirement**.
+### HIL-10 Freshness and Fault Validation
 
-Two integration issues found during HIL-9 are now part of the implementation:
+HIL-10 added explicit freshness and fail-safe validation for odometry, returned brake state and LiDAR-related sensor timeout behaviour. The focused HIL-10 offline suite passed **42 / 42**, and all six planned hardware scenarios passed.
 
-- the 721-beam LiDAR scan is chunked into MTU-safe UDP packets before R2100 reassembly,
-- obstacle distance sent on CAN is corrected from raw LiDAR-origin range to physical vehicle-body clearance.
+Later R2100 HIL work packages added:
 
-The HIL guide documents both findings and their rationale.
+- configurable signal mapping,
+- configuration-driven scalar signal codecs,
+- repeatable embedded zipapp deployment,
+- R2100 deployment preflight and fail-closed startup,
+- WSL-side HIL startup-readiness diagnostics.
 
-## CAN protocol
+The current full offline repository suite passes:
 
-The current HIL protocol is intentionally small:
+```text
+Ran 152 tests
+OK
+```
+
+See [VALIDATION.md](VALIDATION.md) for the current evidence catalogue and the distinction between historical and current preflight checks.
+
+## CAN and signal configuration
+
+The default HIL signal set is:
 
 ```text
 0x100 VEHICLE_SPEED
@@ -168,12 +162,23 @@ The current HIL protocol is intentionally small:
 0x200 BRAKE_COMMAND
 ```
 
-`OBSTACLE_DISTANCE` represents body-to-obstacle clearance for the current Ruskotunturi HIL perception path. A stale LiDAR does not produce a synthetic "no obstacle" value; missing distance updates cause the embedded AEB controller to enter its sensor-timeout fail-safe brake state.
+CAN IDs, interfaces and scalar scaling are no longer treated as fixed runtime constants. The R2100 runtime loads shared JSON signal-mapping profiles, and alternate CAN-ID and alternate-scaling profiles have been validated on the physical CAN bench.
 
-The exact encoding is defined in:
+`OBSTACLE_DISTANCE` represents physical vehicle-body clearance in the current Ruskotunturi HIL perception path.
 
-```text
-edge-path-project/hil/can_protocol.py
+## Deployment
+
+The current R2100 runtime is built as a Python zipapp plus external configuration and control scripts. It supports versioned SSH/SCP deployment, configuration validation, target-side preflight, managed start/status/stop operation and rollback.
+
+The deployed runtime intentionally requires `python3` on the R2100; the project does not currently claim a Python-free native executable.
+
+Typical target control is:
+
+```bash
+~/r2100_hil/current/r2100_hil.pyz preflight
+~/r2100_hil/current/start_hil.sh
+~/r2100_hil/current/status_hil.sh
+~/r2100_hil/current/stop_hil.sh
 ```
 
 ## Repository structure
@@ -181,87 +186,66 @@ edge-path-project/hil/can_protocol.py
 ```text
 EdgeDetection/
 ├── README.md
+├── VALIDATION.md
 ├── tests/
 └── edge-path-project/
     ├── aeb_sil/                 # CARLA SIL controllers and scenarios
-    ├── results/                 # CARLA / early SIL result evidence
+    ├── results/                 # CARLA / early SIL evidence
     ├── gazebo/
     │   ├── README.md            # Current Gazebo SIL guide
-    │   ├── models/              # Gazebo vehicles and Ruskotunturi model
-    │   ├── scripts/             # SIL and HIL scenario controllers/tests
-    │   ├── worlds/              # Gazebo test environments
-    │   └── results/             # Gazebo / Ruskotunturi validation results
-    ├── hil/
-    │   ├── README.md            # R2100 HIL architecture and operating guide
-    │   ├── can_protocol.py
-    │   ├── gazebo_lidar_sender.py
-    │   ├── r2100_can_gateway.py
-    │   ├── r2100_lidar_perception.py
-    │   └── r2100_aeb_controller.py
-    ├── carla_*.py               # Earlier CARLA experiments
-    ├── main.py
-    └── environment.yml
+    │   ├── models/
+    │   ├── scripts/
+    │   ├── worlds/
+    │   └── results/
+    └── hil/
+        ├── README.md            # Detailed R2100 HIL guide
+        ├── config/
+        ├── deployment/
+        ├── signal_mapping.py
+        ├── signal_codec.py
+        ├── r2100_preflight.py
+        ├── r2100_can_gateway.py
+        ├── r2100_lidar_perception.py
+        └── r2100_aeb_controller.py
 ```
 
-## Running the current demonstrations
+## Running current validation
 
-For the final Gazebo-only SIL baseline, follow:
+Run the complete offline repository suite from the repository root:
+
+```bash
+python3 -m unittest discover -s tests -v
+```
+
+For the current Gazebo SIL baseline, follow:
 
 ```text
 edge-path-project/gazebo/README.md
 ```
 
-For the current R2100 HIL setup and HIL-9 tests, follow:
+For the current R2100 HIL setup, deployment and HIL-10-based validation workflow, follow:
 
 ```text
 edge-path-project/hil/README.md
 ```
 
-The HIL guide uses a repeatable three-terminal startup order:
+The filename `edge-path-project/gazebo/scripts/hil10_preflight.py` is historical. It checks integrity against the original HIL-9-derived dependency snapshot and is **not** the current R2100 readiness check. Current target readiness is checked with the deployed `r2100_hil.pyz preflight`; WSL-side startup conditions are reported by the HIL startup diagnostics.
 
-```text
-1. WSL: Gazebo world
-2. R2100: perception + gateway + AEB
-3. WSL: LiDAR sender, then mission/test script
-```
+## Evidence policy
 
-## Testing philosophy
+Validation results are retained when they provide useful development or acceptance evidence. Failed or interrupted runs may be kept deliberately as development history and must not be presented as current PASS evidence.
 
-The project uses staged validation rather than moving directly to a fully integrated scenario.
-
-Functions are tested independently before integration, including:
-
-- AEB and TTC logic,
-- LiDAR perception,
-- obstacle avoidance,
-- camera + LiDAR fusion,
-- multi-vehicle coordination,
-- physical CAN transport,
-- embedded fail-safe behaviour,
-- normal hybrid mission execution,
-- deliberate end-to-end AEB intervention.
-
-This keeps failures diagnosable and provides evidence for each transition from SIL toward HIL.
-
-## Results and evidence
-
-CSV result files are committed intentionally when they represent useful validation evidence. They should not be globally ignored because they document controller behaviour at different development stages.
-
-Primary result locations are:
-
-```text
-edge-path-project/results/          # CARLA / early SIL
-edge-path-project/gazebo/results/   # Gazebo / Ruskotunturi SIL
-```
-
-HIL-9 console PASS criteria, architecture and validated measurements are documented in `edge-path-project/hil/README.md`.
+The cross-project evidence catalogue in [VALIDATION.md](VALIDATION.md) identifies the current baseline artifacts and any known evidence gaps.
 
 ## Current status
 
-**CARLA development:** retained and documented  
+**CARLA development:** retained as development history  
 **Gazebo ADAS SIL:** implemented  
-**Ruskotunturi multi-vehicle SIL:** PASS baseline available  
-**R2100 + physical CAN HIL:** implemented  
-**Ruskotunturi HIL-9A ... HIL-9E:** PASS  
+**Ruskotunturi multi-vehicle SIL v6.4:** PASS  
+**R2100 + physical CAN HIL:** implemented and hardware-validated  
+**HIL-10 freshness/fault hardware scenarios:** 6 / 6 PASS  
+**Configurable mapping / codec / deployment / preflight:** implemented and validated  
+**HIL startup readiness diagnostics:** implemented and validated  
+**Full offline repository suite:** 152 / 152 PASS  
 
-The project has therefore progressed beyond HIL preparation: a real embedded controller and physical CAN link are now part of the validated Ruskotunturi test loop.
+The next project work should build on this verified baseline rather than reorganising the existing `gazebo/`, `hil/` and `tests/` structure.

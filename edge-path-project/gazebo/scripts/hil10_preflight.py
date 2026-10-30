@@ -1,5 +1,14 @@
 #!/usr/bin/env python3
-"""Read-only check of HIL-10 dependencies against its tested HIL-9 baseline."""
+"""Historical HIL-10 dependency integrity check against its tested HIL-9 baseline.
+
+This script is intentionally retained as development-history evidence. It compares a
+small dependency set against the original HIL-9-derived snapshot used when HIL-10
+freshness testing was introduced. It is not the current runtime-readiness preflight.
+
+For current R2100 readiness, run the deployed ``r2100_hil.pyz preflight`` command.
+For end-to-end WSL/Gazebo startup readiness, use the HIL-10 runner's startup
+diagnostics.
+"""
 
 import hashlib
 from pathlib import Path
@@ -15,13 +24,18 @@ EXPECTED = {
     "edge-path-project/hil/r2100_can_gateway.py": "1ef2b77e606e3211f3dbd424e301ff61891b1bb6",
     "edge-path-project/hil/r2100_lidar_perception.py": "c87e3214adee39f92783a2125aa722400bcceba6",
     "edge-path-project/gazebo/worlds/ruskotunturi_phase6_two_vehicle_world.sdf": "f4ebdc1b12bf9573283f4752ae5c730b65697fd6",
-    "edge-path-project/gazebo/worlds/ruskotunturi_hil9e_aeb_world.sdf": "486a29a49cd784840402a3fd2cf4eeec868c7a3e"
+    "edge-path-project/gazebo/worlds/ruskotunturi_hil9e_aeb_world.sdf": "486a29a49cd784840402a3fd2cf4eeec868c7a3e",
 }
 
 
 def main():
     root = Path(__file__).resolve().parents[3]
     failures = []
+
+    print("HIL-10 historical baseline integrity check")
+    print("This is not the current R2100 runtime-readiness preflight.")
+    print()
+
     for relative, expected in EXPECTED.items():
         path = root / relative
         if not path.is_file():
@@ -29,17 +43,34 @@ def main():
         else:
             # Git blob hash; tolerate a checkout converting LF to CRLF.
             content = path.read_bytes().replace(b"\r\n", b"\n")
-            actual = hashlib.sha1(b"blob " + str(len(content)).encode() + b"\0" + content).hexdigest()
+            actual = hashlib.sha1(
+                b"blob " + str(len(content)).encode() + b"\0" + content
+            ).hexdigest()
             status = "OK" if actual == expected else "DIFFERS"
+
         print(f"{status:7s} {relative}")
         if status != "OK":
             failures.append(relative)
-    print("\nBaseline:", BASE_COMMIT)
+
+    print("\nHistorical baseline:", BASE_COMMIT)
+
     if failures:
-        print("Dependency mismatch: inspect local differences before the hardware run.")
+        print(
+            "Historical baseline differs from the current tree. "
+            "This is expected after later HIL development."
+        )
+        print(
+            "Use ~/r2100_hil/current/r2100_hil.pyz preflight for current "
+            "R2100 runtime readiness."
+        )
         print("This check has not modified any files.")
         return 1
-    print("Baseline dependencies match. Hardware/Gazebo validation is still required.")
+
+    print("Historical baseline dependencies match.")
+    print(
+        "Current hardware/Gazebo readiness must still be checked with the "
+        "deployment preflight and HIL startup diagnostics."
+    )
     return 0
 
 
