@@ -4,7 +4,7 @@ This directory documents the Hardware-in-the-Loop implementation used to extend 
 
 The embedded platform is a **Seeed Studio reComputer Industrial R2100**. Gazebo Harmonic runs in WSL and provides the virtual vehicles, terrain, LiDAR and odometry. The R2100 receives simulation data over UDP, maps the relevant signals onto physical CAN, executes the AEB decision, and returns the brake state to the simulator.
 
-The current validated Ruskotunturi milestone is **HIL-10**. The HIL path also includes hardware-validated **Configurable Signal Mapping** and **Embedded Deployment** work packages.
+The current validated Ruskotunturi milestone is **HIL-10**. The HIL path also includes hardware-validated **Configurable Signal Mapping**, **Configuration-driven Signal Codec** and **Embedded Deployment** work packages.
 
 This is a research and development setup, not a certified functional-safety implementation.
 
@@ -63,9 +63,7 @@ Default gateway   : not required
 DNS               : not required
 ```
 
-These addresses are only an example private RFC1918 lab subnet. They are not a project requirement. Use the actual R2100 address in commands via `<R2100_IP>` or a shell variable.
-
-WLAN or another management connection may remain enabled in parallel, but HIL UDP traffic should use the selected wired R2100 address when a direct Ethernet link is available.
+These addresses are only an example private RFC1918 lab subnet. They are not a project requirement. Use the actual reachable R2100 address in commands via `<R2100_IP>` or a shell variable. Later deployment and codec-regression runs also confirmed that the same HIL scripts work over another reachable management/overlay path when the selected R2100 address is used consistently.
 
 ## Main files
 
@@ -75,7 +73,8 @@ R2100 and transport components:
 edge-path-project/hil/
 ├── config/
 │   ├── ruskotunturi_hil.json
-│   └── ruskotunturi_hil_alt_ids.json
+│   ├── ruskotunturi_hil_alt_ids.json
+│   └── ruskotunturi_hil_alt_scaling.json
 ├── deployment/
 │   ├── build_r2100_hil.py
 │   ├── deploy_r2100_hil.sh
@@ -84,6 +83,7 @@ edge-path-project/hil/
 │   ├── status_hil.sh
 │   └── stop_hil.sh
 ├── can_protocol.py
+├── signal_codec.py
 ├── signal_mapping.py
 ├── gazebo_hil_bridge.py
 ├── gazebo_lidar_sender.py
@@ -107,43 +107,30 @@ edge-path-project/gazebo/scripts/
 └── ruskotunturi_hil10_hybrid_test.py
 ```
 
-Earlier HIL-9 validation scripts remain available:
-
-```text
-edge-path-project/gazebo/scripts/
-├── ruskotunturi_hil_b_route_test.py
-├── ruskotunturi_phase6_hybrid_hil_test.py
-└── ruskotunturi_hil9e_aeb_test.py
-```
-
-The HIL-10, signal-mapping and deployment automated software tests are:
+The signal-mapping, codec and deployment automated software tests are:
 
 ```text
 tests/
-├── test_hil10_integration.py
-├── test_hil10_safety.py
 ├── test_signal_mapping.py
 ├── test_signal_mapping_gateway.py
 ├── test_signal_mapping_aeb.py
 ├── test_signal_mapping_perception.py
+├── test_signal_codec.py
+├── test_signal_codec_end_to_end.py
 └── test_embedded_deployment.py
 ```
 
-The dedicated AEB obstacle world is:
-
-```text
-edge-path-project/gazebo/worlds/ruskotunturi_hil9e_aeb_world.sdf
-```
+Earlier HIL-9 scripts and the dedicated AEB obstacle world remain available as development history.
 
 ## CAN protocol
 
-The protocol payload encoding is defined in `can_protocol.py`. The default CAN identifiers are provided by the active signal-mapping profile.
+The default CAN identifiers are provided by the active signal-mapping profile. Scalar payload encoding is now performed through `signal_codec.py` using the active signal definition. The structured brake payload remains the specialized `brake_command_v1` codec in `can_protocol.py`.
 
-| Default CAN ID | Signal | Encoding |
+| Default CAN ID | Signal | Default encoding |
 | --- | --- | --- |
-| `0x100` | `VEHICLE_SPEED` | uint16 little-endian, 0.01 m/s per bit |
-| `0x101` | `OBSTACLE_DISTANCE` | uint16 little-endian millimetres, `0xFFFF` = no obstacle |
-| `0x200` | `BRAKE_COMMAND` | byte 0 active, byte 1 reason, byte 2 rolling counter |
+| `0x100` | `VEHICLE_SPEED` | `uint16_le`, scale `0.01 m/s/bit` |
+| `0x101` | `OBSTACLE_DISTANCE` | `uint16_le`, scale `0.001 m/bit`, `0xFFFF` = no obstacle |
+| `0x200` | `BRAKE_COMMAND` | `brake_command_v1`: byte 0 active, byte 1 reason, byte 2 rolling counter |
 
 Brake reason values:
 
@@ -165,7 +152,7 @@ Control period       : 0.05 s
 
 ## Configurable Signal Mapping
 
-The active HIL CAN identifiers and interface selection are loaded from a shared JSON profile through `signal_mapping.py`. The same profile is consumed by:
+The active HIL CAN identifiers, interfaces and signal definitions are loaded from a shared JSON profile through `signal_mapping.py`. The same profile is consumed by:
 
 ```text
 r2100_can_gateway.py
@@ -190,9 +177,7 @@ obstacle_distance CAN ID       : 0x101
 brake_command CAN ID           : 0x200
 ```
 
-The profile also records signal direction, source, encoding and scale metadata. At the current implementation stage, CAN-ID and interface selection are active runtime configuration. Payload encoding and numeric scaling are still implemented by `can_protocol.py`; the corresponding profile metadata is validated but is not yet used to replace the codec implementation.
-
-The loader validates the profile before use, including required signals, classic 11-bit CAN-ID range, duplicate CAN identifiers, positive scale values, supported directions, interface names and schema version.
+The loader validates required signals, classic 11-bit CAN-ID range, duplicate CAN identifiers, supported directions, interface names, schema version and encoding-specific fields. `uint16_le` requires a positive `scale`. `brake_command_v1` rejects scalar-only fields such as `scale` and `no_value_raw`.
 
 Validate the default profile from the repository root with:
 
@@ -200,7 +185,7 @@ Validate the default profile from the repository root with:
 python3 edge-path-project/hil/signal_mapping.py
 ```
 
-A second profile is committed specifically as proof that the runtime is not tied to the default identifiers:
+A second profile proves that runtime CAN identifiers are not tied to the defaults:
 
 ```text
 edge-path-project/hil/config/ruskotunturi_hil_alt_ids.json
@@ -214,7 +199,7 @@ obstacle_distance  : 0x111
 brake_command      : 0x210
 ```
 
-The alternate profile was tested on the same R2100 and physical CAN bench. All three R2100 processes were started with the alternate profile, `candump` confirmed physical traffic on `0x110`, `0x111` and `0x210`, and the unchanged HIL-10 route completed with:
+The alternate-ID profile was tested on the same R2100 and physical CAN bench. All three R2100 processes used the alternate profile, `candump` confirmed physical traffic on `0x110`, `0x111` and `0x210`, and the unchanged HIL-10 route completed with:
 
 ```text
 HIL-10 RESULT: PASS
@@ -223,25 +208,101 @@ End reason: route_complete
 
 The default profile was also regression-tested after all three runtime components were converted to shared configuration and completed the normal HIL-10 route with `route_complete` PASS.
 
-Dedicated offline tests cover the loader plus gateway, AEB and perception integration:
+Use the portable discovery form for the mapping tests:
 
 ```bash
-python3 -m unittest \
-  tests.test_signal_mapping \
-  tests.test_signal_mapping_gateway \
-  tests.test_signal_mapping_aeb \
-  tests.test_signal_mapping_perception \
+python3 -m unittest discover \
+  -s tests \
+  -p 'test_signal_mapping*.py' \
   -v
 ```
 
-Validated result:
+The original Configurable Signal Mapping work package validated 12 mapping tests before the codec work was added.
+
+## Configuration-driven Signal Codec
+
+The signal profiles already contained `encoding`, `scale` and `no_value_raw` metadata, but the original runtime still used hardcoded scalar conversions in `can_protocol.py`. The Configuration-driven Signal Codec work package makes those fields active runtime configuration for scalar CAN signals.
+
+`signal_codec.py` currently supports `uint16_le` scalar signals and provides shared encode/decode functions using the `SignalDefinition` loaded from the active JSON profile.
+
+The runtime integration is:
 
 ```text
-Ran 12 tests
-OK
+Gazebo speed
+  -> r2100_can_gateway.py
+  -> encode_signal_value(vehicle_speed definition)
+  -> physical CAN
+  -> r2100_aeb_controller.py
+  -> decode_signal_value(vehicle_speed definition)
+
+LiDAR clearance
+  -> r2100_lidar_perception.py
+  -> encode_signal_value(obstacle_distance definition)
+  -> physical CAN
+  -> r2100_aeb_controller.py
+  -> decode_signal_value(obstacle_distance definition)
 ```
 
-This work package therefore demonstrates that the active R2100 processes can share one mapping profile and that the physical CAN identifiers can be changed consistently without editing the Python runtime code.
+The gateway's fallback obstacle-distance path uses the same codec when external perception is not selected.
+
+The codec validates the configured scale, rejects negative scalar values, enforces the uint16 range and prevents a real measurement from colliding with a configured reserved `no_value_raw`. Decoding maps `no_value_raw` back to `None`.
+
+The structured `BRAKE_COMMAND` payload is deliberately not treated as a scalar signal. It continues to use the specialized `brake_command_v1` codec.
+
+A dedicated alternate-scaling profile proves that numeric scaling can change without runtime-code edits:
+
+```text
+edge-path-project/hil/config/ruskotunturi_hil_alt_scaling.json
+```
+
+The CAN identifiers remain unchanged while the scalar resolution changes:
+
+```text
+vehicle_speed      : 0.01  -> 0.02 m/s/bit
+obstacle_distance  : 0.001 -> 0.002 m/bit
+```
+
+The end-to-end software test verifies that the changed raw CAN values are decoded back to the same physical values by the AEB controller. For example, with `vehicle_speed` scale `0.02`, `1.2 m/s` is transmitted as raw value `60` and decoded back to `1.2 m/s`.
+
+Run the current signal-mapping and codec tests with:
+
+```bash
+python3 -m unittest discover \
+  -s tests \
+  -p 'test_signal*.py' \
+  -v
+```
+
+Run the deployment tests with:
+
+```bash
+python3 -m unittest discover \
+  -s tests \
+  -p 'test_embedded_deployment.py' \
+  -v
+```
+
+Validated combined result:
+
+```text
+37 / 37 PASS
+```
+
+Hardware validation was performed from a newly deployed R2100 package on the physical CAN loop. The alternate-scaling profile completed the unchanged HIL-10 route with:
+
+```text
+HIL-10 RESULT: PASS
+End reason: route_complete
+```
+
+The default profile was then run again using the **same new deployment release** and also completed with:
+
+```text
+HIL-10 RESULT: PASS
+End reason: route_complete
+```
+
+This demonstrates that `vehicle_speed` and `obstacle_distance` scaling can be changed from JSON configuration without editing the gateway, perception or AEB runtime code, while preserving the physical-value semantics across the real R2100 and CAN chain.
 
 ## Embedded Deployment
 
@@ -261,14 +322,17 @@ The package contains:
 r2100_hil.pyz
 config/
 ├── ruskotunturi_hil.json
-└── ruskotunturi_hil_alt_ids.json
+├── ruskotunturi_hil_alt_ids.json
+└── ruskotunturi_hil_alt_scaling.json
 manifest.json
 start_hil.sh
 status_hil.sh
 stop_hil.sh
 ```
 
-`r2100_hil.pyz` is a Python zipapp with one executable entry point for the three R2100 runtime components:
+The zipapp includes `signal_codec.py` together with the gateway, perception, AEB, mapping and protocol runtime modules.
+
+`r2100_hil.pyz` provides one executable entry point for the three R2100 runtime components:
 
 ```bash
 r2100_hil.pyz perception
@@ -316,32 +380,20 @@ The deployed runtime is controlled with:
 ~/r2100_hil/current/stop_hil.sh
 ```
 
+A non-default profile can be selected for the managed runtime with `R2100_HIL_CONFIG`, for example:
+
+```bash
+R2100_HIL_CONFIG=~/r2100_hil/current/config/ruskotunturi_hil_alt_scaling.json \
+  ~/r2100_hil/current/start_hil.sh
+```
+
 The start script records process IDs and creates a dedicated log directory. The stop script terminates the AEB, gateway and perception processes in a controlled order. The zipapp converts `SIGTERM` into the existing controller shutdown path so the AEB process can execute its final fail-safe brake transmission logic before exiting normally.
 
 Versioned release directories also provide a simple rollback mechanism. Rollback was validated by creating two releases, changing the `current` symlink back to the older release and successfully running its deployment configuration check. The symlink was then returned to the newer validated release.
 
-Hardware validation was performed with the R2100 processes running only from the deployed package under `~/r2100_hil/current/`, rather than from the Git working tree. The unchanged HIL-10 route completed with:
+Hardware validation was performed with the R2100 processes running only from the deployed package under `~/r2100_hil/current/`, rather than from the Git working tree. The HIL-10 route completed with `route_complete` PASS.
 
-```text
-HIL-10 RESULT: PASS
-End reason: route_complete
-```
-
-Dedicated deployment tests validate the build output, executable permissions, manifest hashes, zipapp check command, component CLI entry points and shell-script syntax. Together with the signal-mapping tests, the validated offline result is:
-
-```text
-Ran 19 tests
-OK
-```
-
-Independent developer validation was also completed from a second developer machine. The second developer built the deployment package locally, deployed it to the R2100 over SSH/SCP, started the deployed runtime, and completed the unchanged HIL-10 route with:
-
-```text
-HIL-10 RESULT: PASS
-End reason: route_complete
-```
-
-This provides an additional reproducibility check that the deployment workflow is not tied to the original development machine.
+Independent developer validation was also completed from a second developer machine. The second developer built the deployment package locally, deployed it to the R2100 over SSH/SCP, started the deployed runtime, and completed the unchanged HIL-10 route with `route_complete` PASS. This provides an additional reproducibility check that the deployment workflow is not tied to the original development machine.
 
 This work package therefore demonstrates a repeatable build -> validate -> deploy -> run -> stop -> rollback workflow for the current R2100 HIL runtime.
 
@@ -397,8 +449,6 @@ The HIL-10 runtime closes that gap with explicit freshness rules:
 - Re-reading a cached zero-speed value cannot produce a PASS.
 - The stop observer uses the magnitude of the full linear velocity vector.
 
-These rules are implemented in the HIL-10 runtime rather than by modifying the legacy HIL-9 scripts.
-
 ## CAN interface setup
 
 On the R2100, configure both CAN interfaces at 500 kbit/s before starting HIL processes:
@@ -433,7 +483,7 @@ CAN0_L <-> CAN1_L
 
 ## HIL-10 offline validation
 
-Before hardware execution, run the preflight and software tests from the repository root:
+Before hardware execution, run the preflight and HIL-10 software tests from the repository root:
 
 ```bash
 cd ~/edge-path-project-git
@@ -441,7 +491,7 @@ python3 edge-path-project/gazebo/scripts/hil10_preflight.py
 python3 -m unittest discover -s tests -p 'test_hil10*.py' -v
 ```
 
-Validated result:
+Validated HIL-10 result:
 
 ```text
 Ran 42 tests
@@ -449,8 +499,6 @@ OK
 ```
 
 The tests cover freshness, stale cached speed, duplicate/reordered replies, source timestamps, stop verification, fail-closed behavior and HIL-10 execution/adaptor logic.
-
-A local `DIFFERS` result from `hil10_preflight.py` must be inspected before a hardware run. During HIL-10 development, the known local change to `ruskotunturi_hil_b_route_test.py` added immediate brake-state transition logging for response-time measurement.
 
 ## Standard HIL-10 three-terminal workflow
 
@@ -466,8 +514,6 @@ The HIL-10 B test starts its own raw LiDAR sender, so a fourth LiDAR process is 
 
 ### Terminal 1 - WSL / Gazebo
 
-Phase 6 world for route, hybrid and fault tests:
-
 ```bash
 cd ~/edge-path-project-git
 export GZ_SIM_RESOURCE_PATH="$PWD/edge-path-project/gazebo/models${GZ_SIM_RESOURCE_PATH:+:$GZ_SIM_RESOURCE_PATH}"
@@ -476,108 +522,33 @@ gz sim -r \
   edge-path-project/gazebo/worlds/ruskotunturi_phase6_two_vehicle_world.sdf
 ```
 
-AEB world:
-
-```bash
-cd ~/edge-path-project-git
-export GZ_SIM_RESOURCE_PATH="$PWD/edge-path-project/gazebo/models${GZ_SIM_RESOURCE_PATH:+:$GZ_SIM_RESOURCE_PATH}"
-
-gz sim -r \
-  edge-path-project/gazebo/worlds/ruskotunturi_hil9e_aeb_world.sdf
-```
-
-### Terminal 2 - R2100
+### Terminal 2 - R2100 / deployed runtime
 
 Restart all three R2100 processes between test runs because the AEB latch and test state must start cleanly.
 
-By default all three processes load `config/ruskotunturi_hil.json`. A different mapping profile can be selected with `--config` on each process.
-
 ```bash
-cd ~/EdgeDetection/edge-path-project/hil
-
-HIL10_LOG_DIR="$HOME/hil_test_logs/hil10_$(date -u +%Y%m%dT%H%M%S)"
-mkdir -p "$HIL10_LOG_DIR"
-
-python3 -u r2100_lidar_perception.py \
-  > "$HIL10_LOG_DIR/perception.log" 2>&1 &
-HIL10_PERCEPTION_PID=$!
-
-python3 -u r2100_can_gateway.py --external-perception \
-  > "$HIL10_LOG_DIR/gateway.log" 2>&1 &
-HIL10_GATEWAY_PID=$!
-
-python3 -u r2100_aeb_controller.py \
-  > "$HIL10_LOG_DIR/aeb.log" 2>&1 &
-HIL10_AEB_PID=$!
+~/r2100_hil/current/start_hil.sh
+~/r2100_hil/current/status_hil.sh
 ```
 
-For the alternate-ID validation profile, pass the same config to all three processes:
-
-```bash
-python3 -u r2100_lidar_perception.py \
-  --config config/ruskotunturi_hil_alt_ids.json
-
-python3 -u r2100_can_gateway.py \
-  --config config/ruskotunturi_hil_alt_ids.json \
-  --external-perception
-
-python3 -u r2100_aeb_controller.py \
-  --config config/ruskotunturi_hil_alt_ids.json
-```
+For a non-default profile, set `R2100_HIL_CONFIG` before invoking the same start script.
 
 ### Terminal 3 - WSL / HIL-10
-
-Set the current R2100 address once:
 
 ```bash
 cd ~/edge-path-project-git
 read -r -p "R2100 IP address: " R2100_IP
-```
 
-Normal route:
-
-```bash
 python3 -u edge-path-project/gazebo/scripts/ruskotunturi_hil10_b_test.py \
   --mode route \
   --r2100-host "$R2100_IP"
 ```
 
-Hybrid mission:
-
-```bash
-python3 -u edge-path-project/gazebo/scripts/ruskotunturi_hil10_hybrid_test.py \
-  --r2100-host "$R2100_IP"
-```
-
-Intentional AEB:
-
-```bash
-python3 -u edge-path-project/gazebo/scripts/ruskotunturi_hil10_b_test.py \
-  --mode aeb \
-  --r2100-host "$R2100_IP"
-```
-
-Fault injection tests:
-
-```bash
-python3 -u edge-path-project/gazebo/scripts/ruskotunturi_hil10_b_test.py \
-  --mode fault-odometry \
-  --r2100-host "$R2100_IP"
-
-python3 -u edge-path-project/gazebo/scripts/ruskotunturi_hil10_b_test.py \
-  --mode fault-brake \
-  --r2100-host "$R2100_IP"
-
-python3 -u edge-path-project/gazebo/scripts/ruskotunturi_hil10_b_test.py \
-  --mode fault-lidar \
-  --r2100-host "$R2100_IP"
-```
-
-The fault tests default to a shorter automatic injection delay. The validated hardware runs used `--fault-after 8.0` to allow a longer period of visually observable normal driving before fault injection.
+Other supported HIL-10 modes are `aeb`, `fault-odometry`, `fault-brake` and `fault-lidar`; the hybrid mission uses `ruskotunturi_hil10_hybrid_test.py`.
 
 ## HIL-10 hardware validation summary
 
-All six planned HIL-10 hardware scenarios passed on the Gazebo -> Ethernet -> R2100 -> physical CAN -> R2100 -> Ethernet -> Gazebo loop.
+All six planned HIL-10 hardware scenarios passed on the Gazebo -> network -> R2100 -> physical CAN -> R2100 -> network -> Gazebo loop.
 
 | Test | Purpose | Result |
 | --- | --- | --- |
@@ -598,24 +569,13 @@ fault-lidar    : 0.559 s -> sensor_timeout
 
 Each fault run required the vehicle to move before injection, detect the expected fault within the allowed window, command zero speed and steering, verify stopping from new odometry samples, and hold the verified stop.
 
-The validated fault runs ended with:
-
-```text
-HIL-10 RESULT: PASS
-End reason: fault_stop_and_hold_verified
-```
-
-The `route`, `hybrid` and `aeb` runs also passed using the same HIL-10 runtime.
-
 ## Manual physical CAN interruption and recovery validation
 
 A manual robustness test was also performed by physically interrupting the CAN0-CAN1 bench connection while Vehicle B was driving.
 
-The interruption caused the CAN interface to enter an error state and produced a fail-safe communication timeout in the Gazebo-side controller. During the first experiment, `r2100_aeb_controller.py` terminated because SocketCAN returned `ENOBUFS` (`No buffer space available`) when the disconnected CAN transmit queue could not drain.
+The first experiment exposed `ENOBUFS` handling in the AEB transmit path. The controller was hardened so transient CAN transmit errors (`ENOBUFS`, `EAGAIN` and `EWOULDBLOCK`) are treated as dropped frames instead of fatal process errors. The brake rolling counter advances only after successful CAN transmission.
 
-The AEB controller was therefore hardened so that transient CAN transmit errors (`ENOBUFS`, `EAGAIN` and `EWOULDBLOCK`) are treated as dropped CAN frames instead of fatal process errors. The brake rolling counter advances only after a successful CAN transmission.
-
-The test was then repeated successfully:
+The repeated test verified:
 
 ```text
 normal driving
@@ -623,35 +583,22 @@ normal driving
  -> fail-safe communication/sensor timeout
  -> vehicle stop
  -> CAN bus-off/error state observed
- -> AEB, gateway and perception processes remained alive
+ -> AEB, gateway and perception remained alive
  -> physical CAN connection restored
  -> CAN0 and CAN1 returned to ERROR-ACTIVE
  -> new route run completed without restarting the R2100 processes
  -> PASS
 ```
 
-The recovery route ended with:
-
-```text
-HIL-10 RESULT: PASS
-End reason: route_complete
-```
-
-This manual test is additional robustness validation and is not one of the six automated HIL-10 hardware scenarios listed above.
-
 ## HIL-10 result evidence
 
-Each HIL-10 hardware run writes a CSV trace and a matching JSON summary under:
+Each HIL-10 hardware run writes a CSV trace and matching JSON summary under:
 
 ```text
 edge-path-project/gazebo/results/hil10/
 ```
 
-The JSON records PASS/FAIL, end reason and scenario-specific verification data. The CSV records the time history used to evaluate freshness, commands, brake state and stop verification.
-
-Generated HIL-10 CSV/JSON outputs are ignored by default for new runs so repeated regression tests do not clutter version control. Existing committed evidence may remain in repository history, while significant hardware-validation conclusions are recorded in this README. Keep local CSV traces when time-series analysis is needed and JSON summaries when compact run metadata is useful.
-
-R2100 process logs should also be retained for failed or diagnostic runs.
+Generated HIL-10 CSV/JSON outputs are ignored by default for new runs so repeated regression tests do not clutter version control. Significant hardware-validation conclusions are recorded in this README.
 
 ## HIL-9 validation summary
 
@@ -693,27 +640,26 @@ brake-return loss -> local brake_timeout -> stop
 LiDAR loss -> R2100 sensor_timeout -> stop
 ```
 
-The vehicle remained stopped after each injected fault.
-
 ### 5. CAN transmit saturation must not terminate the safety controller
 
-A physical CAN interruption can prevent the SocketCAN transmit queue from draining and produce `ENOBUFS`. The AEB controller must treat this as a transient transport failure rather than terminate. After hardening the send path, the controller survived the interruption and resumed normal operation when the physical CAN connection recovered.
+A physical CAN interruption can prevent the SocketCAN transmit queue from draining and produce `ENOBUFS`. After hardening the send path, the controller survived the interruption and resumed normal operation when the physical CAN connection recovered.
 
 ### 6. Shared signal mapping must be validated end to end
 
-Moving CAN IDs into a configuration file is only useful if every active producer and consumer uses the same profile. The gateway, LiDAR perception and AEB controller therefore load the same mapping. The alternate-ID hardware run verified the configured IDs on the physical CAN bus and completed the route without Python runtime edits.
+Moving CAN IDs into a configuration file is only useful if every active producer and consumer uses the same profile. The alternate-ID hardware run verified the configured IDs on the physical CAN bus and completed the route without Python runtime edits.
 
 ### 7. Deployment should not depend on the target Git working tree
 
-The validated embedded deployment packages the runtime into a generated Python zipapp plus external configuration and control scripts. The hardware route was executed from the deployed `~/r2100_hil/current/` release rather than from `~/EdgeDetection`, demonstrating that the target Git working tree is not required for runtime execution. A second developer independently built and deployed the same workflow from another development machine and also completed the HIL-10 route successfully.
+The validated embedded deployment packages the runtime into a generated Python zipapp plus external configuration and control scripts. Hardware routes were executed from the deployed `~/r2100_hil/current/` release rather than from `~/EdgeDetection`. A second developer independently built and deployed the same workflow from another development machine and also completed the HIL-10 route successfully.
+
+### 8. Numeric signal scaling must be shared by producer and consumer
+
+A configurable `scale` value is only safe if every producer and consumer interprets the same physical signal using the same profile. The gateway, LiDAR perception and AEB controller now use the shared scalar codec. The alternate-scaling profile changed the raw CAN representation while preserving the decoded physical values, and both alternate-scaling and default-profile routes passed on the same newly deployed R2100 release.
 
 ## Scope and limitations
 
-The six automated HIL-10 fault/functional scenarios use controlled software-level injections around the real R2100 and physical CAN path. A separate manual test additionally validated physical CAN disconnection, bus-off/error-state behavior and recovery without restarting the R2100 processes.
+The current validation still does **not** cover every possible hardware or system failure. Follow-on targets include:
 
-The current validation still does **not** cover every possible hardware or system failure. Examples of remaining follow-on targets include:
-
-- configuration-driven replacement of the current hardcoded payload scaling/codec implementation,
 - a standalone native executable that does not require Python on the target,
 - arbitrary packet delay/jitter profiles,
 - forced process termination,
@@ -721,25 +667,21 @@ The current validation still does **not** cover every possible hardware or syste
 - an external command watchdog outside the current test runtime,
 - broader multi-node CAN fault cases beyond the current two-interface bench loop.
 
+The scalar codec currently supports `uint16_le`; structured `brake_command_v1` remains a specialized codec rather than a fully generic schema-driven payload description.
+
 ## Troubleshooting
 
-If a test remains in a fail-safe state at startup, inspect the R2100 chain:
-
-```bash
-tail -20 "$HIL10_LOG_DIR/perception.log"
-tail -20 "$HIL10_LOG_DIR/gateway.log"
-tail -20 "$HIL10_LOG_DIR/aeb.log"
-```
-
-Check that:
+If a test remains in a fail-safe state at startup, check that:
 
 - the correct Gazebo world is running,
 - `can0` and `can1` are UP at 500 kbit/s,
 - all three R2100 processes were started with the same mapping profile,
 - the physical CAN H/L loop is connected,
-- the R2100 IP address is reachable,
+- the **same reachable R2100 IP address** is supplied to the HIL test for the network path currently in use,
 - no old HIL controller is still publishing Vehicle B commands,
 - no separate LiDAR sender is running during a HIL-10 B test.
+
+A `startup_not_ready` result can occur when the test sends UDP traffic to an R2100 address that is not reachable on the currently active network path.
 
 Only one process should publish Vehicle B commands during a test.
 
@@ -756,25 +698,30 @@ CARLA experiments
  -> HIL-10 freshness + communication fault validation
  -> configurable signal mapping on the R2100 CAN chain
  -> reproducible embedded deployment package
+ -> configuration-driven scalar signal codec
 ```
 
 Current evidence:
 
 ```text
-HIL-10 offline software validation : 42 / 42 PASS
-HIL-10 hardware scenarios          : 6 / 6 PASS
-signal-mapping offline tests       : 12 / 12 PASS
-mapping + deployment offline tests : 19 / 19 PASS
-default mapping route regression   : PASS
-alternate CAN-ID route             : PASS
-alternate IDs on physical CAN      : 0x110 / 0x111 / 0x210 observed
-embedded package build/check       : PASS
-versioned SSH/SCP deployment       : PASS
-deployed-package HIL route         : PASS
-second-developer deployment route  : PASS
-start / stop / status control      : PASS
-release rollback                   : PASS
-wired Ethernet transport           : validated
-physical CAN loop                  : validated
-manual CAN interruption + recovery : PASS
+HIL-10 offline software validation       : 42 / 42 PASS
+HIL-10 hardware scenarios                : 6 / 6 PASS
+original signal-mapping offline tests    : 12 / 12 PASS
+mapping + deployment offline tests       : 19 / 19 PASS
+codec/mapping/deployment regression      : 37 / 37 PASS
+default mapping route regression         : PASS
+alternate CAN-ID route                   : PASS
+alternate IDs on physical CAN            : 0x110 / 0x111 / 0x210 observed
+alternate scaling route                  : PASS
+default scaling on same new deployment   : PASS
+embedded package build/check             : PASS
+versioned SSH/SCP deployment             : PASS
+deployed-package HIL route               : PASS
+second-developer deployment route        : PASS
+start / stop / status control            : PASS
+release rollback                         : PASS
+wired Ethernet transport                 : validated
+alternate reachable network path         : validated
+physical CAN loop                        : validated
+manual CAN interruption + recovery       : PASS
 ```
