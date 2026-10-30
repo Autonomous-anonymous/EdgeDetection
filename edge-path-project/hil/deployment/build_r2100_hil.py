@@ -21,6 +21,7 @@ OUTPUT_APP = OUTPUT_DIR / "r2100_hil.pyz"
 RUNTIME_FILES = [
     "can_protocol.py",
     "signal_mapping.py",
+    "signal_codec.py",
     "r2100_can_gateway.py",
     "r2100_lidar_perception.py",
     "r2100_aeb_controller.py",
@@ -29,6 +30,7 @@ RUNTIME_FILES = [
 CONFIG_FILES = [
     "ruskotunturi_hil.json",
     "ruskotunturi_hil_alt_ids.json",
+    "ruskotunturi_hil_alt_scaling.json",
 ]
 
 DEPLOYMENT_SCRIPTS = [

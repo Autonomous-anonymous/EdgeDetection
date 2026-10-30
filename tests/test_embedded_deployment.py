@@ -31,6 +31,7 @@ EXPECTED_DIST_FILES = {
     "status_hil.sh",
     "config/ruskotunturi_hil.json",
     "config/ruskotunturi_hil_alt_ids.json",
+    "config/ruskotunturi_hil_alt_scaling.json",
 }
 
 

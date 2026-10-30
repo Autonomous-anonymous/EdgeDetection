@@ -1,3 +1,4 @@
+from dataclasses import replace
 from pathlib import Path
 import sys
 import unittest
@@ -10,7 +11,12 @@ HIL_DIR = REPO_ROOT / "edge-path-project" / "hil"
 sys.path.insert(0, str(HIL_DIR))
 
 from signal_mapping import DEFAULT_CONFIG_PATH, load_signal_mapping
-from r2100_can_gateway import R2100CANGateway
+from r2100_can_gateway import (
+    R2100CANGateway,
+    SENSOR_MAGIC,
+    SENSOR_PACKET,
+    unpack_can_frame,
+)
 
 
 class GatewaySignalMappingTests(unittest.TestCase):
@@ -49,10 +55,10 @@ class GatewaySignalMappingTests(unittest.TestCase):
         gateway = R2100CANGateway(
             can_interface=mapping.can.gateway_interface,
             udp_port=15000,
-            speed_can_id=mapping.signal("vehicle_speed").can_id,
-            distance_can_id=mapping.signal(
+            speed_signal=mapping.signal("vehicle_speed"),
+            distance_signal=mapping.signal(
                 "obstacle_distance"
-            ).can_id,
+            ),
             brake_can_id=mapping.signal("brake_command").can_id,
             mapping_profile=mapping.profile,
             mapping_bitrate=mapping.can.bitrate,
@@ -73,6 +79,123 @@ class GatewaySignalMappingTests(unittest.TestCase):
         fake_udp_socket.bind.assert_called_once_with(
             ("0.0.0.0", 15000)
         )
+
+
+    @patch("r2100_can_gateway.socket.socket")
+    def test_gateway_speed_encoding_uses_mapping_scale(
+        self,
+        socket_mock,
+    ):
+        fake_can_socket = MagicMock()
+        fake_udp_socket = MagicMock()
+
+        socket_mock.side_effect = [
+            fake_can_socket,
+            fake_udp_socket,
+        ]
+
+        mapping = load_signal_mapping(DEFAULT_CONFIG_PATH)
+
+        speed_signal = replace(
+            mapping.signal("vehicle_speed"),
+            scale=0.1,
+        )
+
+        gateway = R2100CANGateway(
+            can_interface=mapping.can.gateway_interface,
+            udp_port=15000,
+            speed_signal=speed_signal,
+            distance_signal=mapping.signal(
+                "obstacle_distance"
+            ),
+            brake_can_id=mapping.signal(
+                "brake_command"
+            ).can_id,
+            mapping_profile=mapping.profile,
+            mapping_bitrate=mapping.can.bitrate,
+            external_perception=True,
+        )
+
+        fake_udp_socket.recvfrom.return_value = (
+            SENSOR_PACKET.pack(
+                SENSOR_MAGIC,
+                1,
+                0.8,
+                float("nan"),
+            ),
+            ("127.0.0.1", 15000),
+        )
+
+        gateway.handle_udp()
+
+        fake_can_socket.send.assert_called_once()
+
+        frame = fake_can_socket.send.call_args.args[0]
+        can_id, data = unpack_can_frame(frame)
+
+        self.assertEqual(can_id, 0x100)
+
+        # scale=0.1 means 0.8 m/s -> raw value 8.
+        self.assertEqual(data[:2], bytes([8, 0]))
+
+
+    @patch("r2100_can_gateway.socket.socket")
+    def test_gateway_distance_encoding_uses_mapping_scale(
+        self,
+        socket_mock,
+    ):
+        fake_can_socket = MagicMock()
+        fake_udp_socket = MagicMock()
+
+        socket_mock.side_effect = [
+            fake_can_socket,
+            fake_udp_socket,
+        ]
+
+        mapping = load_signal_mapping(DEFAULT_CONFIG_PATH)
+
+        distance_signal = replace(
+            mapping.signal("obstacle_distance"),
+            scale=0.5,
+        )
+
+        gateway = R2100CANGateway(
+            can_interface=mapping.can.gateway_interface,
+            udp_port=15000,
+            speed_signal=mapping.signal("vehicle_speed"),
+            distance_signal=distance_signal,
+            brake_can_id=mapping.signal(
+                "brake_command"
+            ).can_id,
+            mapping_profile=mapping.profile,
+            mapping_bitrate=mapping.can.bitrate,
+            external_perception=False,
+        )
+
+        fake_udp_socket.recvfrom.return_value = (
+            SENSOR_PACKET.pack(
+                SENSOR_MAGIC,
+                1,
+                0.8,
+                1.5,
+            ),
+            ("127.0.0.1", 15000),
+        )
+
+        gateway.handle_udp()
+
+        self.assertEqual(
+            fake_can_socket.send.call_count,
+            2,
+        )
+
+        frame = fake_can_socket.send.call_args_list[1].args[0]
+        can_id, data = unpack_can_frame(frame)
+
+        self.assertEqual(can_id, 0x101)
+
+        # scale=0.5 means 1.5 m -> raw value 3.
+        self.assertEqual(data[:2], bytes([3, 0]))
 
 
 if __name__ == "__main__":

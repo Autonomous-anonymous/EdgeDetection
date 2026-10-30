@@ -19,8 +19,12 @@ import socket
 import struct
 import time
 
-from can_protocol import encode_obstacle_distance
-from signal_mapping import DEFAULT_CONFIG_PATH, load_signal_mapping
+from signal_codec import encode_signal_value
+from signal_mapping import (
+    DEFAULT_CONFIG_PATH,
+    SignalDefinition,
+    load_signal_mapping,
+)
 
 
 DEFAULT_PORT = 15010
@@ -89,13 +93,14 @@ class LidarPerceptionCAN:
         self,
         port: int,
         can_interface: str,
-        distance_can_id: int,
+        distance_signal: SignalDefinition,
         mapping_profile: str,
         mapping_bitrate: int,
     ) -> None:
         self.port = port
         self.can_interface = can_interface
-        self.distance_can_id = distance_can_id
+        self.distance_signal = distance_signal
+        self.distance_can_id = distance_signal.can_id
         self.mapping_profile = mapping_profile
         self.mapping_bitrate = mapping_bitrate
 
@@ -135,7 +140,10 @@ class LidarPerceptionCAN:
         self,
         distance_m: float | None,
     ) -> bool:
-        data = encode_obstacle_distance(distance_m)
+        data = encode_signal_value(
+            self.distance_signal,
+            distance_m,
+        )
 
         try:
             self.can_sock.send(
@@ -522,7 +530,7 @@ def main() -> None:
     perception = LidarPerceptionCAN(
         port=args.port,
         can_interface=can_interface,
-        distance_can_id=distance_signal.can_id,
+        distance_signal=distance_signal,
         mapping_profile=mapping.profile,
         mapping_bitrate=mapping.can.bitrate,
     )
