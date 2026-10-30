@@ -22,6 +22,7 @@ RUNTIME_FILES = [
     "can_protocol.py",
     "signal_mapping.py",
     "signal_codec.py",
+    "r2100_preflight.py",
     "r2100_can_gateway.py",
     "r2100_lidar_perception.py",
     "r2100_aeb_controller.py",

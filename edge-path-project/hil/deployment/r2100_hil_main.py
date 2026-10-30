@@ -39,6 +39,7 @@ def print_help() -> None:
     print()
     print("Usage:")
     print("  r2100_hil.pyz check [--config FILE]")
+    print("  r2100_hil.pyz preflight [--config FILE]")
     print("  r2100_hil.pyz perception [OPTIONS]")
     print("  r2100_hil.pyz gateway [OPTIONS]")
     print("  r2100_hil.pyz aeb [OPTIONS]")
@@ -64,6 +65,25 @@ def run_check(args: list[str]) -> None:
     print("Deployment configuration: PASS")
     print()
     print_summary(mapping)
+
+
+
+def run_preflight(args: list[str]) -> None:
+    if not has_config_argument(args):
+        args = [
+            "--config",
+            str(default_config_path()),
+            *args,
+        ]
+
+    module = importlib.import_module("r2100_preflight")
+
+    sys.argv = [
+        "r2100_hil.pyz preflight",
+        *args,
+    ]
+
+    module.main()
 
 
 def run_component(command: str, args: list[str]) -> None:
@@ -109,10 +129,14 @@ def main() -> None:
         run_check(args)
         return
 
+    if command == "preflight":
+        run_preflight(args)
+        return
+
     if command not in COMPONENTS:
         raise SystemExit(
             f"unknown component {command!r}; "
-            f"expected check, perception, gateway or aeb"
+            f"expected check, preflight, perception, gateway or aeb"
         )
 
     run_component(command, args)

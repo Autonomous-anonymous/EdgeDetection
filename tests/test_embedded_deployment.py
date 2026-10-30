@@ -173,6 +173,29 @@ class EmbeddedDeploymentTests(unittest.TestCase):
             result.stdout,
         )
 
+    def test_zipapp_preflight_help_passes(self):
+        result = subprocess.run(
+            [
+                str(DIST_DIR / "r2100_hil.pyz"),
+                "preflight",
+                "--help",
+            ],
+            cwd=REPO_ROOT,
+            capture_output=True,
+            text=True,
+        )
+
+        self.assertEqual(
+            result.returncode,
+            0,
+            msg=result.stderr,
+        )
+
+        self.assertIn(
+            "Validate R2100 HIL runtime readiness",
+            result.stdout,
+        )
+
     def test_component_help_passes_without_can_hardware(self):
         for component in [
             "perception",
