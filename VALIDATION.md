@@ -36,7 +36,7 @@ Run the current offline suite from the repository root with:
 python3 -m unittest discover -s tests -v
 ```
 
-The same command is now part of `.github/workflows/offline-validation.yml`. The workflow also builds the R2100 zipapp, validates its generated configuration and runs the deployment regression tests.
+The same command is part of `.github/workflows/offline-validation.yml`. The workflow also builds the R2100 zipapp, validates its generated configuration and runs the deployment regression tests.
 
 ## Preflight terminology
 
@@ -89,11 +89,11 @@ This complements the R2100 deployment preflight: the target preflight checks the
 | HIL startup diagnostics | 7 / 7 PASS | Dedicated diagnostics unit tests. |
 | HIL integration regression | 18 / 18 PASS | Integration tests after startup diagnostics. |
 | Full repository offline suite | 152 / 152 PASS | Verified 2026-10-30 after updating the HIL-10 test fixture. |
-| GitHub Actions offline validation | automated | Runs full offline suite plus deployment build/configuration check and deployment regression tests. |
+| GitHub Actions offline validation | PASS | Full offline suite plus deployment build/configuration check and deployment regression tests. |
 
 ### Standalone route evidence
 
-The committed file
+The earlier committed file
 
 `edge-path-project/gazebo/results/hil10/hil10_route_20261029T092701_b95d92cd.json`
 
@@ -104,20 +104,22 @@ passed: false
 end_reason: interrupted
 ```
 
-A later route run was successfully validated with:
+A later successful standalone route result is now also committed:
+
+`edge-path-project/gazebo/results/hil10/hil10_route_20261030T101421_6ac599e1.json`
+
+It records:
 
 ```text
-HIL-10 RESULT: PASS
-End reason: route_complete
+passed: true
+end_reason: route_complete
+stop_verified: true
+fault: null
 ```
 
-The originating local result filename is:
+The recorded final speed is effectively zero (`3.1974423109204504e-12 m/s`), and the observer recorded five stop-confirmation samples. The raw evidence was added in commit `3f5642f` (`Add successful HIL route evidence`).
 
-`hil10_route_20261030T101421_6ac599e1.json`
-
-That raw JSON file is not currently present in GitHub. It must be committed from the machine that produced it before it can be treated as committed raw evidence. This catalogue records the known validation result without inventing missing JSON fields.
-
-The startup-diagnostics source exercised by that validation was subsequently committed as `b5210da` (`Add HIL startup readiness diagnostics`). The exact deployed R2100 release-directory name and active target configuration used by that specific route run are not recorded in the committed evidence and should not be inferred.
+The JSON field `baseline_commit=52331fde756991988cbb94f01e6d33d615c8d7df` identifies the historical HIL-10 baseline used by the test format. It must **not** be interpreted as the source revision of this later route run. The startup-diagnostics source exercised by the run was subsequently committed as `b5210da` (`Add HIL startup readiness diagnostics`). The exact deployed R2100 release-directory name and active target configuration for that specific run are not encoded in the committed result and should not be inferred.
 
 For future acceptance hardware runs, record the repository commit SHA, selected mapping profile, deployed release identifier or manifest hash, command/host, raw result file and final end reason together.
 
@@ -144,10 +146,9 @@ The requirements map links each objective to:
 
 ## Remaining acceptance work
 
-The focused cleanup is complete except for the missing raw successful standalone-route artifact. The next acceptance-oriented steps are:
+The focused repository cleanup is now complete. The next acceptance-oriented steps are:
 
-1. commit the original `hil10_route_20261030T101421_6ac599e1.json` from the machine that produced it,
-2. have another team member perform a fresh-checkout build/deploy/acceptance run,
-3. record any undocumented setup steps,
-4. tag that verified baseline,
-5. then proceed to the common SIL/HIL scenario-runner automation milestone.
+1. have another team member perform a fresh-checkout build/deploy/acceptance run,
+2. record any undocumented setup steps,
+3. tag that verified baseline,
+4. then proceed to the common SIL/HIL scenario-runner automation milestone.
