@@ -2,7 +2,7 @@
 
 This file identifies the current SIL/HIL baselines, the role of the different preflight checks, and the evidence that should be used for current reporting.
 
-It is intentionally small and does not replace the detailed Gazebo or HIL guides.
+It is intentionally small and does not replace the detailed Gazebo or HIL guides. Course/project requirement traceability is maintained separately in `REQUIREMENTS.md`.
 
 ## Current baselines
 
@@ -36,6 +36,8 @@ Run the current offline suite from the repository root with:
 python3 -m unittest discover -s tests -v
 ```
 
+The same command is now part of `.github/workflows/offline-validation.yml`. The workflow also builds the R2100 zipapp, validates its generated configuration and runs the deployment regression tests.
+
 ## Preflight terminology
 
 There are three different checks with different purposes. They should not be treated as interchangeable.
@@ -48,7 +50,7 @@ python3 edge-path-project/gazebo/scripts/hil10_preflight.py
 
 `hil10_preflight.py` compares a small dependency set against the original HIL-9-derived snapshot used when HIL-10 freshness testing was introduced. It is retained as development-history evidence.
 
-Because the runtime has since gained signal mapping, codecs, deployment and diagnostics changes, `DIFFERS` results are expected for changed dependencies. This script is **not** the current runtime-readiness preflight.
+Because the runtime has since gained signal mapping, codecs, deployment and diagnostics changes, `DIFFERS` results are expected for changed dependencies. This script is **not** the current runtime-readiness preflight. References to this command in the historical HIL-10 offline-validation material describe the original milestone procedure rather than the current startup procedure.
 
 ### Current R2100 runtime readiness
 
@@ -87,6 +89,7 @@ This complements the R2100 deployment preflight: the target preflight checks the
 | HIL startup diagnostics | 7 / 7 PASS | Dedicated diagnostics unit tests. |
 | HIL integration regression | 18 / 18 PASS | Integration tests after startup diagnostics. |
 | Full repository offline suite | 152 / 152 PASS | Verified 2026-10-30 after updating the HIL-10 test fixture. |
+| GitHub Actions offline validation | automated | Runs full offline suite plus deployment build/configuration check and deployment regression tests. |
 
 ### Standalone route evidence
 
@@ -114,23 +117,37 @@ The originating local result filename is:
 
 That raw JSON file is not currently present in GitHub. It must be committed from the machine that produced it before it can be treated as committed raw evidence. This catalogue records the known validation result without inventing missing JSON fields.
 
-The startup-diagnostics source exercised by that validation was subsequently committed as `b5210da` (`Add HIL startup readiness diagnostics`). The exact deployed R2100 release-directory name used by that route run is not recorded in the repository evidence and should not be inferred.
+The startup-diagnostics source exercised by that validation was subsequently committed as `b5210da` (`Add HIL startup readiness diagnostics`). The exact deployed R2100 release-directory name and active target configuration used by that specific route run are not recorded in the committed evidence and should not be inferred.
+
+For future acceptance hardware runs, record the repository commit SHA, selected mapping profile, deployed release identifier or manifest hash, command/host, raw result file and final end reason together.
 
 ## Documentation index
 
 - `README.md` — project overview and current reference points.
+- `REQUIREMENTS.md` — sanitised course/CAMINO requirements map with implementation, verification, evidence and remaining gaps.
 - `edge-path-project/gazebo/README.md` — detailed Gazebo SIL architecture, v6.4 evidence and run instructions.
 - `edge-path-project/gazebo/results/README.md` — result-file conventions and current SIL reporting baseline.
 - `edge-path-project/hil/README.md` — detailed R2100 HIL architecture, deployment, preflight, diagnostics, tests and hardware evidence.
+- `.github/workflows/offline-validation.yml` — automated offline test and deployment-build validation.
 - `VALIDATION.md` — this cross-project baseline/evidence index.
 
 ## Requirements documentation
 
-Public repository documentation should use a sanitised requirements summary rather than copying course source documents verbatim. Source documents may contain environment-specific connection details or credentials that are not requirements and must not be published as project documentation.
+Public repository documentation uses the sanitised `REQUIREMENTS.md` summary rather than copying course source documents verbatim. Source documents may contain environment-specific connection details or credentials that are not requirements and must not be published as project documentation.
 
-A later requirements map should link each sanitised course/project objective to:
+The requirements map links each objective to:
 
 1. implementation,
-2. reproducible test command,
+2. reproducible test command or validation procedure,
 3. recorded evidence,
 4. current status or known gap.
+
+## Remaining acceptance work
+
+The focused cleanup is complete except for the missing raw successful standalone-route artifact. The next acceptance-oriented steps are:
+
+1. commit the original `hil10_route_20261030T101421_6ac599e1.json` from the machine that produced it,
+2. have another team member perform a fresh-checkout build/deploy/acceptance run,
+3. record any undocumented setup steps,
+4. tag that verified baseline,
+5. then proceed to the common SIL/HIL scenario-runner automation milestone.

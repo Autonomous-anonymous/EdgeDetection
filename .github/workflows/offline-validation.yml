@@ -1,0 +1,49 @@
+name: Offline validation
+
+on:
+  push:
+    branches:
+      - main
+      - hil-development
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  offline-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.13'
+
+      - name: Run offline test suite
+        run: python -m unittest discover -s tests -v
+
+  deployment-build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.13'
+
+      - name: Build R2100 deployment package
+        run: python edge-path-project/hil/deployment/build_r2100_hil.py
+
+      - name: Validate generated deployment configuration
+        run: python edge-path-project/hil/dist/r2100_hil/r2100_hil.pyz check
+
+      - name: Run deployment regression tests
+        run: python -m unittest discover -s tests -p 'test_embedded_deployment.py' -v
