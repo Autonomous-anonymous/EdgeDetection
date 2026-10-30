@@ -4,7 +4,7 @@ This directory documents the Hardware-in-the-Loop implementation used to extend 
 
 The embedded platform is a **Seeed Studio reComputer Industrial R2100**. Gazebo Harmonic runs in WSL and provides the virtual vehicles, terrain, LiDAR and odometry. The R2100 receives simulation data over UDP, maps the relevant signals onto physical CAN, executes the AEB decision, and returns the brake state to the simulator.
 
-The current validated Ruskotunturi milestone is **HIL-10**. The HIL path also includes hardware-validated **Configurable Signal Mapping**, **Configuration-driven Signal Codec** and **Embedded Deployment** work packages.
+The current validated Ruskotunturi milestone is **HIL-10**. The HIL path also includes hardware-validated **Configurable Signal Mapping**, **Configuration-driven Signal Codec**, **Embedded Deployment** and **Deployment Preflight** work packages.
 
 This is a research and development setup, not a certified functional-safety implementation.
 
@@ -85,6 +85,7 @@ edge-path-project/hil/
 ├── can_protocol.py
 ├── signal_codec.py
 ├── signal_mapping.py
+├── r2100_preflight.py
 ├── gazebo_hil_bridge.py
 ├── gazebo_lidar_sender.py
 ├── r2100_aeb_controller.py
@@ -107,7 +108,7 @@ edge-path-project/gazebo/scripts/
 └── ruskotunturi_hil10_hybrid_test.py
 ```
 
-The signal-mapping, codec and deployment automated software tests are:
+The signal-mapping, codec, deployment and deployment-preflight automated software tests are:
 
 ```text
 tests/
@@ -117,7 +118,8 @@ tests/
 ├── test_signal_mapping_perception.py
 ├── test_signal_codec.py
 ├── test_signal_codec_end_to_end.py
-└── test_embedded_deployment.py
+├── test_embedded_deployment.py
+└── test_r2100_preflight.py
 ```
 
 Earlier HIL-9 scripts and the dedicated AEB obstacle world remain available as development history.
@@ -282,7 +284,7 @@ python3 -m unittest discover \
   -v
 ```
 
-Validated combined result:
+Validated combined result for the codec work package at completion:
 
 ```text
 37 / 37 PASS
@@ -330,21 +332,19 @@ status_hil.sh
 stop_hil.sh
 ```
 
-The zipapp includes `signal_codec.py` together with the gateway, perception, AEB, mapping and protocol runtime modules.
+The zipapp includes `signal_codec.py` and `r2100_preflight.py` together with the gateway, perception, AEB, mapping and protocol runtime modules.
 
-`r2100_hil.pyz` provides one executable entry point for the three R2100 runtime components:
+`r2100_hil.pyz` provides one executable entry point for validation, preflight and the three R2100 runtime components:
 
 ```bash
+r2100_hil.pyz check
+r2100_hil.pyz preflight
 r2100_hil.pyz perception
 r2100_hil.pyz gateway
 r2100_hil.pyz aeb
 ```
 
-The package can be validated without opening CAN interfaces:
-
-```bash
-r2100_hil.pyz check
-```
+`check` validates the deployment configuration without opening CAN interfaces. `preflight` performs R2100 runtime-readiness checks before the managed processes are started.
 
 The current deployment format intentionally depends on `python3` being installed on the R2100. It is not a standalone native binary and does not claim to remove the target Python runtime dependency.
 
@@ -396,6 +396,64 @@ Hardware validation was performed with the R2100 processes running only from the
 Independent developer validation was also completed from a second developer machine. The second developer built the deployment package locally, deployed it to the R2100 over SSH/SCP, started the deployed runtime, and completed the unchanged HIL-10 route with `route_complete` PASS. This provides an additional reproducibility check that the deployment workflow is not tied to the original development machine.
 
 This work package therefore demonstrates a repeatable build -> validate -> deploy -> run -> stop -> rollback workflow for the current R2100 HIL runtime.
+
+## Deployment Preflight
+
+The deployed zipapp includes an R2100-specific readiness check:
+
+```bash
+~/r2100_hil/current/r2100_hil.pyz preflight
+```
+
+The preflight loads the selected mapping profile and verifies the runtime prerequisites that can be checked locally before the HIL processes start:
+
+- the active JSON configuration is valid,
+- the configured gateway and controller CAN interfaces exist,
+- both CAN interfaces are `UP`,
+- both CAN interfaces report `ERROR-ACTIVE`,
+- the configured CAN bitrate matches the live interfaces,
+- UDP port `15000` is available for the CAN gateway,
+- UDP port `15010` is available for LiDAR perception.
+
+`start_hil.sh` runs this preflight automatically before starting perception, gateway or AEB. Because the shell script uses fail-fast execution, a failed preflight prevents a partial or conflicting runtime startup.
+
+A normal hardware preflight on the validated R2100 bench produced:
+
+```text
+[PASS] config: ruskotunturi_hil
+[PASS] CAN can0: UP, ERROR-ACTIVE, bitrate=500000
+[PASS] CAN can1: UP, ERROR-ACTIVE, bitrate=500000
+[PASS] UDP 15000: available for gateway
+[PASS] UDP 15010: available for LiDAR perception
+
+R2100 HIL preflight: PASS
+```
+
+Fail-closed behavior was validated by running `start_hil.sh` a second time while the original deployment processes were already running. Preflight detected both occupied UDP ports and returned `FAIL`; no second runtime was started, and the original perception, gateway and AEB processes remained `RUNNING`.
+
+After integrating automatic preflight into `start_hil.sh`, the normal HIL-10 route was regression-tested again over the deployed R2100 and physical CAN loop:
+
+```text
+HIL-10 RESULT: PASS
+End reason: route_complete
+```
+
+Dedicated preflight and deployment tests can be run with:
+
+```bash
+python3 -m unittest discover -s tests -p 'test_r2100_preflight.py' -v
+python3 -m unittest discover -s tests -p 'test_embedded_deployment.py' -v
+```
+
+Validated results are:
+
+```text
+preflight unit tests : 4 / 4 PASS
+deployment tests     : 8 / 8 PASS
+signal regression    : 30 / 30 PASS
+```
+
+The deployment preflight is intentionally local to the R2100. It verifies target readiness; it does not prove that Gazebo is running or that the WSL test selected a reachable R2100 address. Those remain end-to-end HIL prerequisites.
 
 ## Important distance semantics
 
@@ -531,6 +589,8 @@ Restart all three R2100 processes between test runs because the AEB latch and te
 ~/r2100_hil/current/status_hil.sh
 ```
 
+`start_hil.sh` runs the R2100 deployment preflight automatically and starts the three runtime components only after it passes.
+
 For a non-default profile, set `R2100_HIL_CONFIG` before invoking the same start script.
 
 ### Terminal 3 - WSL / HIL-10
@@ -656,6 +716,10 @@ The validated embedded deployment packages the runtime into a generated Python z
 
 A configurable `scale` value is only safe if every producer and consumer interprets the same physical signal using the same profile. The gateway, LiDAR perception and AEB controller now use the shared scalar codec. The alternate-scaling profile changed the raw CAN representation while preserving the decoded physical values, and both alternate-scaling and default-profile routes passed on the same newly deployed R2100 release.
 
+### 9. Runtime readiness should fail before process startup
+
+Configuration validity alone does not prove that the R2100 is ready to run HIL. The deployment preflight therefore checks the configured CAN interfaces, their live state and bitrate, plus the UDP ports required by gateway and LiDAR perception. A conflicting second startup was rejected before any new runtime processes were launched, while the original deployment remained healthy.
+
 ## Scope and limitations
 
 The current validation still does **not** cover every possible hardware or system failure. Follow-on targets include:
@@ -669,10 +733,13 @@ The current validation still does **not** cover every possible hardware or syste
 
 The scalar codec currently supports `uint16_le`; structured `brake_command_v1` remains a specialized codec rather than a fully generic schema-driven payload description.
 
+The deployment preflight verifies local R2100 readiness but does not verify that Gazebo is running, that WSL can reach the selected R2100 address, or that end-to-end UDP traffic is flowing before the HIL test starts.
+
 ## Troubleshooting
 
 If a test remains in a fail-safe state at startup, check that:
 
+- `~/r2100_hil/current/r2100_hil.pyz preflight` passes,
 - the correct Gazebo world is running,
 - `can0` and `can1` are UP at 500 kbit/s,
 - all three R2100 processes were started with the same mapping profile,
@@ -681,7 +748,7 @@ If a test remains in a fail-safe state at startup, check that:
 - no old HIL controller is still publishing Vehicle B commands,
 - no separate LiDAR sender is running during a HIL-10 B test.
 
-A `startup_not_ready` result can occur when the test sends UDP traffic to an R2100 address that is not reachable on the currently active network path.
+A `startup_not_ready` result can occur when Gazebo is not running or when the test sends UDP traffic to an R2100 address that is not reachable on the currently active network path. The R2100 deployment preflight cannot detect either WSL-side condition.
 
 Only one process should publish Vehicle B commands during a test.
 
@@ -699,6 +766,7 @@ CARLA experiments
  -> configurable signal mapping on the R2100 CAN chain
  -> reproducible embedded deployment package
  -> configuration-driven scalar signal codec
+ -> deployment preflight and fail-closed startup
 ```
 
 Current evidence:
@@ -708,7 +776,13 @@ HIL-10 offline software validation       : 42 / 42 PASS
 HIL-10 hardware scenarios                : 6 / 6 PASS
 original signal-mapping offline tests    : 12 / 12 PASS
 mapping + deployment offline tests       : 19 / 19 PASS
-codec/mapping/deployment regression      : 37 / 37 PASS
+codec work-package regression            : 37 / 37 PASS
+current signal regression                : 30 / 30 PASS
+deployment tests                         : 8 / 8 PASS
+deployment preflight unit tests          : 4 / 4 PASS
+R2100 deployment preflight               : PASS
+preflight duplicate-start fail-closed    : PASS
+preflight-integrated HIL route           : PASS / route_complete
 default mapping route regression         : PASS
 alternate CAN-ID route                   : PASS
 alternate IDs on physical CAN            : 0x110 / 0x111 / 0x210 observed
