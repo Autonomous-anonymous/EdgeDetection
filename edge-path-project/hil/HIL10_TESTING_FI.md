@@ -1,46 +1,56 @@
-# HIL-10: mittaustiedon tuoreus ja katkostestit
+# HIL-10: measurement freshness and communication-loss tests
 
-Päiväys: 29.10.2026. Pohja: `hil-development`, commit
+Date: 29 October 2026. Baseline: `hil-development`, commit
 `52331fde756991988cbb94f01e6d33d615c8d7df`.
 
-Tämä paketti lisää HIL-10-testit nykyisen HIL-9-toteutuksen rinnalle.
-HIL-9:n skriptejä, maailmoja, R2100-ohjelmia ja vanhoja tuloksia ei korvata.
-Korjattu toiminta on käytössä, kun ajat tässä ohjeessa mainittuja **HIL-10-skriptejä**.
-Vanhojen HIL-9-skriptien ajaminen käyttää edelleen niiden vanhaa toimintaa.
+> This is an English translation of the original HIL-10 package guide. The
+> baseline checks, manual startup procedure and validation status below describe
+> that package when it was prepared. For the current deployed runtime, signal
+> mapping and completed hardware validation, see the [current HIL guide](README.md).
+> The original filename is retained to preserve existing references.
 
-## 1. Mitä on korjattu
+This package adds HIL-10 tests alongside the existing HIL-9 implementation.
+It does not replace the HIL-9 scripts, worlds, R2100 programs or earlier results.
+The corrected behaviour is used when you run the **HIL-10 scripts** listed in
+this guide. Running the old HIL-9 scripts still uses their original behaviour.
 
-- B:n odometrian ja jarruviestin suurin sallittu paikallinen ikä on 0,50 s.
-  Puuttuva tai vanhentunut tieto estää B:n ajokomennon.
-- Yksi nopeusnäyte lähetetään R2100:lle korkeintaan kerran. Vanhaa nopeutta ei
-  toisteta uutena CAN-nopeuspäivityksenä. R2100:n nykyinen anturikatkon valvonta
-  pääsee näin toimimaan myös nopeusmittauksen katketessa.
-- Mittauksen Gazebo-aikaleiman on edettävä, jos viesti sisältää aikaleiman.
-  Tuoreuden mittaus käyttää PC:n monotonista kelloa. Eri koneiden kelloja ei verrata.
-- Virheelliset, toistuvat ja väärässä järjestyksessä saapuvat jarruvastaukset
-  eivät päivitä jarrutiedon tuoreutta. Laskurin 255 -> 0 -vaihtuminen sallitaan.
-- Liikkeellelähdön jälkeen havaittu tiedonsiirtovika lukitsee pysäytyksen kyseisen
-  testiajon loppuun. Hetkellinen palautuminen ei vapauta jarrua automaattisesti.
-- Pysähtyminen vaatii vähintään kolme uutta peräkkäistä odometriaviestiä, joiden
-  nopeus on enintään 0,05 m/s ja jotka saapuvat pysäytyskomennon jälkeen.
-  Saman välimuistiarvon lukeminen monta kertaa ei täytä ehtoa. Nopeutena käytetään
-  lineaarisen nopeusvektorin suuruutta, myös sivuttais- ja pystysuunnassa.
-- B:n reittitesti vahvistaa pysähtymisen ennen PASS-tulosta. Hybriditesti säilyttää
-  Phase 6:n hyväksymisehdot ja lisää B:n pysähtymisen varmistuksen. HIL-vian
-  keskeyttäessä hybridiajon molemmille ajoneuvoille lähetetään nollakomento.
-- Jokainen ajo tallentaa oman CSV-jäljen ja JSON-yhteenvedon hakemistoon
-  `edge-path-project/gazebo/results/hil10/`. Vanhaan SIL-tulos-CSV:hen ei kirjoiteta.
+## 1. What has been fixed
 
-1,00 m:n AEB-turvaetäisyyttä tai R2100:n jarrutuskynnyksiä ei muuteta.
+- The maximum permitted local age of Vehicle B's odometry and brake message is
+  0.50 s. Missing or stale data blocks Vehicle B's motion command.
+- Each speed sample is sent to the R2100 at most once. An old speed value is not
+  replayed as a new CAN speed update. This allows the R2100's existing sensor
+  timeout monitoring to detect loss of speed measurements as well.
+- If a measurement message contains a Gazebo timestamp, that timestamp must
+  advance. Freshness is measured using the PC's monotonic clock. Clocks on
+  different machines are not compared.
+- Invalid, duplicate or out-of-order brake replies do not refresh the brake
+  state. Counter wrap from 255 to 0 is allowed.
+- A communication fault detected after motion begins latches the stop for the
+  remainder of that test run. A temporary recovery does not automatically
+  release the brake.
+- Stop verification requires at least three new consecutive odometry messages
+  with a speed at or below 0.05 m/s, received after the stop command. Reading
+  the same cached value repeatedly does not satisfy this condition. Speed is
+  the magnitude of the linear velocity vector, including lateral and vertical
+  components.
+- Vehicle B's route test verifies the stop before reporting PASS. The hybrid
+  test retains the Phase 6 acceptance criteria and adds verification that B
+  has stopped. If an HIL fault interrupts the hybrid run, zero commands are
+  sent to both vehicles.
+- Each run saves its own CSV trace and JSON summary under
+  `edge-path-project/gazebo/results/hil10/`. The old SIL results CSV is not modified.
 
-## 2. Asennus ja ohjelmistotarkistus WSL:ssä
+The 1.00 m AEB clearance requirement and the R2100 braking thresholds are unchanged.
 
-Sulje käynnissä olevat testiohjaimet ja Gazebo. Pura ZIP projektin juureen
-`~/edge-path-project-git`, niin että paketin `edge-path-project` ja `tests`
-yhdistyvät olemassa oleviin samannimisiin hakemistoihin. Tiedostot ovat uusia;
-paketti ei sisällä HIL-9:n lähdetiedostojen korvaavia kopioita.
+## 2. Installation and software checks in WSL
 
-Suorita projektin juuressa:
+Stop any running test controllers and close Gazebo. Extract the ZIP into the
+project root, `~/edge-path-project-git`, merging the package's `edge-path-project`
+and `tests` directories with the existing directories of the same names. The
+files are new; the package does not contain replacements for HIL-9 source files.
+
+Run these commands from the project root:
 
 ```bash
 cd ~/edge-path-project-git
@@ -48,40 +58,40 @@ python3 edge-path-project/gazebo/scripts/hil10_preflight.py
 python3 -m unittest discover -s tests -p 'test_hil10*.py' -v
 ```
 
-Odotettu tulos: lähtöversion riippuvuudet `OK` ja **42 ohjelmistotestiä / OK**.
-Tarkistus lukee tiedostoja, eikä muuta niitä. `DIFFERS` tai `MISSING` tarkoittaa,
-että paikallinen lähtöversio pitää tarkistaa ennen laitteistoajoa. Älä poista
-omia muutoksiasi tai tuloksiasi tarkistuksen vuoksi.
+Expected result: baseline dependencies report `OK`, and **42 software tests / OK**.
+The check reads files without modifying them. `DIFFERS` or `MISSING` means that
+the local baseline needs to be checked before a hardware run. Do not delete
+your own changes or results to satisfy the check.
 
-Ohjelmistotestit eivät tarvitse Gazeboa eivätkä CAN-laitetta. Niissä käytetään
-oikeaa tuoreusvalvontaa ja testien ajosilmukkaa, mutta ajan kulku, Gazebo-viestien
-tuonti ja ajoneuvon vaste korvataan hallituilla testivastineilla. R2100:n nykyistä
-AEB-päätöslogiikkaa testataan suoraan ilman CAN-liitäntää. Nämä testit eivät ole
-uusia Gazebo–R2100-laitteistotuloksia.
+The software tests require neither Gazebo nor a CAN device. They use the actual
+freshness checks and test execution loop, while elapsed time, Gazebo message
+imports and vehicle response are replaced with controlled test doubles. The
+R2100's existing AEB decision logic is tested directly without a CAN interface.
+These tests are not new Gazebo–R2100 hardware results.
 
-## 3. Ajojärjestys ja maailmat
+## 3. Test order and worlds
 
-Tee jokainen taulukon rivi omana ajonaan. Käynnistä **Gazebo ja kaikki kolme
-R2100-prosessia uudelleen jokaisen ajon välissä**. R2100:n AEB-lukitus ja
-testin vikamuisti nollautuvat vain uudessa ajossa. Älä käytä Gazebon reset-painiketta
-kesken testin; aikaleiman palaaminen taakse tulkitaan vanhaksi mittaukseksi.
+Run each row in the table as a separate test. **Restart Gazebo and all three
+R2100 processes between every run.** The R2100 AEB latch and the test's latched
+fault state are reset only for a new run. Do not use Gazebo's reset button
+during a test: a timestamp moving backwards is treated as an old measurement.
 
-| Järjestys | Koe | Gazebo-maailma | Testi / valinta |
+| Order | Test | Gazebo world | Script / option |
 |---|---|---|---|
-| 1 | B:n normaali reitti ja lopullinen pysähtyminen | Phase 6 | B-testi, `--mode route` |
-| 2 | Kahden ajoneuvon hybridiajo (HIL-9D:n uusinta) | Phase 6 | hybriditesti |
-| 3 | Esteen aiheuttama AEB (HIL-9E:n uusinta) | HIL-9E:n estemaailma | B-testi, `--mode aeb` |
-| 4 | B:n ohjaimelle tulevan odometrian katko | Phase 6 | B-testi, `--mode fault-odometry` |
-| 5 | Palautuvien jarruviestien katko | Phase 6 | B-testi, `--mode fault-brake` |
-| 6 | R2100:lle lähetettävän LiDAR-datan katko | Phase 6 | B-testi, `--mode fault-lidar` |
+| 1 | Vehicle B's normal route and final stop | Phase 6 | B test, `--mode route` |
+| 2 | Two-vehicle hybrid run (HIL-9D regression) | Phase 6 | Hybrid test |
+| 3 | Obstacle-triggered AEB (HIL-9E regression) | HIL-9E obstacle world | B test, `--mode aeb` |
+| 4 | Loss of odometry supplied to Vehicle B's controller | Phase 6 | B test, `--mode fault-odometry` |
+| 5 | Loss of returned brake messages | Phase 6 | B test, `--mode fault-brake` |
+| 6 | Loss of LiDAR data sent to the R2100 | Phase 6 | B test, `--mode fault-lidar` |
 
-HIL-10 lähettää B:n raakamuotoisen LiDAR-datan itse. **Älä käynnistä erillistä
-`gazebo_lidar_sender.py`-ohjelmaa.** Myöskään vanha HIL-9-ohjain tai toinen
-B:n komentoja lähettävä prosessi ei saa olla käynnissä samanaikaisesti.
+HIL-10 sends Vehicle B's raw LiDAR data itself. **Do not start a separate
+`gazebo_lidar_sender.py` process.** An old HIL-9 controller or any other process
+sending commands to Vehicle B must not run at the same time either.
 
-### Terminaali 1: WSL / Gazebo
+### Terminal 1: WSL / Gazebo
 
-Phase 6 -maailma reitti-, hybridi- ja katkostesteille:
+Use the Phase 6 world for the route, hybrid and communication-loss tests:
 
 ```bash
 cd ~/edge-path-project-git
@@ -89,7 +99,7 @@ export GZ_SIM_RESOURCE_PATH="$PWD/edge-path-project/gazebo/models${GZ_SIM_RESOUR
 gz sim -r edge-path-project/gazebo/worlds/ruskotunturi_phase6_two_vehicle_world.sdf
 ```
 
-Vain AEB-kokeessa (`--mode aeb`) käynnistä sen sijasta:
+For the AEB test only (`--mode aeb`), start this world instead:
 
 ```bash
 cd ~/edge-path-project-git
@@ -97,23 +107,24 @@ export GZ_SIM_RESOURCE_PATH="$PWD/edge-path-project/gazebo/models${GZ_SIM_RESOUR
 gz sim -r edge-path-project/gazebo/worlds/ruskotunturi_hil9e_aeb_world.sdf
 ```
 
-### Terminaali 2: R2100
+### Terminal 2: R2100
 
-Käytä HIL-9:ssä toimineita ohjelmia ja fyysistä CAN0–CAN1-yhteyttä. Molempien
-liitäntöjen nopeus on 500 kbit/s. Tarkista tila:
+Use the programs that worked in HIL-9 and the physical CAN0–CAN1 connection.
+Both interfaces use 500 kbit/s. Check their status:
 
 ```bash
 ip -details link show can0
 ip -details link show can1
 ```
 
-Jos liitännät eivät ole valmiina, tee nykyisen `edge-path-project/hil/README.md`:n
-CAN-asetukset. Paketti ei edellytä R2100:n lähdekoodin muuttamista.
+If the interfaces are not ready, apply the CAN configuration described in
+`edge-path-project/hil/README.md`. This package does not require changes to the
+R2100 source code.
 
-Pysäytä edellisen testin kolme R2100-prosessia ennen uutta käynnistystä.
-Jos ne käynnistettiin saman terminaalin taustatöinä, jäljempänä tallennetut PID:t
-mahdollistavat juuri niiden pysäyttämisen. Ensimmäisellä kerralla pysäytä vanhat
-HIL-9-prosessit niistä terminaaleista tai istunnoista, joissa ne käynnistit.
+Stop the three R2100 processes from the previous test before starting them again.
+If they were started as background jobs in the same terminal, the PIDs saved
+below let you stop those specific processes. On the first run, stop the old
+HIL-9 processes in the terminals or sessions where you started them.
 
 ```bash
 cd ~/EdgeDetection/edge-path-project/hil
@@ -128,39 +139,40 @@ python3 -u r2100_aeb_controller.py > "$HIL10_LOG_DIR/aeb.log" 2>&1 &
 HIL10_AEB_PID=$!
 ```
 
-`--external-perception` on tarpeellinen: LiDAR-havaintoprosessi omistaa CAN-signaalin
-`0x101`. Gateway välittää B:n nopeuden `0x100`-signaalina ja palauttaa `0x200`-jarrutiedon.
-Ennen PC-testin käynnistymistä puuttuva anturidata ja `sensor_timeout` ovat odotettu tila.
+`--external-perception` is required: the LiDAR perception process owns CAN
+signal `0x101`. The gateway forwards Vehicle B's speed as signal `0x100` and
+returns the `0x200` brake state. Missing sensor data and `sensor_timeout` are
+expected before the PC test starts.
 
-### Terminaali 3: WSL / HIL-10-testi
+### Terminal 3: WSL / HIL-10 test
 
-Kysy nykyinen IP-osoite kerran tässä terminaalissa:
+Enter the current IP address once in this terminal:
 
 ```bash
 cd ~/edge-path-project-git
-read -r -p "R2100:n IP-osoite: " R2100_IP
+read -r -p "R2100 IP address: " R2100_IP
 ```
 
-Ensimmäinen normaali B:n reittiajo:
+First test: Vehicle B's normal route:
 
 ```bash
 python3 -u edge-path-project/gazebo/scripts/ruskotunturi_hil10_b_test.py --mode route --r2100-host "$R2100_IP"
 ```
 
-Toinen koe, kahden ajoneuvon hybridiajo:
+Second test: the two-vehicle hybrid run:
 
 ```bash
 python3 -u edge-path-project/gazebo/scripts/ruskotunturi_hil10_hybrid_test.py --r2100-host "$R2100_IP"
 ```
 
-Kolmas koe, AEB estemaailmassa:
+Third test: AEB in the obstacle world:
 
 ```bash
 python3 -u edge-path-project/gazebo/scripts/ruskotunturi_hil10_b_test.py --mode aeb --r2100-host "$R2100_IP"
 ```
 
-Katkostestien kolme erillistä käynnistyskomentoa ovat alla. Aja ne **yksi kerrallaan**;
-tee jokaisen välissä Gazebon ja R2100-prosessien uudelleenkäynnistys.
+The three separate commands for the communication-loss tests are below. Run
+them **one at a time**, restarting Gazebo and the R2100 processes between runs.
 
 ```bash
 python3 -u edge-path-project/gazebo/scripts/ruskotunturi_hil10_b_test.py --mode fault-odometry --r2100-host "$R2100_IP"
@@ -174,75 +186,81 @@ python3 -u edge-path-project/gazebo/scripts/ruskotunturi_hil10_b_test.py --mode 
 python3 -u edge-path-project/gazebo/scripts/ruskotunturi_hil10_b_test.py --mode fault-lidar --r2100-host "$R2100_IP"
 ```
 
-Testi odottaa alussa enintään 12 sekuntia tuoretta asentoa, odometriaa ja R2100:n
-DRIVE-tilaa. Auto ei saa lupaa ajaa ennen näitä. Väärä lähtöpaikka tuottaa
-`startup_not_ready`-tuloksen ja pyynnön käynnistää maailma uudestaan.
+At startup, the test waits up to 12 seconds for fresh pose and odometry data
+and the R2100's DRIVE state. The vehicle is not allowed to move before these
+conditions are met. An incorrect starting position produces `startup_not_ready`
+and a request to restart the world.
 
-### Ajon jälkeen ja ennen seuraavaa koetta
+### After a run and before the next test
 
-PC-testi lopettaa oman LiDAR-lähettimensä ja lähettää pysäytyskomennot.
-Sulje Gazebo terminaalissa 1. Pysäytä juuri käynnistetyt R2100-prosessit
-terminaalissa 2 ja odota niiden sulkeutumista:
+The PC test stops its own LiDAR sender and sends stop commands. Close Gazebo
+in terminal 1. Stop the R2100 processes you started in terminal 2 and wait for
+them to exit:
 
 ```bash
 kill -INT "$HIL10_PERCEPTION_PID" "$HIL10_GATEWAY_PID" "$HIL10_AEB_PID"
 wait "$HIL10_PERCEPTION_PID" "$HIL10_GATEWAY_PID" "$HIL10_AEB_PID"
 ```
 
-Säilytä kunkin ajon R2100-lokihakemisto. Seuraavaa koetta varten käynnistä oikea
-maailma, aloita R2100:n kolme prosessia uudestaan ja käynnistä sitten PC-testi.
+Keep each run's R2100 log directory. For the next test, start the correct world,
+restart the three R2100 processes, and then start the PC test.
 
-## 4. Katkostestin PASS-ehdot
+## 4. PASS criteria for communication-loss tests
 
-Katko injektoidaan oletuksena 2 sekuntia ensimmäisen havaitun liikkeen jälkeen,
-kun B:n mittaus näyttää edelleen vähintään 0,20 m/s ja ajokomento on positiivinen.
-Viivettä voi muuttaa valinnalla `--fault-after`, mutta ensimmäiset kokeet tehdään
-oletusarvolla vertailukelpoisuuden vuoksi.
+By default, the selected fault is injected 2 seconds after motion is first
+observed, while Vehicle B's measured speed is still at least 0.20 m/s and the
+motion command is positive. You can change the delay using `--fault-after`,
+but use the default value for the initial tests to keep them comparable.
 
-| Katko | Mitä katkaistaan | Odotettu tunnistus |
+| Fault | What is interrupted | Expected detection |
 |---|---|---|
-| `fault-odometry` | Odometriapäivitykset HIL-komentoportille ja nopeuden lähetykselle | Paikallinen `odometry_timeout`; R2100:n `sensor_timeout` voidaan havaita ensin |
-| `fault-brake` | PC:llä vastaanotettavien jarruvastausten hyväksyminen | Paikallinen `brake_timeout` |
-| `fault-lidar` | B:n raakamuotoisen LiDAR-datan lähettäminen R2100:lle | R2100:lta tuore jarruvastaus, syy `sensor_timeout` |
+| `fault-odometry` | Odometry updates to the HIL command gate and speed transmission | Local `odometry_timeout`; the R2100's `sensor_timeout` may be detected first |
+| `fault-brake` | Acceptance of brake replies received by the PC | Local `brake_timeout` |
+| `fault-lidar` | Transmission of Vehicle B's raw LiDAR data to the R2100 | A fresh brake reply from the R2100 with reason `sensor_timeout` |
 
-Kaikissa kolmessa kokeessa vaaditaan:
+All three tests require:
 
-1. B on ensin liikkunut ja vasta sitten on injektoitu valittu katko.
-2. Oikea vika havaitaan viimeistään 1,0 sekunnissa injektiosta.
-3. Havaitsemisen jälkeen sekä nopeus- että kääntökomento pysyvät nollassa.
-4. Pysähtyminen vahvistetaan kolmesta uudesta mittauksesta viimeistään
-   3,0 sekunnissa injektiosta.
-5. Vahvistettu pysähtyminen säilyy vähintään 1,0 sekunnin ajan ja mittaukset
-   pysyvät tuoreina.
+1. Vehicle B moves before the selected fault is injected.
+2. The correct fault is detected within 1.0 s of injection.
+3. Both the speed and steering commands remain zero after detection.
+4. The stop is verified from three new measurements within 3.0 s of injection.
+5. The verified stop is maintained for at least 1.0 s, with measurements
+   remaining fresh.
 
-Odotettu onnistumisen syy on `fault_stop_and_hold_verified`. Normaali reitti
-hyväksytään syyllä `route_complete`, hybridi syyllä `hybrid_complete` ja AEB
-syyllä `aeb_stop_verified`. Pelkkä vikailmoitus tai saapuminen maaliin ei riitä
-katkostestin PASS-tulokseen. Ennen injektiota ilmenevä vika on FAIL.
+The expected successful end reason is `fault_stop_and_hold_verified`. The
+normal route passes with `route_complete`, the hybrid test with
+`hybrid_complete`, and the AEB test with `aeb_stop_verified`. A fault message
+alone or reaching the goal is not enough for a communication-loss test to
+PASS. A fault occurring before injection is a FAIL.
 
-Odometriakatkossa erillinen varmennuslukija lukee edelleen saman Gazebo-ajoneuvon
-odometriaa. Se ei anna nopeustietoa ohjaimelle. Näin ohjaimen mittauskatko ja
-ajoneuvon todellinen simuloitu liike voidaan tarkistaa erikseen. Jos itse Gazebon
-odometrialähde katkeaa kokonaan, pysähtymistä ei voi vahvistaa ja koe on FAIL.
+During the odometry-loss test, a separate verification observer continues
+reading odometry from the same Gazebo vehicle. It does not supply speed data
+to the controller. This allows the controller's measurement loss and the
+vehicle's actual simulated motion to be checked separately. If Gazebo's
+odometry source itself stops completely, the stop cannot be verified and
+the test is a FAIL.
 
-Nämä ovat hallittuja ohjelmallisia katkoksia. Ne eivät sellaisenaan testaa
-fyysisen CAN-kaapelin irrotusta, CAN bus-off -tilaa, kaikkia pakettien viiveitä,
-prosessin pakkotappoa tai PC:n virrankatkoa. Prosessin ulkopuolinen komentojen
-watchdog on erillinen jatkokehitysasia. Tämä paketti ei ota sitä käyttöön.
+These are controlled software fault injections. By themselves, they do not
+test physical CAN cable disconnection, CAN bus-off, all packet delays, forced
+process termination or PC power loss. A command watchdog running outside the
+test process is a separate future development task. This package does not
+implement it.
 
-## 5. Tuloslokit ja vianrajaus
+## 5. Result logs and troubleshooting
 
-Jokaisesta ajosta muodostuu pari:
+Each run produces a pair of files:
 
-- `hil10_<mode>_<aikaleima>_<tunniste>.csv`: mittausikä, nopeus, pyydetty ja
-  käytetty komento, jarrun syy/laskuri, vikamuisti ja pysähtymisnäytteet.
-- Samanniminen `.json`: PASS/FAIL, päättymissyy, pysähtymisen vahvistus sekä
-  testikohtaiset tulokset. Katkokokeissa mukana ovat tunnistus- ja pysähtymisviive;
-  AEB:ssä turvaetäisyys; hybridissä Phase 6:n hyväksymisehdot.
+- `hil10_<mode>_<timestamp>_<identifier>.csv`: measurement age, speed, requested
+  and applied commands, brake reason/counter, latched fault state and stop samples.
+- A `.json` file with the same stem: PASS/FAIL, end reason, stop verification
+  and test-specific results. Communication-loss tests include detection and
+  stopping latency; AEB includes clearance; the hybrid test includes the
+  Phase 6 acceptance criteria.
 
-CSV:n monotoniset sekunnit ovat PC:n paikallista aikaa eivätkä kalenteriaikaa.
-JSONin `baseline_commit` kertoo pohjaversion; HIL-10-muutokset ovat tämän
-erikseen jaetun paketin paikallisia tiedostoja. Paketti ei tee Git-committia tai pushia.
+The monotonic seconds in the CSV are local to the PC and are not calendar time.
+The JSON field `baseline_commit` identifies the baseline version; the HIL-10
+changes are local files from this separately distributed package. The package
+does not create a Git commit or push changes.
 
 ```bash
 cd ~/edge-path-project-git/edge-path-project/gazebo/results/hil10
@@ -250,25 +268,29 @@ ls -lt
 explorer.exe .
 ```
 
-Jos koe epäonnistuu, säilytä JSON ja saman ajon CSV sekä R2100:n kolme lokia.
-`startup_not_ready`-tilanteessa tarkista ensin, että maailma käy, IP-osoite on
-oikea, R2100:n prosessit ovat käynnissä ja toinen LiDAR-lähetin tai ohjain ei ole
-päällä. Tarkastele R2100:lla esimerkiksi:
+If a test fails, keep its JSON file and matching CSV, along with the three
+R2100 logs. For `startup_not_ready`, first check that the world is running,
+the IP address is correct, the R2100 processes are running, and no second
+LiDAR sender or controller is active. For example, inspect the R2100 logs with:
 
 ```bash
 tail -n 20 "$HIL10_LOG_DIR/perception.log" "$HIL10_LOG_DIR/gateway.log" "$HIL10_LOG_DIR/aeb.log"
 ```
 
-LiDAR-lokissa pitäisi näkyä kokonaisia 721-säteen skannauksia ennen vian injektiota.
-`stop_not_verified` ja `verification_odometry_timeout` eivät ole hyväksyttäviä
-pysähtymisiä, vaikka auto näyttäisi kuvassa paikallaan olevalta.
+The LiDAR log should show complete 721-beam scans before fault injection.
+`stop_not_verified` and `verification_odometry_timeout` do not count as
+verified stops, even if the vehicle appears stationary in the visualisation.
 
-## 6. Valmistumiskriteeri
+## 6. Completion criteria
 
-Ohjelmistotarkistukset: **42/42 PASS** tämän paketin valmistuksessa.
-Gazebo + R2100 + fyysinen CAN: **ei vielä ajettu tällä HIL-10-versiolla**.
+Status when this package was prepared:
 
-Seuraava välitavoite on kuuden taulukossa nimetyn kokeen onnistunut ajo omalla
-laitteistolla, jokaisesta CSV/JSON-pari ja R2100-lokit. Vasta niiden perusteella
-HIL-10 voidaan kirjata laitteistolla varmennetuksi vaiheeksi ja viedä hyväksytyt
-tiedostot sekä tulokset `hil-development`-haaraan.
+- Software checks: **42/42 PASS**.
+- Gazebo + R2100 + physical CAN: **not yet run with this HIL-10 version**.
+
+The next milestone at that point was to complete all six tests in the table
+successfully on the local hardware, retaining a CSV/JSON pair and R2100 logs
+for each run. Those results would provide the basis for recording HIL-10 as
+a hardware-validated stage and committing the accepted files and results to
+`hil-development`. See the [current HIL guide](README.md#hil-10-hardware-validation-summary)
+for the subsequent hardware-validation status.
