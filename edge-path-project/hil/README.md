@@ -1,10 +1,10 @@
-# Hardware-in-the-Loop (HIL) validation
+# Ruskotunturi R2100 Hardware-in-the-Loop (HIL) validation
 
 This directory documents the Hardware-in-the-Loop implementation used to extend the Gazebo SIL baseline onto a real embedded controller and physical CAN link.
 
 The embedded platform is a **Seeed Studio reComputer Industrial R2100**. Gazebo Harmonic runs in WSL and provides the virtual vehicles, terrain, LiDAR and odometry. The R2100 receives simulation data over UDP, maps the relevant signals onto physical CAN, executes the AEB decision, and returns the brake state to the simulator.
 
-The current validated Ruskotunturi milestone is **HIL-10**. The HIL path also includes hardware-validated **Configurable Signal Mapping**, **Configuration-driven Signal Codec**, **Embedded Deployment** and **Deployment Preflight** work packages.
+The current HIL platform is **Ruskotunturi R2100 HIL**. Its validated functional test suite is **HIL-10 Freshness and Fault Validation**. The HIL path also includes hardware-validated **Configurable Signal Mapping**, **Configuration-driven Signal Codec**, **Embedded Deployment**, **Deployment Preflight** and **HIL Startup Readiness Diagnostics** work packages.
 
 This is a research and development setup, not a certified functional-safety implementation.
 
@@ -63,7 +63,7 @@ Default gateway   : not required
 DNS               : not required
 ```
 
-These addresses are only an example private RFC1918 lab subnet. They are not a project requirement. Use the actual reachable R2100 address in commands via `<R2100_IP>` or a shell variable. Later deployment and codec-regression runs also confirmed that the same HIL scripts work over another reachable management/overlay path when the selected R2100 address is used consistently.
+These addresses are only an example private RFC1918 lab subnet. They are not a project requirement. Use the actual reachable R2100 address in commands via `<R2100_IP>` or a shell variable. Later deployment, codec-regression and startup-diagnostics runs also confirmed that the same HIL scripts work over another reachable management/overlay path when the selected R2100 address is used consistently.
 
 ## Main files
 
@@ -104,11 +104,12 @@ edge-path-project/gazebo/scripts/
 ├── hil10_preflight.py
 ├── hil10_runtime.py
 ├── hil10_safety.py
+├── hil_startup_diagnostics.py
 ├── ruskotunturi_hil10_b_test.py
 └── ruskotunturi_hil10_hybrid_test.py
 ```
 
-The signal-mapping, codec, deployment and deployment-preflight automated software tests are:
+The signal-mapping, codec, deployment, deployment-preflight and startup-diagnostics automated software tests include:
 
 ```text
 tests/
@@ -119,7 +120,8 @@ tests/
 ├── test_signal_codec.py
 ├── test_signal_codec_end_to_end.py
 ├── test_embedded_deployment.py
-└── test_r2100_preflight.py
+├── test_r2100_preflight.py
+└── test_hil_startup_diagnostics.py
 ```
 
 Earlier HIL-9 scripts and the dedicated AEB obstacle world remain available as development history.
@@ -455,6 +457,71 @@ signal regression    : 30 / 30 PASS
 
 The deployment preflight is intentionally local to the R2100. It verifies target readiness; it does not prove that Gazebo is running or that the WSL test selected a reachable R2100 address. Those remain end-to-end HIL prerequisites.
 
+## HIL Startup Readiness Diagnostics
+
+The WSL-side HIL test now reports the state of its startup prerequisites instead of collapsing every startup failure into the generic `startup_not_ready` result.
+
+The diagnostics layer is read-only: it does not change the existing readiness thresholds, AEB behavior or HIL PASS/FAIL criteria. On startup failure it reports the selected R2100 host together with the readiness state already observed by the test:
+
+```text
+HIL startup readiness
+
+R2100 host           : <R2100_IP>
+[PASS/FAIL] Gazebo pose
+[PASS/FAIL] Gazebo odometry
+[PASS/FAIL] R2100 brake reply
+Brake state          : <active/released> (<reason>)
+Runtime fault        : <fault/none>
+LiDAR sender error   : <error/none>
+```
+
+The selected host is not tied to a particular transport. `<R2100_IP>` may be the direct Ethernet address, an overlay/management address, or another reachable R2100 address used consistently for that run.
+
+The current startup classifications include:
+
+```text
+startup_gazebo_not_ready
+startup_pose_not_ready
+startup_odometry_not_ready
+startup_brake_reply_missing
+startup_r2100_sensor_timeout
+startup_brake_active
+startup_udp_error
+startup_lidar_send_error
+startup_start_position_invalid
+```
+
+These reasons identify the condition observed by the HIL runner; they do not always identify the underlying network root cause. For example, a missing brake reply may be caused by an unreachable address, stopped R2100 processes or another break in the end-to-end path.
+
+Run the dedicated diagnostics tests with:
+
+```bash
+python3 -m unittest discover -s tests -p 'test_hil_startup_diagnostics.py' -v
+```
+
+The work package was validated with:
+
+```text
+startup diagnostics unit tests : 7 / 7 PASS
+HIL-10 integration tests       : 18 / 18 PASS
+```
+
+An end-to-end negative test was performed with the R2100 runtime running and the Gazebo world intentionally absent. The runner produced a readiness report with failed Gazebo pose and odometry and terminated with:
+
+```text
+HIL-10 RESULT: FAIL
+End reason: startup_gazebo_not_ready
+```
+
+The Gazebo world was then started and the same R2100 route was rerun without changing the HIL safety behavior:
+
+```text
+HIL-10 RESULT: PASS
+End reason: route_complete
+```
+
+This demonstrates that startup failures are now diagnosable while the normal HIL route behavior remains unchanged.
+
 ## Important distance semantics
 
 `OBSTACLE_DISTANCE` is treated as **free clearance from the physical vehicle body to the obstacle**, not raw LiDAR-origin range.
@@ -606,6 +673,8 @@ python3 -u edge-path-project/gazebo/scripts/ruskotunturi_hil10_b_test.py \
 
 Other supported HIL-10 modes are `aeb`, `fault-odometry`, `fault-brake` and `fault-lidar`; the hybrid mission uses `ruskotunturi_hil10_hybrid_test.py`.
 
+If startup readiness is not reached, the B test prints the detailed readiness report described above and returns a specific startup failure reason instead of the former generic `startup_not_ready` result when the missing condition can be identified.
+
 ## HIL-10 hardware validation summary
 
 All six planned HIL-10 hardware scenarios passed on the Gazebo -> network -> R2100 -> physical CAN -> R2100 -> network -> Gazebo loop.
@@ -720,6 +789,10 @@ A configurable `scale` value is only safe if every producer and consumer interpr
 
 Configuration validity alone does not prove that the R2100 is ready to run HIL. The deployment preflight therefore checks the configured CAN interfaces, their live state and bitrate, plus the UDP ports required by gateway and LiDAR perception. A conflicting second startup was rejected before any new runtime processes were launched, while the original deployment remained healthy.
 
+### 10. Startup failure should identify the missing readiness condition
+
+A generic startup timeout hides whether the missing prerequisite is on the Gazebo side, in the odometry path or in the R2100 brake-return path. The startup diagnostics now report the observed readiness state and return a specific failure reason when possible, while leaving the underlying HIL safety gates unchanged.
+
 ## Scope and limitations
 
 The current validation still does **not** cover every possible hardware or system failure. Follow-on targets include:
@@ -733,11 +806,11 @@ The current validation still does **not** cover every possible hardware or syste
 
 The scalar codec currently supports `uint16_le`; structured `brake_command_v1` remains a specialized codec rather than a fully generic schema-driven payload description.
 
-The deployment preflight verifies local R2100 readiness but does not verify that Gazebo is running, that WSL can reach the selected R2100 address, or that end-to-end UDP traffic is flowing before the HIL test starts.
+The deployment preflight verifies local R2100 readiness but does not verify that Gazebo is running, that WSL can reach the selected R2100 address, or that end-to-end UDP traffic is flowing before the HIL test starts. Startup diagnostics improve the WSL-side failure report but cannot always distinguish the exact underlying cause of a missing remote reply.
 
 ## Troubleshooting
 
-If a test remains in a fail-safe state at startup, check that:
+If a test remains in a fail-safe state at startup, check the printed **HIL startup readiness** report first, then verify that:
 
 - `~/r2100_hil/current/r2100_hil.pyz preflight` passes,
 - the correct Gazebo world is running,
@@ -748,7 +821,7 @@ If a test remains in a fail-safe state at startup, check that:
 - no old HIL controller is still publishing Vehicle B commands,
 - no separate LiDAR sender is running during a HIL-10 B test.
 
-A `startup_not_ready` result can occur when Gazebo is not running or when the test sends UDP traffic to an R2100 address that is not reachable on the currently active network path. The R2100 deployment preflight cannot detect either WSL-side condition.
+For example, missing Gazebo pose and odometry now produce `startup_gazebo_not_ready`; a missing fresh brake reply produces `startup_brake_reply_missing`; and a local UDP I/O failure produces `startup_udp_error`. The R2100 deployment preflight remains complementary: it verifies the target itself before runtime startup, while the WSL diagnostics report what the end-to-end HIL runner actually observes.
 
 Only one process should publish Vehicle B commands during a test.
 
@@ -767,6 +840,7 @@ CARLA experiments
  -> reproducible embedded deployment package
  -> configuration-driven scalar signal codec
  -> deployment preflight and fail-closed startup
+ -> HIL startup readiness diagnostics
 ```
 
 Current evidence:
@@ -774,6 +848,10 @@ Current evidence:
 ```text
 HIL-10 offline software validation       : 42 / 42 PASS
 HIL-10 hardware scenarios                : 6 / 6 PASS
+HIL startup diagnostics unit tests       : 7 / 7 PASS
+HIL-10 integration regression            : 18 / 18 PASS
+Gazebo-absent startup diagnosis           : PASS / startup_gazebo_not_ready
+diagnostics-integrated HIL route          : PASS / route_complete
 original signal-mapping offline tests    : 12 / 12 PASS
 mapping + deployment offline tests       : 19 / 19 PASS
 codec work-package regression            : 37 / 37 PASS

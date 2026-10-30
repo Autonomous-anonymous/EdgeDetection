@@ -18,6 +18,7 @@ import ruskotunturi_hil_b_route_test as legacy
 from ruskotunturi_hil9e_aeb_test import physical_clearance, REQUIRED_CLEARANCE_M
 from hil10_safety import HILLink, OdometryMonitor, RunLog
 from hil10_runtime import ManagedLidarSender, odometry_values, verify_stop, stop_repeatedly
+from hil_startup_diagnostics import StartupReadiness
 
 MODES = ("route", "aeb", "fault-odometry", "fault-brake", "fault-lidar")
 DETECTION_LIMIT_S = 1.0
@@ -30,6 +31,7 @@ class HIL10B(legacy.RuskotunturiHILBRouteTest):
         # Initialize all callback state before subscriptions are enabled.
         self.mode = args.mode
         self.fault_after = args.fault_after
+        self.r2100_host = args.r2100_host
         self.link = HILLink(args.r2100_host, args.udp_port)
         self.observer = OdometryMonitor()
         self.log = RunLog(args.results_dir, self.mode)
@@ -51,6 +53,7 @@ class HIL10B(legacy.RuskotunturiHILBRouteTest):
         self.confirmed_stop = None
         self.measurements = {}
         self.stop_verified = False
+        self.startup_failure_reason = "startup_not_ready"
 
     def record_stop(self):
         _brake, reason = self.link.decision()
@@ -88,27 +91,61 @@ class HIL10B(legacy.RuskotunturiHILBRouteTest):
         return (self.link.brake_fresh() and self.link.brake_active
                 and self.link.brake_reason == 3 and self.link.fault == "sensor_timeout")
 
+    def startup_readiness(self):
+        return StartupReadiness(
+            r2100_host=self.r2100_host,
+            pose_fresh=self.pose_fresh(),
+            odometry_fresh=self.link.odom.fresh(),
+            brake_reply_fresh=self.link.brake_fresh(),
+            brake_active=self.link.brake_active,
+            brake_reason=self.link.brake_reason,
+            fault=self.link.fault,
+            lidar_error=self.lidar.error,
+        )
+
     def wait_ready(self):
         deadline = time.monotonic() + 12.0
         while time.monotonic() < deadline:
             self.stop_b()
             self.link.pump()
             brake, _reason = self.link.decision()
+            state = self.startup_readiness()
+
             if self.link.fault or self.lidar.error:
+                self.startup_failure_reason = (
+                    state.failure_reason() or "startup_not_ready"
+                )
+                print()
+                print(state.format_report(), flush=True)
                 return False
+
             if self.pose_fresh() and not brake:
                 with self.lock:
-                    distance = math.hypot(self.x - legacy.B_START[0], self.y - legacy.B_START[1])
+                    distance = math.hypot(
+                        self.x - legacy.B_START[0],
+                        self.y - legacy.B_START[1],
+                    )
                 if distance > 1.5:
                     print("Start-position check failed. Restart the Gazebo world.")
+                    self.startup_failure_reason = "startup_start_position_invalid"
+                    print()
+                    print(state.format_report(), flush=True)
                     return False
                 return True
+
             time.sleep(0.05)
+
+        state = self.startup_readiness()
+        self.startup_failure_reason = (
+            state.failure_reason() or "startup_not_ready"
+        )
+        print()
+        print(state.format_report(), flush=True)
         return False
 
     def execute(self):
         if not self.wait_ready():
-            return False, "startup_not_ready"
+            return False, self.startup_failure_reason
         start = time.monotonic()
         moving_since = None
         last_print = 0.0
