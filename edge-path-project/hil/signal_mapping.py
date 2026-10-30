@@ -28,6 +28,11 @@ VALID_DIRECTIONS = {
     "controller_to_simulation",
 }
 
+VALID_ENCODINGS = {
+    "uint16_le",
+    "brake_command_v1",
+}
+
 
 @dataclass(frozen=True)
 class SignalDefinition:
@@ -235,6 +240,11 @@ def load_signal_mapping(
             f"signals.{name}.encoding",
         )
 
+        if encoding not in VALID_ENCODINGS:
+            raise ValueError(
+                f"unsupported encoding for {name}: {encoding!r}"
+            )
+
         scale = _optional_number(
             definition.get("scale"),
             f"signals.{name}.scale",
@@ -262,6 +272,26 @@ def load_signal_mapping(
             if not 0 <= no_value_raw <= 0xFFFF:
                 raise ValueError(
                     f"signals.{name}.no_value_raw must fit uint16"
+                )
+
+        if encoding == "uint16_le":
+            if scale is None:
+                raise ValueError(
+                    f"signals.{name}.scale is required "
+                    f"for uint16_le encoding"
+                )
+
+        elif encoding == "brake_command_v1":
+            if scale is not None:
+                raise ValueError(
+                    f"signals.{name}.scale is not valid "
+                    f"for brake_command_v1"
+                )
+
+            if no_value_raw is not None:
+                raise ValueError(
+                    f"signals.{name}.no_value_raw is not valid "
+                    f"for brake_command_v1"
                 )
 
         signals[name] = SignalDefinition(

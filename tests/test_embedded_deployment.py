@@ -31,6 +31,7 @@ EXPECTED_DIST_FILES = {
     "status_hil.sh",
     "config/ruskotunturi_hil.json",
     "config/ruskotunturi_hil_alt_ids.json",
+    "config/ruskotunturi_hil_alt_scaling.json",
 }
 
 
@@ -169,6 +170,29 @@ class EmbeddedDeploymentTests(unittest.TestCase):
 
         self.assertIn(
             "R2100 HIL deployment executable",
+            result.stdout,
+        )
+
+    def test_zipapp_preflight_help_passes(self):
+        result = subprocess.run(
+            [
+                str(DIST_DIR / "r2100_hil.pyz"),
+                "preflight",
+                "--help",
+            ],
+            cwd=REPO_ROOT,
+            capture_output=True,
+            text=True,
+        )
+
+        self.assertEqual(
+            result.returncode,
+            0,
+            msg=result.stderr,
+        )
+
+        self.assertIn(
+            "Validate R2100 HIL runtime readiness",
             result.stdout,
         )
 

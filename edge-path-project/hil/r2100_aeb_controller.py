@@ -32,11 +32,14 @@ from can_protocol import (
     BRAKE_REASON_SENSOR_TIMEOUT,
     BRAKE_REASON_TTC,
     brake_reason_text,
-    decode_obstacle_distance,
-    decode_vehicle_speed,
     encode_brake_command,
 )
-from signal_mapping import DEFAULT_CONFIG_PATH, load_signal_mapping
+from signal_codec import decode_signal_value
+from signal_mapping import (
+    DEFAULT_CONFIG_PATH,
+    SignalDefinition,
+    load_signal_mapping,
+)
 
 TTC_THRESHOLD_SECONDS = 1.7
 MIN_SPEED_FOR_TTC_MPS = 0.10
@@ -66,15 +69,17 @@ class R2100AEBController:
     def __init__(
         self,
         interface: str,
-        speed_can_id: int,
-        distance_can_id: int,
+        speed_signal: SignalDefinition,
+        distance_signal: SignalDefinition,
         brake_can_id: int,
         mapping_profile: str,
         mapping_bitrate: int,
     ) -> None:
         self.interface = interface
-        self.speed_can_id = speed_can_id
-        self.distance_can_id = distance_can_id
+        self.speed_signal = speed_signal
+        self.distance_signal = distance_signal
+        self.speed_can_id = speed_signal.can_id
+        self.distance_can_id = distance_signal.can_id
         self.brake_can_id = brake_can_id
         self.mapping_profile = mapping_profile
         self.mapping_bitrate = mapping_bitrate
@@ -106,13 +111,23 @@ class R2100AEBController:
         if can_id == self.speed_can_id:
             if len(data) != 8:
                 return
-            self.speed_mps = decode_vehicle_speed(data)
+            speed_mps = decode_signal_value(
+                self.speed_signal,
+                data,
+            )
+            if speed_mps is None:
+                return
+
+            self.speed_mps = speed_mps
             self.last_speed_time = now
 
         elif can_id == self.distance_can_id:
             if len(data) != 8:
                 return
-            self.front_distance_m = decode_obstacle_distance(data)
+            self.front_distance_m = decode_signal_value(
+                self.distance_signal,
+                data,
+            )
             self.last_distance_time = now
 
     def sensors_fresh(self, now: float) -> bool:
@@ -335,8 +350,8 @@ def main() -> None:
 
     controller = R2100AEBController(
         interface=interface,
-        speed_can_id=speed_signal.can_id,
-        distance_can_id=distance_signal.can_id,
+        speed_signal=speed_signal,
+        distance_signal=distance_signal,
         brake_can_id=brake_signal.can_id,
         mapping_profile=mapping.profile,
         mapping_bitrate=mapping.can.bitrate,

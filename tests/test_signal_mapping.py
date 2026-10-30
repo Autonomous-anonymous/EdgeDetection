@@ -133,5 +133,49 @@ class SignalMappingTests(unittest.TestCase):
             self.load_config(config)
 
 
+    def test_uint16_encoding_requires_scale(self):
+        config = json.loads(json.dumps(VALID_CONFIG))
+        del config["signals"]["vehicle_speed"]["scale"]
+
+        with self.assertRaisesRegex(
+            ValueError,
+            "scale is required",
+        ):
+            self.load_config(config)
+
+    def test_unsupported_encoding_is_rejected(self):
+        config = json.loads(json.dumps(VALID_CONFIG))
+
+        config["signals"]["vehicle_speed"]["encoding"] = "float32_le"
+
+        with self.assertRaisesRegex(
+            ValueError,
+            "unsupported encoding",
+        ):
+            self.load_config(config)
+
+    def test_brake_encoding_rejects_scale(self):
+        config = json.loads(json.dumps(VALID_CONFIG))
+
+        config["signals"]["brake_command"]["scale"] = 1.0
+
+        with self.assertRaisesRegex(
+            ValueError,
+            "scale is not valid",
+        ):
+            self.load_config(config)
+
+    def test_brake_encoding_rejects_no_value_raw(self):
+        config = json.loads(json.dumps(VALID_CONFIG))
+
+        config["signals"]["brake_command"]["no_value_raw"] = 255
+
+        with self.assertRaisesRegex(
+            ValueError,
+            "no_value_raw is not valid",
+        ):
+            self.load_config(config)
+
+
 if __name__ == "__main__":
     unittest.main()

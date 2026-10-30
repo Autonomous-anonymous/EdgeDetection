@@ -22,6 +22,13 @@ if [[ ! -f "$CONFIG" ]]; then
     exit 1
 fi
 
+echo "Running R2100 HIL preflight"
+echo
+
+"$APP" preflight --config "$CONFIG"
+
+echo
+
 for component in perception gateway aeb; do
     pid_file="$PID_DIR/$component.pid"
 
