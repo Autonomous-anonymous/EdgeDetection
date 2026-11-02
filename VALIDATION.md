@@ -21,7 +21,7 @@ The committed v6.4 result is `PASS` with `end_reason=final_demo_complete` and no
 
 Current platform name: **Ruskotunturi R2100 HIL**.
 
-The historical functional suite name remains **HIL-10 Freshness and Fault Validation**. Later work packages extend the same platform with configurable signal mapping, configuration-driven scalar codecs, embedded deployment, R2100 deployment preflight, WSL-side startup-readiness diagnostics, a common SIL/HIL emergency-braking scenario and an independent Vehicle B command watchdog for process-termination fail-safe protection.
+The historical functional suite name remains **HIL-10 Freshness and Fault Validation**. Later work packages extend the same platform with configurable signal mapping, configuration-driven scalar codecs, embedded deployment, R2100 deployment preflight, WSL-side startup-readiness diagnostics, a common SIL/HIL emergency-braking scenario, an independent Vehicle B command watchdog for process-termination fail-safe protection and SIL/HIL AEB threshold-consistency regression coverage.
 
 The verified R2100 baseline is tagged:
 
@@ -29,12 +29,12 @@ The verified R2100 baseline is tagged:
 r2100-hil-verified-2026-11-02
 ```
 
-That tag closes the fresh-checkout build/deploy/physical-CAN acceptance baseline. The common staged emergency-braking scenario and process-termination watchdog were added afterwards on `hil-development`.
+That tag closes the fresh-checkout build/deploy/physical-CAN acceptance baseline. The common staged emergency-braking scenario, process-termination watchdog and threshold-consistency tests were added afterwards on `hil-development`.
 
-The current offline repository suite was rerun on 2026-11-02 after adding the watchdog state tests:
+The current offline repository suite was rerun on 2026-11-02 after the threshold-consistency tests were added:
 
 ```text
-Ran 163 tests
+Ran 168 tests
 OK
 ```
 
@@ -114,7 +114,7 @@ The clean run also demonstrated that stale PID files from an earlier managed run
 
 ## Common SIL/HIL emergency-braking scenario — 2026-11-02
 
-A shared staged scenario now defines one equivalent emergency-braking acceptance case for both execution targets:
+A shared staged scenario defines one equivalent emergency-braking acceptance case for both execution targets:
 
 ```text
 edge-path-project/gazebo/scenarios/emergency_braking.json
@@ -159,17 +159,38 @@ raw LiDAR transport         active
 physical-CAN AEB path       exercised
 ```
 
-The HIL run generated the target-specific result file `hil10_aeb_20261102T102033_e21c05af.json` in the operator checkout. It is not part of the earlier verified-baseline tag and should not be confused with the committed fresh-checkout route evidence.
+The successful HIL run is now retained as committed raw evidence:
+
+```text
+edge-path-project/gazebo/results/hil10/hil10_aeb_20261102T102033_e21c05af.json
+edge-path-project/gazebo/results/hil10/hil10_aeb_20261102T102033_e21c05af.csv
+```
+
+The JSON records:
+
+```text
+passed                 true
+end_reason             aeb_stop_verified
+stop_verified          true
+AEB reason             ttc_threshold
+final speed            ~0.000 m/s
+observer stop samples  4
+recorded clearance     1.189 m
+required clearance     1.000 m
+fault                   null
+```
+
+Commit `c2c91d6` added the raw JSON/CSV evidence pair and `b445c716` normalized the CSV line endings without changing its measurements.
 
 The first HIL attempt intentionally failed closed with `startup_brake_reply_missing` while the R2100 runtime was not returning brake state. After the managed R2100 runtime was started, the same scenario passed. This is consistent with the startup-readiness diagnostics design and is not used as PASS evidence.
 
-The new offline staged-scenario tests pass **6 / 6**.
+The offline staged-scenario tests pass **6 / 6**.
 
 The common runner currently selects the target, validates the shared scenario and starts the target-specific backend. Gazebo world lifecycle and R2100 runtime lifecycle remain explicit operator steps, and target-specific result formats have not yet been replaced by one unified result schema.
 
 ## Independent HIL process-termination fail-safe — 2026-11-02
 
-The HIL path now includes an independent WSL-side Vehicle B command watchdog:
+The HIL path includes an independent WSL-side Vehicle B command watchdog:
 
 ```text
 edge-path-project/gazebo/scripts/hil_command_watchdog.py
@@ -191,31 +212,63 @@ edge-path-project/gazebo/scripts/hil_process_termination_test.py
 
 The harness starts the watchdog and the normal HIL route runner, independently observes Vehicle B commands and odometry, waits until the vehicle is moving, and then kills the HIL runner with `SIGKILL`. Because `SIGKILL` prevents the runner from executing its own cleanup/final STOP path, the harness requires a new post-kill zero command from the independent watchdog before the later vehicle stop can be counted as PASS.
 
-Verified operator run on 2026-11-02:
+Final committed operator run on 2026-11-02:
 
 ```text
 Vehicle B moving before fault    PASS, 0.850 m/s
 fault injection                  SIGKILL to HIL runner
 runner termination               PASS
-watchdog trigger / STOP latency  PASS, 0.314 s after SIGKILL
-final observed speed             0.000 m/s
+watchdog STOP latency            PASS, 0.261 s after SIGKILL
+final observed speed             ~0.000 m/s
 stop confirmation samples        17
-stop-and-hold verification       PASS, 1.680 s after SIGKILL
+stop-and-hold verification       PASS, 1.616 s after SIGKILL
+source commit                    269a1c4feb5ce91a5174f25243f21be71cce959f
+source dirty                     false
 PROCESS TERMINATION FAIL-SAFE    PASS
 ```
 
-The default watchdog timeout is 0.30 s. The test verifies that the actual post-kill Vehicle B zero command comes from the watchdog and that the vehicle subsequently remains below the 0.05 m/s stop threshold for the required confirmation/hold period.
+Machine-readable committed evidence:
 
-The corresponding source was committed as `afa691e` (`Add HIL process termination fail-safe watchdog`). The test is run with the Phase 6 Gazebo world active and the R2100 runtime ready:
-
-```bash
-python3 -u edge-path-project/gazebo/scripts/hil_process_termination_test.py \
-  --r2100-host <R2100_IP>
+```text
+edge-path-project/gazebo/results/hil10/hil_process_termination_20261102T115256Z.json
 ```
 
-The watchdog state tests pass **5 / 5**. With those tests added, the complete repository offline suite passes **163 / 163**.
+The evidence JSON was produced by the committed harness source at `269a1c4feb5ce91a5174f25243f21be71cce959f` with a clean working tree and was committed in `63cb16f`.
 
-This closes the previously documented gap for forced HIL runner termination. It does not claim coverage of PC power loss, physical CAN cable disconnection, CAN bus-off or all distributed-node failure modes.
+The default watchdog timeout is 0.30 s. The recorded 0.261 s value is measured from the `SIGKILL` injection to the first observed watchdog zero command; the watchdog's own timeout is measured from the last healthy Vehicle B command, so those two timings are intentionally different references.
+
+The test verifies that the actual post-kill Vehicle B zero command comes from the watchdog and that the vehicle subsequently remains below the 0.05 m/s stop threshold for the required confirmation/hold period.
+
+The watchdog state tests pass **5 / 5**.
+
+This closes the previously documented gap for forced HIL runner termination. It does not claim coverage of PC power loss, physical CAN cable disconnection, CAN bus-off or all distributed-node failure modes. The watchdog is independent of the HIL runner process but remains on the same WSL/PC host.
+
+## SIL/HIL AEB threshold consistency — 2026-11-02
+
+The SIL emergency-braking adapter and the R2100 AEB controller intentionally remain separate runtime modules. Their duplicated safety constants are protected against silent drift by:
+
+```text
+tests/test_aeb_threshold_consistency.py
+```
+
+The five regression checks compare:
+
+```text
+TTC threshold
+emergency distance
+sensor timeout
+control period
+minimum speed used for TTC
+```
+
+Verified result:
+
+```text
+Ran 5 tests
+OK
+```
+
+This test was added in commit `acc8712`. With it included, the complete repository offline suite passes **168 / 168**.
 
 ## Preflight terminology
 
@@ -268,11 +321,12 @@ This complements the R2100 deployment preflight: the target preflight checks the
 | HIL startup diagnostics | 7 / 7 PASS | Dedicated diagnostics unit tests. |
 | HIL integration regression | 18 / 18 PASS | Integration tests after startup diagnostics. |
 | Common staged-scenario tests | 6 / 6 PASS | Scenario schema, target command construction, HIL host requirement and both dry-run paths. |
+| SIL/HIL AEB threshold consistency | 5 / 5 PASS | TTC, emergency distance, timeout, period and TTC minimum-speed copies match. |
 | Common emergency-braking SIL run | PASS | `aeb_stop_verified`, `ttc_threshold`, 1.253 m ground-truth stop clearance. |
-| Common emergency-braking HIL run | PASS | `aeb_stop_verified`, `ttc_threshold`; R2100 and physical-CAN AEB path exercised. |
+| Common emergency-braking HIL run | PASS / committed raw evidence | `hil10_aeb_20261102T102033_e21c05af.json/.csv`; R2100 and physical-CAN AEB path exercised. |
 | Command-watchdog state tests | 5 / 5 PASS | Arming, freshness, timeout latch, invalid timeout and unarmed behaviour. |
-| HIL runner `SIGKILL` fail-safe | PASS | Watchdog STOP at 0.314 s; Vehicle B 0.000 m/s; stop-and-hold verified at 1.680 s. |
-| Full repository offline suite | 163 / 163 PASS | Verified after adding the command-watchdog tests on 2026-11-02. |
+| HIL runner `SIGKILL` fail-safe | PASS / committed raw evidence | `hil_process_termination_20261102T115256Z.json`; watchdog zero at 0.261 s after SIGKILL, 17 stop samples, source clean. |
+| Full repository offline suite | 168 / 168 PASS | Verified after adding AEB threshold-consistency tests on 2026-11-02. |
 | GitHub Actions offline validation | PASS | Full offline suite plus deployment build/configuration check and deployment regression tests. |
 | Fresh-checkout R2100 acceptance | PASS | Clean checkout -> build -> deploy -> preflight -> managed runtime -> physical-CAN route; `route_complete`. |
 | Verified baseline tag | complete | `r2100-hil-verified-2026-11-02`; closes the pre-common-scenario R2100 acceptance baseline. |
@@ -290,7 +344,7 @@ passed: false
 end_reason: interrupted
 ```
 
-A later successful standalone route result is now also committed:
+A later successful standalone route result is also committed:
 
 `edge-path-project/gazebo/results/hil10/hil10_route_20261030T101421_6ac599e1.json`
 
@@ -305,9 +359,17 @@ fault: null
 
 The recorded final speed is effectively zero (`3.1974423109204504e-12 m/s`), and the observer recorded five stop-confirmation samples. The raw evidence was added in commit `3f5642f` (`Add successful HIL route evidence`).
 
-The JSON field `baseline_commit=52331fde756991988cbb94f01e6d33d615c8d7df` identifies the historical HIL-10 baseline used by the test format. It must **not** be interpreted as the source revision of this later route run. The startup-diagnostics source exercised by the run was subsequently committed as `b5210da` (`Add HIL startup readiness diagnostics`). The exact deployed R2100 release-directory name and active target configuration for that specific run are not encoded in the committed result and should not be inferred.
+The JSON field `baseline_commit=52331fde756991988cbb94f01e6d33d615c8d7df` identifies the historical HIL-10 baseline used by the test format. It must **not** be interpreted as the source revision of this later route run.
+
+The referenced baseline commit is not missing repository history. `52331fde756991988cbb94f01e6d33d615c8d7df` exists, is reachable from the current `hil-development` HEAD, and is the historical commit `Update project README for completed HIL-9 milestone`. It does not appear in short recent-commit listings simply because the branch history is longer than those listings.
+
+The startup-diagnostics source exercised by the later route run was subsequently committed as `b5210da` (`Add HIL startup readiness diagnostics`). The exact deployed R2100 release-directory name and active target configuration for that older run are not encoded in the committed result and should not be inferred.
 
 The 2026-11-02 fresh-checkout acceptance fixes that traceability gap by explicitly recording the source revision, deployed release and build/deployment hashes together with the committed route result pair.
+
+## Scope boundary
+
+The current deliverable validates the staged **SIL -> HIL** development and acceptance workflow. A Vehicle-in-the-Loop (VIL) stage is **not implemented and is explicitly out of scope** for this deliverable. No completed VIL stage is claimed by the repository.
 
 ## Documentation index
 
@@ -332,10 +394,11 @@ The requirements map links each objective to:
 
 ## Remaining acceptance work
 
-The verified R2100 baseline tag, common SIL/HIL emergency-braking scenario and independent HIL runner process-termination fail-safe are complete. No additional navigation or local-planning feature is required to close the current embedded AEB scope.
+The verified R2100 baseline tag, common SIL/HIL emergency-braking scenario, independent HIL runner process-termination fail-safe and threshold-consistency regression are complete. No additional navigation or local-planning feature is required to close the current embedded AEB scope.
 
 Remaining work is optional refinement:
 
 1. optional unification of SIL/HIL result output into one comparable result schema,
 2. optional lifecycle automation for Gazebo and R2100 runtime startup/cleanup,
-3. optional broader fault coverage such as physical CAN disconnection or PC power-loss behaviour.
+3. optional second common SIL/HIL scenario to demonstrate runner generalisation,
+4. optional broader fault coverage such as physical CAN disconnection or PC power-loss behaviour.
