@@ -18,6 +18,7 @@ The project progresses from perception and ADAS experiments to off-road multi-ve
 Detailed documentation:
 
 - [Gazebo SIL guide](edge-path-project/gazebo/README.md)
+- [Short two-vehicle Gazebo pitch with optional live R2100/CAN](edge-path-project/gazebo/PITCH_DEMO.md)
 - [R2100 HIL guide](edge-path-project/hil/README.md)
 - [Validation and evidence index](VALIDATION.md)
 
