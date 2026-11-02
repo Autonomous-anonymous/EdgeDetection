@@ -9,8 +9,10 @@ The project progresses from perception and ADAS experiments to off-road multi-ve
 - **Gazebo SIL baseline:** v6.4 multi-vehicle Ruskotunturi demo
 - **HIL platform:** Ruskotunturi R2100 HIL
 - **Historical functional validation suite:** HIL-10 Freshness and Fault Validation
+- **Common SIL/HIL scenario:** `emergency_braking`
+- **Verified baseline tag:** `r2100-hil-verified-2026-11-02`
 - **Development branch:** `hil-development`
-- **Current offline repository suite:** 152 / 152 PASS (2026-10-30)
+- **Current offline repository suite:** 158 / 158 PASS (2026-11-02)
 
 Detailed documentation:
 
@@ -61,6 +63,7 @@ Gazebo files are organised as:
 ```text
 edge-path-project/gazebo/
 ├── models/
+├── scenarios/
 ├── scripts/
 ├── worlds/
 └── results/
@@ -115,6 +118,43 @@ Vehicle speed also travels from Gazebo to the R2100 gateway and onto physical CA
 
 Vehicle B retains SIL route steering while its longitudinal AEB decision is evaluated on the R2100. The current embedded AEB safety path is LiDAR-based; camera + LiDAR fusion is demonstrated on the SIL side rather than claimed as part of the current embedded HIL decision path.
 
+### 5. Common SIL/HIL emergency-braking scenario
+
+The repository now includes one shared staged scenario definition:
+
+```text
+edge-path-project/gazebo/scenarios/emergency_braking.json
+```
+
+It uses the same Gazebo world, Vehicle B route, static obstacle and acceptance criteria for both targets. The target-selecting runner is:
+
+```text
+edge-path-project/gazebo/scripts/run_staged_scenario.py
+```
+
+The shared acceptance criteria require the vehicle to move before braking, use a valid AEB reason (`emergency_distance` or `ttc_threshold`), stop below 0.05 m/s for three confirmation samples and retain at least 1.00 m ground-truth clearance.
+
+With the world running, the SIL target is selected with:
+
+```bash
+python3 edge-path-project/gazebo/scripts/run_staged_scenario.py \
+  --scenario emergency_braking \
+  --target sil
+```
+
+With the same world and the R2100 HIL runtime ready, the HIL target is selected with:
+
+```bash
+python3 edge-path-project/gazebo/scripts/run_staged_scenario.py \
+  --scenario emergency_braking \
+  --target hil \
+  --r2100-host <R2100_IP>
+```
+
+Both targets passed on 2026-11-02 with `end_reason=aeb_stop_verified` and AEB reason `ttc_threshold`. The SIL run stopped with 1.253 m ground-truth clearance. The HIL run exercised raw Gazebo LiDAR transport, R2100 perception, physical CAN, the embedded AEB controller and the returned brake state before stopping successfully.
+
+The common runner selects and validates the target-specific backend but intentionally does not yet launch Gazebo or start the R2100 runtime itself; those lifecycle steps remain explicit.
+
 ## HIL validation progression
 
 ### HIL-9 development history
@@ -141,12 +181,13 @@ Later R2100 HIL work packages added:
 - configuration-driven scalar signal codecs,
 - repeatable embedded zipapp deployment,
 - R2100 deployment preflight and fail-closed startup,
-- WSL-side HIL startup-readiness diagnostics.
+- WSL-side HIL startup-readiness diagnostics,
+- a common SIL/HIL emergency-braking scenario and target-selecting runner.
 
 The current full offline repository suite passes:
 
 ```text
-Ran 152 tests
+Ran 158 tests
 OK
 ```
 
@@ -194,6 +235,7 @@ EdgeDetection/
     ├── gazebo/
     │   ├── README.md            # Current Gazebo SIL guide
     │   ├── models/
+    │   ├── scenarios/           # Shared staged SIL/HIL scenario definitions
     │   ├── scripts/
     │   ├── worlds/
     │   └── results/
@@ -217,7 +259,7 @@ Run the complete offline repository suite from the repository root:
 python3 -m unittest discover -s tests -v
 ```
 
-For the current Gazebo SIL baseline, follow:
+For the current Gazebo SIL baseline and the shared emergency-braking scenario, follow:
 
 ```text
 edge-path-project/gazebo/README.md
@@ -246,6 +288,8 @@ The cross-project evidence catalogue in [VALIDATION.md](VALIDATION.md) identifie
 **HIL-10 freshness/fault hardware scenarios:** 6 / 6 PASS  
 **Configurable mapping / codec / deployment / preflight:** implemented and validated  
 **HIL startup readiness diagnostics:** implemented and validated  
-**Full offline repository suite:** 152 / 152 PASS  
+**Verified R2100 baseline tag:** `r2100-hil-verified-2026-11-02`  
+**Common SIL/HIL emergency-braking scenario:** SIL PASS / HIL PASS  
+**Full offline repository suite:** 158 / 158 PASS  
 
-The next project work should build on this verified baseline rather than reorganising the existing `gazebo/`, `hil/` and `tests/` structure.
+Further work should build on this verified baseline. A useful optional safety extension is independent command-watchdog and process-termination validation; full local path planning is not required for the current embedded AEB scope.
