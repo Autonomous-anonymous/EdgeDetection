@@ -2,6 +2,8 @@
 """Automated HIL runner process-termination fail-safe test."""
 
 import argparse
+from datetime import datetime, timezone
+import json
 import math
 from pathlib import Path
 import subprocess
@@ -30,6 +32,64 @@ STARTUP_TIMEOUT_S = 20.0
 WATCHDOG_ZERO_LIMIT_S = 0.60
 STOP_TIMEOUT_S = 3.0
 STOP_HOLD_S = 1.0
+
+DEFAULT_RESULTS_DIR = (
+    ROOT
+    / "edge-path-project"
+    / "gazebo"
+    / "results"
+    / "hil10"
+)
+
+
+def source_revision():
+    try:
+        return subprocess.check_output(
+            ["git", "rev-parse", "HEAD"],
+            cwd=ROOT,
+            text=True,
+        ).strip()
+    except (OSError, subprocess.SubprocessError):
+        return None
+
+
+def source_dirty():
+    try:
+        output = subprocess.check_output(
+            ["git", "status", "--porcelain"],
+            cwd=ROOT,
+            text=True,
+        )
+        return bool(output.strip())
+    except (OSError, subprocess.SubprocessError):
+        return None
+
+
+def write_pass_result(results_dir, payload):
+    results_dir.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
+    timestamp = datetime.now(
+        timezone.utc
+    ).strftime("%Y%m%dT%H%M%SZ")
+
+    path = (
+        results_dir
+        / f"hil_process_termination_{timestamp}.json"
+    )
+
+    path.write_text(
+        json.dumps(
+            payload,
+            indent=2,
+            sort_keys=True,
+        )
+        + "\n"
+    )
+
+    return path
 
 
 class TestObserver:
@@ -193,6 +253,13 @@ def main():
         default=0.30,
     )
 
+    parser.add_argument(
+        "--results-dir",
+        type=Path,
+        default=DEFAULT_RESULTS_DIR,
+        help="directory for process-termination JSON evidence",
+    )
+
     args = parser.parse_args()
 
     observer = TestObserver()
@@ -297,11 +364,12 @@ def main():
             return 1
 
         state = observer.snapshot()
+        moving_speed = state["speed"]
 
         print()
         print(
             "Vehicle B moving: PASS "
-            f"(speed={state['speed']:.3f} m/s)"
+            f"(speed={moving_speed:.3f} m/s)"
         )
 
         kill_time = observer.mark_kill()
@@ -390,9 +458,40 @@ def main():
                     f"({stop_latency:.3f} s after SIGKILL)"
                 )
 
+                result = {
+                    "schema_version": 1,
+                    "test": "hil_process_termination_fail_safe",
+                    "passed": True,
+                    "end_reason": (
+                        "process_termination_stop_and_hold_verified"
+                    ),
+                    "source_commit": source_revision(),
+                    "source_dirty": source_dirty(),
+                    "fault_injection": "SIGKILL",
+                    "pre_fault_speed_mps": moving_speed,
+                    "watchdog_timeout_s": args.watchdog_timeout,
+                    "watchdog_stop_latency_s": watchdog_latency,
+                    "final_speed_mps": state["speed"],
+                    "stop_threshold_mps": STOP_SPEED_MPS,
+                    "stop_confirmation_samples": state["stop_samples"],
+                    "stop_confirmation_samples_required": (
+                        STOP_CONFIRM_SAMPLES
+                    ),
+                    "stop_hold_required_s": STOP_HOLD_S,
+                    "stop_and_hold_latency_s": stop_latency,
+                }
+
+                result_path = write_pass_result(
+                    args.results_dir,
+                    result,
+                )
+
                 print()
                 print(
                     "PROCESS TERMINATION FAIL-SAFE: PASS"
+                )
+                print(
+                    f"Result JSON: {result_path}"
                 )
                 return 0
 
