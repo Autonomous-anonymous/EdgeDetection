@@ -1,34 +1,36 @@
 {
   "schema_version": 1,
   "profile": "ruskotunturi_hil",
-  "can": {
-    "bitrate": 500000,
-    "gateway_interface": "can0",
-    "controller_interface": "can1"
-  },
+  "target": "hil",
+  "generated_from": "ruskotunturi_aeb_interface.json",
   "signals": {
     "vehicle_speed": {
-      "can_id": "0x100",
       "direction": "simulation_to_controller",
       "source": "gazebo.vehicle_b.odometry.speed",
       "encoding": "uint16_le",
       "scale": 0.01,
-      "unit": "m/s"
+      "unit": "m/s",
+      "can_id": "0x100"
     },
     "obstacle_distance": {
-      "can_id": "0x101",
       "direction": "perception_to_controller",
       "source": "r2100.perception.front_clearance",
       "encoding": "uint16_le",
       "scale": 0.001,
       "unit": "m",
-      "no_value_raw": 65535
+      "no_value_raw": 65535,
+      "can_id": "0x101"
     },
     "brake_command": {
-      "can_id": "0x200",
       "direction": "controller_to_simulation",
       "source": "r2100.aeb.brake_command",
-      "encoding": "brake_command_v1"
+      "encoding": "brake_command_v1",
+      "can_id": "0x200"
     }
+  },
+  "can": {
+    "bitrate": 500000,
+    "gateway_interface": "can0",
+    "controller_interface": "can1"
   }
 }

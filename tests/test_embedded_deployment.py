@@ -3,17 +3,15 @@ from __future__ import annotations
 import hashlib
 import json
 from pathlib import Path
+import platform
 import subprocess
 import sys
 import unittest
 
-
 REPO_ROOT = Path(__file__).resolve().parents[1]
-
 HIL_DIR = REPO_ROOT / "edge-path-project" / "hil"
 DEPLOYMENT_DIR = HIL_DIR / "deployment"
 DIST_DIR = HIL_DIR / "dist" / "r2100_hil"
-
 BUILD_SCRIPT = DEPLOYMENT_DIR / "build_r2100_hil.py"
 
 SHELL_SCRIPTS = [
@@ -24,11 +22,12 @@ SHELL_SCRIPTS = [
 ]
 
 EXPECTED_DIST_FILES = {
-    "r2100_hil.pyz",
+    "r2100_hil",
     "manifest.json",
     "start_hil.sh",
     "stop_hil.sh",
     "status_hil.sh",
+    "config/ruskotunturi_aeb_interface.json",
     "config/ruskotunturi_hil.json",
     "config/ruskotunturi_hil_alt_ids.json",
     "config/ruskotunturi_hil_alt_scaling.json",
@@ -37,24 +36,32 @@ EXPECTED_DIST_FILES = {
 
 def sha256(path: Path) -> str:
     digest = hashlib.sha256()
-
     with path.open("rb") as handle:
         for chunk in iter(lambda: handle.read(65536), b""):
             digest.update(chunk)
-
     return digest.hexdigest()
+
+
+def normalized_architecture() -> str:
+    value = platform.machine().lower()
+    return {"arm64": "aarch64", "amd64": "x86_64"}.get(value, value)
 
 
 class EmbeddedDeploymentTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        subprocess.run(
+        result = subprocess.run(
             [sys.executable, str(BUILD_SCRIPT)],
             cwd=REPO_ROOT,
-            check=True,
             capture_output=True,
             text=True,
         )
+        if result.returncode != 0:
+            raise AssertionError(
+                "standalone deployment build failed\n"
+                f"stdout:\n{result.stdout}\n"
+                f"stderr:\n{result.stderr}"
+            )
 
     def test_shell_scripts_have_valid_syntax(self):
         for script in SHELL_SCRIPTS:
@@ -65,12 +72,7 @@ class EmbeddedDeploymentTests(unittest.TestCase):
                     capture_output=True,
                     text=True,
                 )
-
-                self.assertEqual(
-                    result.returncode,
-                    0,
-                    msg=result.stderr,
-                )
+                self.assertEqual(result.returncode, 0, msg=result.stderr)
 
     def test_build_contains_expected_files(self):
         actual = {
@@ -78,150 +80,77 @@ class EmbeddedDeploymentTests(unittest.TestCase):
             for path in DIST_DIR.rglob("*")
             if path.is_file()
         }
-
         self.assertEqual(actual, EXPECTED_DIST_FILES)
 
     def test_runtime_files_are_executable(self):
-        for name in [
-            "r2100_hil.pyz",
-            "start_hil.sh",
-            "stop_hil.sh",
-            "status_hil.sh",
-        ]:
+        for name in ["r2100_hil", "start_hil.sh", "stop_hil.sh", "status_hil.sh"]:
             with self.subTest(file=name):
-                path = DIST_DIR / name
-                self.assertTrue(
-                    path.stat().st_mode & 0o111,
-                    msg=f"{name} is not executable",
-                )
+                self.assertTrue((DIST_DIR / name).stat().st_mode & 0o111)
+
+    def test_native_binary_is_elf(self):
+        with (DIST_DIR / "r2100_hil").open("rb") as handle:
+            self.assertEqual(handle.read(4), b"\x7fELF")
 
     def test_manifest_matches_built_files(self):
-        manifest_path = DIST_DIR / "manifest.json"
+        manifest = json.loads((DIST_DIR / "manifest.json").read_text())
+        self.assertEqual(manifest["format"], "standalone-linux-executable")
+        self.assertEqual(manifest["entrypoint"], "r2100_hil")
+        self.assertEqual(manifest["architecture"], normalized_architecture())
+        self.assertIsNone(manifest["python_requirement"])
+        self.assertEqual(manifest["builder"]["tool"], "PyInstaller")
 
-        manifest = json.loads(manifest_path.read_text())
-
-        self.assertEqual(
-            manifest["format"],
-            "python-zipapp",
-        )
-        self.assertEqual(
-            manifest["entrypoint"],
-            "r2100_hil.pyz",
-        )
-
-        expected_manifest_files = EXPECTED_DIST_FILES - {
-            "manifest.json"
-        }
-
-        self.assertEqual(
-            set(manifest["files"]),
-            expected_manifest_files,
-        )
-
+        expected_manifest_files = EXPECTED_DIST_FILES - {"manifest.json"}
+        self.assertEqual(set(manifest["files"]), expected_manifest_files)
         for relative, metadata in manifest["files"].items():
             with self.subTest(file=relative):
                 path = DIST_DIR / relative
+                self.assertEqual(metadata["sha256"], sha256(path))
+                self.assertEqual(metadata["bytes"], path.stat().st_size)
 
-                self.assertEqual(
-                    metadata["sha256"],
-                    sha256(path),
-                )
-                self.assertEqual(
-                    metadata["bytes"],
-                    path.stat().st_size,
-                )
-
-    def test_zipapp_check_passes(self):
+    def test_native_check_passes(self):
         result = subprocess.run(
-            [str(DIST_DIR / "r2100_hil.pyz"), "check"],
+            [str(DIST_DIR / "r2100_hil"), "check"],
             cwd=REPO_ROOT,
             capture_output=True,
             text=True,
         )
+        self.assertEqual(result.returncode, 0, msg=result.stderr)
+        self.assertIn("Deployment configuration: PASS", result.stdout)
+        self.assertIn("Profile             : ruskotunturi_hil", result.stdout)
 
-        self.assertEqual(
-            result.returncode,
-            0,
-            msg=result.stderr,
-        )
-
-        self.assertIn(
-            "Deployment configuration: PASS",
-            result.stdout,
-        )
-        self.assertIn(
-            "Profile             : ruskotunturi_hil",
-            result.stdout,
-        )
-
-    def test_zipapp_main_help_passes(self):
+    def test_native_main_help_passes(self):
         result = subprocess.run(
-            [str(DIST_DIR / "r2100_hil.pyz"), "--help"],
+            [str(DIST_DIR / "r2100_hil"), "--help"],
             cwd=REPO_ROOT,
             capture_output=True,
             text=True,
         )
+        self.assertEqual(result.returncode, 0, msg=result.stderr)
+        self.assertIn("R2100 HIL standalone deployment executable", result.stdout)
 
-        self.assertEqual(
-            result.returncode,
-            0,
-            msg=result.stderr,
-        )
-
-        self.assertIn(
-            "R2100 HIL deployment executable",
-            result.stdout,
-        )
-
-    def test_zipapp_preflight_help_passes(self):
+    def test_native_preflight_help_passes(self):
         result = subprocess.run(
-            [
-                str(DIST_DIR / "r2100_hil.pyz"),
-                "preflight",
-                "--help",
-            ],
+            [str(DIST_DIR / "r2100_hil"), "preflight", "--help"],
             cwd=REPO_ROOT,
             capture_output=True,
             text=True,
         )
-
-        self.assertEqual(
-            result.returncode,
-            0,
-            msg=result.stderr,
-        )
-
-        self.assertIn(
-            "Validate R2100 HIL runtime readiness",
-            result.stdout,
-        )
+        self.assertEqual(result.returncode, 0, msg=result.stderr)
+        self.assertIn("Validate R2100 HIL runtime readiness", result.stdout)
 
     def test_component_help_passes_without_can_hardware(self):
-        for component in [
-            "perception",
-            "gateway",
-            "aeb",
-        ]:
+        for component in ["perception", "gateway", "aeb"]:
             with self.subTest(component=component):
                 result = subprocess.run(
-                    [
-                        str(DIST_DIR / "r2100_hil.pyz"),
-                        component,
-                        "--help",
-                    ],
+                    [str(DIST_DIR / "r2100_hil"), component, "--help"],
                     cwd=REPO_ROOT,
                     capture_output=True,
                     text=True,
                 )
-
                 self.assertEqual(
                     result.returncode,
                     0,
-                    msg=(
-                        f"{component}\n"
-                        f"stdout:\n{result.stdout}\n"
-                        f"stderr:\n{result.stderr}"
-                    ),
+                    msg=f"{component}\nstdout:\n{result.stdout}\nstderr:\n{result.stderr}",
                 )
 
 

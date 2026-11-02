@@ -14,36 +14,67 @@ permissions:
 jobs:
   offline-tests:
     runs-on: ubuntu-latest
-
     steps:
       - name: Check out repository
         uses: actions/checkout@v7
-
       - name: Set up Python
         uses: actions/setup-python@v7
         with:
-          python-version: '3.13'
-
+          python-version: '3.12'
+      - name: Install standalone build dependency
+        run: python -m pip install -r edge-path-project/hil/deployment/requirements-build.txt
       - name: Run offline test suite
         run: python -m unittest discover -s tests -v
 
-  deployment-build:
+  deployment-design-tests:
     runs-on: ubuntu-latest
-
     steps:
       - name: Check out repository
         uses: actions/checkout@v7
-
       - name: Set up Python
         uses: actions/setup-python@v7
         with:
-          python-version: '3.13'
+          python-version: '3.12'
+      - name: Run deployment and mapping regression tests
+        run: |
+          python -m unittest discover -s tests -p 'test_stage_signal_config.py' -v
+          python -m unittest discover -s tests -p 'test_generated_config_snapshot.py' -v
+          python -m unittest discover -s tests -p 'test_staged_mapping_integration.py' -v
+          python -m unittest discover -s tests -p 'test_embedded_deployment.py' -v
 
-      - name: Build R2100 deployment package
+  r2100-native-arm64:
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+      - name: Install standalone build dependency
+        run: python -m pip install -r edge-path-project/hil/deployment/requirements-build.txt
+      - name: Build ARM64 standalone R2100 package
         run: python edge-path-project/hil/deployment/build_r2100_hil.py
-
-      - name: Validate generated deployment configuration
-        run: python edge-path-project/hil/dist/r2100_hil/r2100_hil.pyz check
-
-      - name: Run deployment regression tests
-        run: python -m unittest discover -s tests -p 'test_embedded_deployment.py' -v
+      - name: Smoke-test standalone executable
+        run: |
+          edge-path-project/hil/dist/r2100_hil/r2100_hil --help
+          edge-path-project/hil/dist/r2100_hil/r2100_hil check
+      - name: Verify ARM64/Python-free manifest
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          manifest = json.loads(Path('edge-path-project/hil/dist/r2100_hil/manifest.json').read_text())
+          assert manifest['format'] == 'standalone-linux-executable'
+          assert manifest['architecture'] == 'aarch64'
+          assert manifest['python_requirement'] is None
+          print('ARM64 standalone manifest: PASS')
+          PY
+      - name: Pack deployment artifact
+        run: tar -C edge-path-project/hil/dist -czf r2100_hil-aarch64.tar.gz r2100_hil
+      - name: Upload ARM64 deployment artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: r2100-hil-aarch64
+          path: r2100_hil-aarch64.tar.gz
+          if-no-files-found: error
