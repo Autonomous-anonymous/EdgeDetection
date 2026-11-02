@@ -38,6 +38,72 @@ python3 -m unittest discover -s tests -v
 
 The same command is part of `.github/workflows/offline-validation.yml`. The workflow also builds the R2100 zipapp, validates its generated configuration and runs the deployment regression tests.
 
+## Fresh-checkout reproducibility acceptance — 2026-11-02
+
+A formal fresh checkout of `hil-development` at source revision
+`ed1bb2e8496c36965f51a2fcb70af938777f872f` was validated end-to-end on 2026-11-02.
+
+The verification used a separate clean checkout with no files copied from the development working tree. The clean checkout was on Python 3.12.3 / x86_64 WSL and had a clean Git worktree before the validation steps.
+
+The fresh checkout completed:
+
+```text
+full offline suite                152 / 152 PASS
+R2100 deployment build           PASS
+generated zipapp configuration   PASS
+deployment regression tests      8 / 8 PASS
+R2100 deployment                 PASS
+R2100 target preflight           PASS
+managed runtime startup          PASS
+physical-CAN HIL route           PASS
+end reason                       route_complete
+```
+
+The deployed release was:
+
+```text
+/home/recomputer/r2100_hil/releases/r2100_hil_20261102T085551Z
+```
+
+The fresh build and deployed target were verified to contain the same artifacts:
+
+```text
+manifest.json SHA-256
+23a00a6eddfee877b9beda997ad3b6b0672d22db7c4a4a4cc676bcb4e13f35a4
+
+r2100_hil.pyz SHA-256
+e92b8f7a6a3367a4e0b01ee52e5ba8eb23046aa76fb9cf7f6af1264ad948ec37
+```
+
+The acceptance route produced:
+
+```text
+hil10_route_20261102T090358_69a081f9.json
+HIL-10 RESULT: PASS
+End reason: route_complete
+```
+
+The raw acceptance result was produced in the clean checkout and should be retained as the final reproducibility evidence before tagging the verified baseline.
+
+### Host prerequisite discovered by the clean run
+
+The deployment package intentionally checks CAN readiness but does not configure host CAN interfaces itself. On a fresh/restarted R2100 host, `can0` and `can1` therefore have to be configured before runtime startup.
+
+The validated bench configuration is:
+
+```text
+can0 / can1       UP
+CAN state         ERROR-ACTIVE
+bitrate           500000 bit/s
+restart-ms        100
+txqueuelen        100
+physical loop     CAN0_H <-> CAN1_H, CAN0_L <-> CAN1_L
+```
+
+This is now considered an explicit R2100 host prerequisite rather than an implicit setup assumption. The target-side preflight correctly failed while the interfaces were down and passed after this host setup was applied.
+
+The clean run also demonstrated that stale PID files from an earlier managed run are harmless: `stop_hil.sh` removes stale PID state and the subsequent managed startup records the current config and log directory.
+
 ## Preflight terminology
 
 There are three different checks with different purposes. They should not be treated as interchangeable.
@@ -88,8 +154,9 @@ This complements the R2100 deployment preflight: the target preflight checks the
 | R2100 deployment preflight unit tests | 4 / 4 PASS | Target-side preflight coverage. |
 | HIL startup diagnostics | 7 / 7 PASS | Dedicated diagnostics unit tests. |
 | HIL integration regression | 18 / 18 PASS | Integration tests after startup diagnostics. |
-| Full repository offline suite | 152 / 152 PASS | Verified 2026-10-30 after updating the HIL-10 test fixture. |
+| Full repository offline suite | 152 / 152 PASS | Verified 2026-10-30 and again from a clean checkout on 2026-11-02. |
 | GitHub Actions offline validation | PASS | Full offline suite plus deployment build/configuration check and deployment regression tests. |
+| Fresh-checkout R2100 acceptance | PASS | Clean checkout -> build -> deploy -> preflight -> managed runtime -> physical-CAN route; `route_complete`. |
 
 ### Standalone route evidence
 
@@ -121,7 +188,7 @@ The recorded final speed is effectively zero (`3.1974423109204504e-12 m/s`), and
 
 The JSON field `baseline_commit=52331fde756991988cbb94f01e6d33d615c8d7df` identifies the historical HIL-10 baseline used by the test format. It must **not** be interpreted as the source revision of this later route run. The startup-diagnostics source exercised by the run was subsequently committed as `b5210da` (`Add HIL startup readiness diagnostics`). The exact deployed R2100 release-directory name and active target configuration for that specific run are not encoded in the committed result and should not be inferred.
 
-For future acceptance hardware runs, record the repository commit SHA, selected mapping profile, deployed release identifier or manifest hash, command/host, raw result file and final end reason together.
+The 2026-11-02 fresh-checkout acceptance fixes that traceability gap by explicitly recording the source revision, deployed release and build/deployment hashes together with the route result filename.
 
 ## Documentation index
 
@@ -146,9 +213,8 @@ The requirements map links each objective to:
 
 ## Remaining acceptance work
 
-The focused repository cleanup is now complete. The next acceptance-oriented steps are:
+The formal fresh-checkout acceptance has now passed. Before declaring the verified baseline complete:
 
-1. have another team member perform a fresh-checkout build/deploy/acceptance run,
-2. record any undocumented setup steps,
-3. tag that verified baseline,
-4. then proceed to the common SIL/HIL scenario-runner automation milestone.
+1. retain the 2026-11-02 raw acceptance JSON as repository evidence,
+2. tag the verified baseline,
+3. then proceed to the common SIL/HIL scenario-definition and runner automation milestone.
