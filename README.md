@@ -10,9 +10,10 @@ The project progresses from perception and ADAS experiments to off-road multi-ve
 - **HIL platform:** Ruskotunturi R2100 HIL
 - **Historical functional validation suite:** HIL-10 Freshness and Fault Validation
 - **Common SIL/HIL scenario:** `emergency_braking`
+- **Independent HIL command watchdog:** process-termination fail-safe validated
 - **Verified baseline tag:** `r2100-hil-verified-2026-11-02`
 - **Development branch:** `hil-development`
-- **Current offline repository suite:** 158 / 158 PASS (2026-11-02)
+- **Current offline repository suite:** 163 / 163 PASS (2026-11-02)
 
 Detailed documentation:
 
@@ -155,6 +156,40 @@ Both targets passed on 2026-11-02 with `end_reason=aeb_stop_verified` and AEB re
 
 The common runner selects and validates the target-specific backend but intentionally does not yet launch Gazebo or start the R2100 runtime itself; those lifecycle steps remain explicit.
 
+### 6. Independent HIL process-termination fail-safe
+
+An independent WSL-side command watchdog now protects Vehicle B against loss of the HIL command-producing process:
+
+```text
+edge-path-project/gazebo/scripts/hil_command_watchdog.py
+edge-path-project/gazebo/scripts/hil_process_termination_test.py
+```
+
+The watchdog arms only after it has observed the normal Vehicle B command stream. If command updates then stop for 0.30 s, it latches a fail-safe STOP and continuously publishes zero speed and steering commands. The latch is not automatically released during the same watchdog run.
+
+The automated process-termination harness starts the watchdog and HIL route runner, waits until Vehicle B is moving, kills the HIL runner with `SIGKILL`, verifies that the watchdog publishes a post-kill zero command, and verifies the physical simulated vehicle stop from new odometry measurements.
+
+The verified 2026-11-02 run produced:
+
+```text
+Vehicle B before fault        0.850 m/s
+HIL runner termination        SIGKILL
+watchdog STOP latency         0.314 s
+final observed speed          0.000 m/s
+stop confirmation samples     17
+stop-and-hold verification    1.680 s after SIGKILL
+result                        PASS
+```
+
+This is stronger than a normal controller cleanup test because `SIGKILL` prevents the killed HIL runner from executing its own final STOP cleanup. The independent watchdog therefore provides the post-failure Vehicle B command that is explicitly verified by the test harness.
+
+With the Phase 6 Gazebo world running and the R2100 runtime ready, the automated test is:
+
+```bash
+python3 -u edge-path-project/gazebo/scripts/hil_process_termination_test.py \
+  --r2100-host <R2100_IP>
+```
+
 ## HIL validation progression
 
 ### HIL-9 development history
@@ -182,12 +217,13 @@ Later R2100 HIL work packages added:
 - repeatable embedded zipapp deployment,
 - R2100 deployment preflight and fail-closed startup,
 - WSL-side HIL startup-readiness diagnostics,
-- a common SIL/HIL emergency-braking scenario and target-selecting runner.
+- a common SIL/HIL emergency-braking scenario and target-selecting runner,
+- an independent HIL command watchdog with automated `SIGKILL` process-termination validation.
 
 The current full offline repository suite passes:
 
 ```text
-Ran 158 tests
+Ran 163 tests
 OK
 ```
 
@@ -290,6 +326,7 @@ The cross-project evidence catalogue in [VALIDATION.md](VALIDATION.md) identifie
 **HIL startup readiness diagnostics:** implemented and validated  
 **Verified R2100 baseline tag:** `r2100-hil-verified-2026-11-02`  
 **Common SIL/HIL emergency-braking scenario:** SIL PASS / HIL PASS  
-**Full offline repository suite:** 158 / 158 PASS  
+**Independent HIL process-termination fail-safe:** PASS  
+**Full offline repository suite:** 163 / 163 PASS  
 
-Further work should build on this verified baseline. A useful optional safety extension is independent command-watchdog and process-termination validation; full local path planning is not required for the current embedded AEB scope.
+The current embedded AEB scope is now complete. Remaining work is optional refinement such as unified SIL/HIL result formatting or additional lifecycle automation; full local path planning is not required for the validated scope.
