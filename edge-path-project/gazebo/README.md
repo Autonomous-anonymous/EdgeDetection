@@ -2,7 +2,8 @@
 
 This guide describes the v6.4 SIL baseline merged into `main` from `sil-development`. Earlier scripts,
 worlds and CSV results remain available as development evidence. Mevea is outside
-this project's scope. Raspberry Pi/CAN integration is the later HIL stage.
+this project's scope. The later HIL stage uses a real reComputer Industrial R2100
+with physical CAN while Gazebo remains the virtual world and vehicle-dynamics source.
 
 ## Running the integrated demo
 
@@ -27,6 +28,105 @@ it deliberately does not reset or unpause the world, following a reset-related
 native Gazebo crash encountered during testing. Do not use Reset or run multiple
 demos concurrently: vehicle sensor/actuator topics are shared.
 
+## Common SIL/HIL emergency-braking scenario
+
+The repository also contains one shared staged scenario for direct SIL-to-HIL
+comparison of the longitudinal AEB safety function:
+
+```text
+edge-path-project/gazebo/scenarios/emergency_braking.json
+```
+
+The scenario uses:
+
+```text
+world: edge-path-project/gazebo/worlds/ruskotunturi_hil9e_aeb_world.sdf
+vehicle: aeb_vehicle_360_b
+required clearance: 1.00 m
+stop speed: 0.05 m/s
+stop confirmation: 3 samples
+valid brake reasons: emergency_distance, ttc_threshold
+```
+
+Start the common world in terminal 1:
+
+```bash
+export GZ_SIM_RESOURCE_PATH="$PWD/edge-path-project/gazebo/models${GZ_SIM_RESOURCE_PATH:+:$GZ_SIM_RESOURCE_PATH}"
+gz sim -r edge-path-project/gazebo/worlds/ruskotunturi_hil9e_aeb_world.sdf
+```
+
+Close and reopen Gazebo before each new SIL or HIL trial so Vehicle B starts from
+the defined initial state. Do not run another Vehicle B command publisher at the
+same time.
+
+Run the SIL target in terminal 2:
+
+```bash
+python3 -u edge-path-project/gazebo/scripts/run_staged_scenario.py \
+  --scenario emergency_braking \
+  --target sil
+```
+
+The SIL adapter uses Vehicle B pose, odometry and `/aeb360b/lidar`, follows the
+same route used by the HIL test and applies the same AEB thresholds as the current
+embedded controller. LiDAR range is converted to physical body clearance before
+the AEB decision so the SIL and HIL distance semantics match.
+
+Verified SIL result on 2026-11-02:
+
+```text
+STAGED SCENARIO RESULT: PASS
+End reason: aeb_stop_verified
+AEB reason: ttc_threshold
+Trigger clearance: 1.374 m
+Trigger speed: 0.850 m/s
+Trigger TTC: 1.617 s
+Ground-truth clearance: 1.253 m
+```
+
+For the HIL target, first ensure the R2100 runtime has passed its target-side
+preflight and all managed HIL processes are running. With the same Gazebo world
+running, execute:
+
+```bash
+python3 -u edge-path-project/gazebo/scripts/run_staged_scenario.py \
+  --scenario emergency_braking \
+  --target hil \
+  --r2100-host <R2100_IP>
+```
+
+The HIL backend is the validated `ruskotunturi_hil10_b_test.py --mode aeb` path.
+It sends raw Vehicle B LiDAR to the R2100 perception process, carries the resulting
+signals across physical CAN to the embedded AEB controller and applies the returned
+brake state to Gazebo.
+
+Verified HIL result on 2026-11-02:
+
+```text
+HIL-10 RESULT: PASS
+End reason: aeb_stop_verified
+AEB reason: ttc_threshold
+```
+
+The HIL run generated `hil10_aeb_20261102T102033_e21c05af.json` in the operator
+checkout. The common runner currently selects and validates the execution target
+but intentionally leaves Gazebo and R2100 runtime lifecycle management explicit.
+
+Offline coverage for the common scenario is:
+
+```bash
+python3 -m unittest tests.test_staged_scenario -v
+```
+
+Verified result:
+
+```text
+Ran 6 tests
+OK
+```
+
+After adding these tests, the complete repository suite passes 158 / 158.
+
 ## Files and responsibilities
 
 | File under scripts/ | Responsibility |
@@ -35,6 +135,9 @@ demos concurrently: vehicle sensor/actuator topics are shared.
 | final_sil_v6_harness.py | Separate process driving the moving obstacle; observed-pose verification and bounded retries |
 | final_sil_v6_watchdog.py | Separate command arbiter stopping stale or unsafe commands |
 | final_sil_v6_checks.py | Sensor validation, footprint geometry and initial-scene checks |
+| run_staged_scenario.py | Shared scenario loader and SIL/HIL target selector |
+| ruskotunturi_emergency_braking_sil.py | SIL backend for the shared emergency-braking scenario |
+| ruskotunturi_hil10_b_test.py | Existing HIL backend used by the shared scenario with `--mode aeb` |
 
 The controller starts and cleans up its harness/watchdog processes. Normally
 it publishes requested commands; the watchdog forwards valid commands to the
