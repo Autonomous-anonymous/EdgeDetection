@@ -5,6 +5,8 @@ worlds and CSV results remain available as development evidence. Mevea is outsid
 this project's scope. The later HIL stage uses a real reComputer Industrial R2100
 with physical CAN while Gazebo remains the virtual world and vehicle-dynamics source.
 
+For the short two-vehicle presentation with a fixed camera, Finnish status panel and optional physical CAN, see the [pitch instructions](PITCH_DEMO.md).
+
 ## Running the integrated demo
 
 Environment: Ubuntu 24.04 (including WSL), Gazebo Harmonic, Python bindings
