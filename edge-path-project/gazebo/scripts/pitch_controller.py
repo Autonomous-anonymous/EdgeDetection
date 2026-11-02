@@ -5,11 +5,13 @@ import math
 from pathlib import Path
 import time
 
+# Register the v6 message types before hil10_runtime loads native transport.
+# Ubuntu's C++ protobuf backend otherwise loses the nested Pose class in Pose_V.
+from ruskotunturi_final_sil_demo_v6 import FinalSilDemoLargeArea, MODEL_A, MODEL_B
 from gz.msgs10.odometry_pb2 import Odometry
 from final_sil_v6_checks import footprint, HALF_LENGTH, HALF_WIDTH, HEIGHT, margins_ok
 from hil10_runtime import ManagedLidarSender, odometry_values
 from hil10_safety import HILLink, OdometryMonitor, REASONS
-from ruskotunturi_final_sil_demo_v6 import FinalSilDemoLargeArea, MODEL_A, MODEL_B
 
 
 def past_barrier(vehicle, barrier, direction):
