@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "name": "emergency_braking",
+  "description": "Vehicle B approaches a static obstacle and must stop safely using AEB.",
+  "world": "edge-path-project/gazebo/worlds/ruskotunturi_hil9e_aeb_world.sdf",
+  "vehicle": "aeb_vehicle_360_b",
+  "acceptance": {
+    "vehicle_must_move_before_braking": true,
+    "valid_brake_reasons": [
+      "emergency_distance",
+      "ttc_threshold"
+    ],
+    "stop_speed_mps": 0.05,
+    "stop_confirm_samples": 3,
+    "required_clearance_m": 1.0
+  },
+  "targets": {
+    "sil": {
+      "runner": "edge-path-project/gazebo/scripts/ruskotunturi_emergency_braking_sil.py"
+    },
+    "hil": {
+      "runner": "edge-path-project/gazebo/scripts/ruskotunturi_hil10_b_test.py",
+      "arguments": [
+        "--mode",
+        "aeb"
+      ],
+      "requires_r2100_host": true
+    }
+  }
+}

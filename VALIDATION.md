@@ -83,7 +83,7 @@ HIL-10 RESULT: PASS
 End reason: route_complete
 ```
 
-The raw acceptance result was produced in the clean checkout and should be retained as the final reproducibility evidence before tagging the verified baseline.
+The raw acceptance JSON and CSV are committed in the repository as the final fresh-checkout reproducibility evidence. Commit `e78868d` added the evidence pair, and commit `cee3445` normalized the CSV line endings without changing the measurement content.
 
 ### Host prerequisite discovered by the clean run
 
@@ -188,7 +188,7 @@ The recorded final speed is effectively zero (`3.1974423109204504e-12 m/s`), and
 
 The JSON field `baseline_commit=52331fde756991988cbb94f01e6d33d615c8d7df` identifies the historical HIL-10 baseline used by the test format. It must **not** be interpreted as the source revision of this later route run. The startup-diagnostics source exercised by the run was subsequently committed as `b5210da` (`Add HIL startup readiness diagnostics`). The exact deployed R2100 release-directory name and active target configuration for that specific run are not encoded in the committed result and should not be inferred.
 
-The 2026-11-02 fresh-checkout acceptance fixes that traceability gap by explicitly recording the source revision, deployed release and build/deployment hashes together with the route result filename.
+The 2026-11-02 fresh-checkout acceptance fixes that traceability gap by explicitly recording the source revision, deployed release and build/deployment hashes together with the committed route result pair.
 
 ## Documentation index
 
@@ -213,8 +213,4 @@ The requirements map links each objective to:
 
 ## Remaining acceptance work
 
-The formal fresh-checkout acceptance has now passed. Before declaring the verified baseline complete:
-
-1. retain the 2026-11-02 raw acceptance JSON as repository evidence,
-2. tag the verified baseline,
-3. then proceed to the common SIL/HIL scenario-definition and runner automation milestone.
+The formal fresh-checkout acceptance and raw-evidence retention are complete. The remaining baseline-closure step is to tag the verified baseline. After that, proceed to the common SIL/HIL scenario-definition and runner automation milestone.
