@@ -11,9 +11,10 @@ The project progresses from perception and ADAS experiments to off-road multi-ve
 - **Historical functional validation suite:** HIL-10 Freshness and Fault Validation
 - **Common SIL/HIL scenario:** `emergency_braking`
 - **Independent HIL command watchdog:** process-termination fail-safe validated
+- **SIL/HIL AEB threshold consistency:** 5 / 5 PASS
 - **Verified baseline tag:** `r2100-hil-verified-2026-11-02`
 - **Development branch:** `hil-development`
-- **Current offline repository suite:** 163 / 163 PASS (2026-11-02)
+- **Current offline repository suite:** 168 / 168 PASS (2026-11-02)
 
 Detailed documentation:
 
@@ -122,7 +123,7 @@ Vehicle B retains SIL route steering while its longitudinal AEB decision is eval
 
 ### 5. Common SIL/HIL emergency-braking scenario
 
-The repository now includes one shared staged scenario definition:
+The repository includes one shared staged scenario definition:
 
 ```text
 edge-path-project/gazebo/scenarios/emergency_braking.json
@@ -155,11 +156,18 @@ python3 edge-path-project/gazebo/scripts/run_staged_scenario.py \
 
 Both targets passed on 2026-11-02 with `end_reason=aeb_stop_verified` and AEB reason `ttc_threshold`. The SIL run stopped with 1.253 m ground-truth clearance. The HIL run exercised raw Gazebo LiDAR transport, R2100 perception, physical CAN, the embedded AEB controller and the returned brake state before stopping successfully.
 
+The successful HIL run now has committed raw evidence:
+
+```text
+edge-path-project/gazebo/results/hil10/hil10_aeb_20261102T102033_e21c05af.json
+edge-path-project/gazebo/results/hil10/hil10_aeb_20261102T102033_e21c05af.csv
+```
+
 The common runner selects and validates the target-specific backend but intentionally does not yet launch Gazebo or start the R2100 runtime itself; those lifecycle steps remain explicit.
 
 ### 6. Independent HIL process-termination fail-safe
 
-An independent WSL-side command watchdog now protects Vehicle B against loss of the HIL command-producing process:
+An independent WSL-side command watchdog protects Vehicle B against loss of the HIL command-producing process:
 
 ```text
 edge-path-project/gazebo/scripts/hil_command_watchdog.py
@@ -170,16 +178,24 @@ The watchdog arms only after it has observed the normal Vehicle B command stream
 
 The automated process-termination harness starts the watchdog and HIL route runner, waits until Vehicle B is moving, kills the HIL runner with `SIGKILL`, verifies that the watchdog publishes a post-kill zero command, and verifies the physical simulated vehicle stop from new odometry measurements.
 
-The verified 2026-11-02 run produced:
+The final committed 2026-11-02 evidence run produced:
 
 ```text
 Vehicle B before fault        0.850 m/s
 HIL runner termination        SIGKILL
-watchdog STOP latency         0.314 s
-final observed speed          0.000 m/s
+watchdog STOP latency         0.261 s after SIGKILL
+final observed speed          ~0.000 m/s
 stop confirmation samples     17
-stop-and-hold verification    1.680 s after SIGKILL
+stop-and-hold verification    1.616 s after SIGKILL
+source commit                 269a1c4feb5ce91a5174f25243f21be71cce959f
+source dirty                  false
 result                        PASS
+```
+
+The committed machine-readable result is:
+
+```text
+edge-path-project/gazebo/results/hil10/hil_process_termination_20261102T115256Z.json
 ```
 
 This is stronger than a normal controller cleanup test because `SIGKILL` prevents the killed HIL runner from executing its own final STOP cleanup. The independent watchdog therefore provides the post-failure Vehicle B command that is explicitly verified by the test harness.
@@ -190,6 +206,16 @@ With the Phase 6 Gazebo world running and the R2100 runtime ready, the automated
 python3 -u edge-path-project/gazebo/scripts/hil_process_termination_test.py \
   --r2100-host <R2100_IP>
 ```
+
+### 7. SIL/HIL AEB threshold consistency
+
+The SIL emergency-braking backend and the embedded R2100 AEB controller keep separate runtime constants so the validated embedded runtime does not depend on Gazebo code. A regression test now prevents those copies from drifting silently:
+
+```text
+tests/test_aeb_threshold_consistency.py
+```
+
+It verifies equality of the TTC threshold, emergency distance, sensor timeout, control period and minimum TTC speed. The dedicated result is **5 / 5 PASS**.
 
 ## HIL validation progression
 
@@ -219,12 +245,13 @@ Later R2100 HIL work packages added:
 - R2100 deployment preflight and fail-closed startup,
 - WSL-side HIL startup-readiness diagnostics,
 - a common SIL/HIL emergency-braking scenario and target-selecting runner,
-- an independent HIL command watchdog with automated `SIGKILL` process-termination validation.
+- an independent HIL command watchdog with automated `SIGKILL` process-termination validation,
+- SIL/HIL AEB threshold-consistency regression coverage.
 
 The current full offline repository suite passes:
 
 ```text
-Ran 163 tests
+Ran 168 tests
 OK
 ```
 
@@ -316,6 +343,10 @@ Validation results are retained when they provide useful development or acceptan
 
 The cross-project evidence catalogue in [VALIDATION.md](VALIDATION.md) identifies the current baseline artifacts and any known evidence gaps.
 
+## Scope boundary
+
+The current deliverable covers the staged **SIL -> HIL** workflow and embedded AEB validation. A Vehicle-in-the-Loop (VIL) stage is **not implemented and is explicitly out of scope for the current project deliverable**. The repository does not claim a completed VIL implementation.
+
 ## Current status
 
 **CARLA development:** retained as development history  
@@ -328,6 +359,8 @@ The cross-project evidence catalogue in [VALIDATION.md](VALIDATION.md) identifie
 **Verified R2100 baseline tag:** `r2100-hil-verified-2026-11-02`  
 **Common SIL/HIL emergency-braking scenario:** SIL PASS / HIL PASS  
 **Independent HIL process-termination fail-safe:** PASS  
-**Full offline repository suite:** 163 / 163 PASS  
+**SIL/HIL AEB threshold consistency:** 5 / 5 PASS  
+**Full offline repository suite:** 168 / 168 PASS  
+**VIL stage:** out of scope / not implemented  
 
-The current embedded AEB scope is now complete. Remaining work is optional refinement such as unified SIL/HIL result formatting or additional lifecycle automation; full local path planning is not required for the validated scope.
+The current embedded AEB scope is complete. Remaining work is optional refinement such as unified SIL/HIL result formatting, additional lifecycle automation or a second shared SIL/HIL scenario; full local path planning is not required for the validated scope.

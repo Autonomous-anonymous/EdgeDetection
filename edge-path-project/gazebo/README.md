@@ -74,6 +74,10 @@ same route used by the HIL test and applies the same AEB thresholds as the curre
 embedded controller. LiDAR range is converted to physical body clearance before
 the AEB decision so the SIL and HIL distance semantics match.
 
+The duplicated SIL/HIL AEB constants are protected against drift by
+`tests/test_aeb_threshold_consistency.py`, which compares TTC threshold,
+emergency distance, sensor timeout, control period and minimum TTC speed.
+
 Verified SIL result on 2026-11-02:
 
 ```text
@@ -110,9 +114,17 @@ End reason: aeb_stop_verified
 AEB reason: ttc_threshold
 ```
 
-The HIL run generated `hil10_aeb_20261102T102033_e21c05af.json` in the operator
-checkout. The common runner currently selects and validates the execution target
-but intentionally leaves Gazebo and R2100 runtime lifecycle management explicit.
+The successful HIL run is retained as committed raw evidence:
+
+```text
+edge-path-project/gazebo/results/hil10/hil10_aeb_20261102T102033_e21c05af.json
+edge-path-project/gazebo/results/hil10/hil10_aeb_20261102T102033_e21c05af.csv
+```
+
+The JSON records `passed=true`, `stop_verified=true`, `aeb_reason=ttc_threshold`
+and 1.189 m recorded clearance against the 1.000 m requirement. The common runner
+currently selects and validates the execution target but intentionally leaves
+Gazebo and R2100 runtime lifecycle management explicit.
 
 Offline coverage for the common scenario is:
 
@@ -127,7 +139,45 @@ Ran 6 tests
 OK
 ```
 
-After adding these tests, the complete repository suite passes 158 / 158.
+AEB threshold-consistency coverage is:
+
+```bash
+python3 -m unittest tests.test_aeb_threshold_consistency -v
+```
+
+Verified result:
+
+```text
+Ran 5 tests
+OK
+```
+
+With all current offline tests included, the complete repository suite passes
+**168 / 168**.
+
+## Independent HIL process-termination fail-safe
+
+The current Gazebo/HIL tooling also includes:
+
+```text
+edge-path-project/gazebo/scripts/hil_command_watchdog.py
+edge-path-project/gazebo/scripts/hil_process_termination_test.py
+```
+
+The automated harness waits until Vehicle B is moving, kills the normal HIL route
+runner with `SIGKILL`, requires a new zero command from the independent watchdog,
+and verifies the subsequent stop from Gazebo odometry.
+
+The final committed evidence is:
+
+```text
+edge-path-project/gazebo/results/hil10/hil_process_termination_20261102T115256Z.json
+```
+
+It records `passed=true`, `source_dirty=false`, source commit
+`269a1c4feb5ce91a5174f25243f21be71cce959f`, watchdog STOP latency 0.261 s,
+17 stop-confirmation samples and stop-and-hold verification 1.616 s after
+`SIGKILL`.
 
 ## Files and responsibilities
 
@@ -140,6 +190,8 @@ After adding these tests, the complete repository suite passes 158 / 158.
 | run_staged_scenario.py | Shared scenario loader and SIL/HIL target selector |
 | ruskotunturi_emergency_braking_sil.py | SIL backend for the shared emergency-braking scenario |
 | ruskotunturi_hil10_b_test.py | Existing HIL backend used by the shared scenario with `--mode aeb` |
+| hil_command_watchdog.py | Independent Vehicle B stale-command STOP latch for HIL process-loss protection |
+| hil_process_termination_test.py | Automated `SIGKILL` fail-safe validation and JSON evidence writer |
 
 The controller starts and cleans up its harness/watchdog processes. Normally
 it publishes requested commands; the watchdog forwards valid commands to the
@@ -181,6 +233,9 @@ The ground-truth oracle uses conservative planar projections, not a full 3-D
 terrain/contact analysis. Camera confirmation is a controlled orange-target
 detector, and simulator poses supply ideal localization. Controller/watchdog
 simultaneous failure still needs an actuator-side timeout for a stronger design.
+The WSL-side HIL watchdog is independent of the HIL runner process but not of the
+PC/WSL host; PC power loss, physical CAN disconnection and CAN bus-off remain
+outside the demonstrated coverage.
 
 ## Evidence and regression tests
 
@@ -202,7 +257,7 @@ The committed v6.4 result CSV and matching trace document the operator's success
 | Maximum roll/pitch B | 9.972 / 20.273 degrees |
 | Terrain / LiDAR / loading-overlap violation | All NO |
 
-The original run evidence is now committed:
+The original run evidence is committed:
 
 - [Result CSV](results/ruskotunturi_final_sil_demo_v6_4_results.csv): PASS, no unmet checks, duration 184.108 s, minimum ground-truth clearance 1.902952 m.
 - [Matching per-step trace](results/final_sil_v6_4_trace_20261026T133025_782767.csv), named by the result CSV's `trace_file` field.
@@ -230,6 +285,12 @@ harness and watchdog logic with transport doubles, plus numerical geometry.
 They are not substitutes for Gazebo runs. The successful nominal run does not
 establish all-weather perception, repeatability on every host, HIL operation or
 full CAMINO digital-twin/WSMS functionality.
+
+## Scope boundary
+
+The current project deliverable validates the staged **SIL -> HIL** path. A
+Vehicle-in-the-Loop (VIL) stage is not implemented and is explicitly outside the
+current deliverable scope.
 
 ## Documentation and local cleanup
 

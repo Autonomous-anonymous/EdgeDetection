@@ -1,0 +1,18 @@
+{
+  "end_reason": "process_termination_stop_and_hold_verified",
+  "fault_injection": "SIGKILL",
+  "final_speed_mps": 1.149080830487037e-11,
+  "passed": true,
+  "pre_fault_speed_mps": 0.8500000000118468,
+  "schema_version": 1,
+  "source_commit": "269a1c4feb5ce91a5174f25243f21be71cce959f",
+  "source_dirty": false,
+  "stop_and_hold_latency_s": 1.6158061520000047,
+  "stop_confirmation_samples": 17,
+  "stop_confirmation_samples_required": 3,
+  "stop_hold_required_s": 1.0,
+  "stop_threshold_mps": 0.05,
+  "test": "hil_process_termination_fail_safe",
+  "watchdog_stop_latency_s": 0.2614115029973618,
+  "watchdog_timeout_s": 0.3
+}
