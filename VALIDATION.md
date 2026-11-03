@@ -21,7 +21,7 @@ The committed v6.4 result is `PASS` with `end_reason=final_demo_complete` and no
 
 Current platform name: **Ruskotunturi R2100 HIL**.
 
-The historical functional suite name remains **HIL-10 Freshness and Fault Validation**. Later work packages extend the same platform with configurable signal mapping, configuration-driven scalar codecs, embedded deployment, R2100 deployment preflight, WSL-side startup-readiness diagnostics, a common SIL/HIL emergency-braking scenario, an independent Vehicle B command watchdog for process-termination fail-safe protection and SIL/HIL AEB threshold-consistency regression coverage.
+The historical functional suite name remains **HIL-10 Freshness and Fault Validation**. Later work packages extend the same platform with configurable signal mapping, configuration-driven scalar codecs, standalone native executable deployment, R2100 deployment preflight, WSL-side startup-readiness diagnostics, a common SIL/HIL emergency-braking scenario, an independent Vehicle B command watchdog for process-termination fail-safe protection and SIL/HIL AEB threshold-consistency regression coverage.
 
 The verified R2100 baseline is tagged:
 
@@ -29,12 +29,18 @@ The verified R2100 baseline is tagged:
 r2100-hil-verified-2026-11-02
 ```
 
-That tag closes the fresh-checkout build/deploy/physical-CAN acceptance baseline. The common staged emergency-braking scenario, process-termination watchdog and threshold-consistency tests were added afterwards on `hil-development`.
+That tag closes the fresh-checkout build/deploy/physical-CAN acceptance baseline. The common staged emergency-braking scenario, process-termination watchdog, threshold-consistency tests and standalone native executable work were added afterwards on `hil-development`.
 
-The current offline repository suite was rerun on 2026-11-02 after the threshold-consistency tests were added:
+The standalone ARM64 deployment was physically accepted on the R2100 on 2026-11-03. The target identified `r2100_hil` as an ARM aarch64 ELF; `r2100_hil check` and `r2100_hil preflight` both passed on Debian 12 / glibc 2.36 with CAN0 and CAN1 UP, ERROR-ACTIVE and configured at 500 kbit/s. The detailed record is:
 
 ```text
-Ran 168 tests
+edge-path-project/hil/NATIVE_DEPLOYMENT_ACCEPTANCE.md
+```
+
+The current offline repository suite is:
+
+```text
+Ran 190 tests
 OK
 ```
 
@@ -44,7 +50,7 @@ Run the current offline suite from the repository root with:
 python3 -m unittest discover -s tests -v
 ```
 
-The same command is part of `.github/workflows/offline-validation.yml`. The workflow also builds the R2100 zipapp, validates its generated configuration and runs the deployment regression tests.
+The same command is part of `.github/workflows/offline-validation.yml`. The workflow also builds and validates the standalone R2100 deployment package and runs the deployment regression tests.
 
 ## Fresh-checkout reproducibility acceptance — 2026-11-02
 
@@ -52,6 +58,8 @@ A formal fresh checkout of `hil-development` at source revision
 `ed1bb2e8496c36965f51a2fcb70af938777f872f` was validated end-to-end on 2026-11-02.
 
 The verification used a separate clean checkout with no files copied from the development working tree. The clean checkout was on Python 3.12.3 / x86_64 WSL and had a clean Git worktree before the validation steps.
+
+This acceptance predates the later native-executable deployment work. It used the historical Python zipapp package and is retained as reproducibility evidence for that baseline rather than as the description of the current deployment format.
 
 The fresh checkout completed:
 
@@ -73,7 +81,7 @@ The deployed release was:
 /home/recomputer/r2100_hil/releases/r2100_hil_20261102T085551Z
 ```
 
-The fresh build and deployed target were verified to contain the same artifacts:
+The fresh build and deployed target were verified to contain the same historical zipapp artifacts:
 
 ```text
 manifest.json SHA-256
@@ -268,7 +276,7 @@ Ran 5 tests
 OK
 ```
 
-This test was added in commit `acc8712`. With it included, the complete repository offline suite passes **168 / 168**.
+This test was added in commit `acc8712`. At that stage, the complete repository offline suite passed **168 / 168**. After the native deployment and requirements-closure tests were added, the current development suite passes **190 / 190**.
 
 ## Preflight terminology
 
@@ -289,7 +297,7 @@ Because the runtime has since gained signal mapping, codecs, deployment and diag
 On the deployed R2100 package:
 
 ```bash
-~/r2100_hil/current/r2100_hil.pyz preflight
+~/r2100_hil/current/r2100_hil preflight
 ```
 
 This is the current target-side readiness check. It validates the selected mapping profile, configured CAN interfaces, live CAN state and bitrate, and the UDP ports needed by the HIL runtime. `start_hil.sh` runs this check automatically before launching the managed processes.
@@ -326,9 +334,10 @@ This complements the R2100 deployment preflight: the target preflight checks the
 | Common emergency-braking HIL run | PASS / committed raw evidence | `hil10_aeb_20261102T102033_e21c05af.json/.csv`; R2100 and physical-CAN AEB path exercised. |
 | Command-watchdog state tests | 5 / 5 PASS | Arming, freshness, timeout latch, invalid timeout and unarmed behaviour. |
 | HIL runner `SIGKILL` fail-safe | PASS / committed raw evidence | `hil_process_termination_20261102T115256Z.json`; watchdog zero at 0.261 s after SIGKILL, 17 stop samples, source clean. |
-| Full repository offline suite | 168 / 168 PASS | Verified after adding AEB threshold-consistency tests on 2026-11-02. |
-| GitHub Actions offline validation | PASS | Full offline suite plus deployment build/configuration check and deployment regression tests. |
-| Fresh-checkout R2100 acceptance | PASS | Clean checkout -> build -> deploy -> preflight -> managed runtime -> physical-CAN route; `route_complete`. |
+| Standalone ARM64 deployment acceptance | PASS | Physical R2100: ARM aarch64 ELF, Debian 12 / glibc 2.36, `check` PASS, `preflight` PASS; see `edge-path-project/hil/NATIVE_DEPLOYMENT_ACCEPTANCE.md`. |
+| Full repository offline suite | 190 / 190 PASS | Current development suite after automatic stage mapping and native deployment work. |
+| GitHub Actions offline validation | PASS | Full offline suite plus standalone deployment build/configuration check and deployment regression tests. |
+| Fresh-checkout R2100 acceptance | PASS | Historical zipapp baseline: clean checkout -> build -> deploy -> preflight -> managed runtime -> physical-CAN route; `route_complete`. |
 | Verified baseline tag | complete | `r2100-hil-verified-2026-11-02`; closes the pre-common-scenario R2100 acceptance baseline. |
 
 ### Standalone route evidence
@@ -378,6 +387,7 @@ The current deliverable validates the staged **SIL -> HIL** development and acce
 - `edge-path-project/gazebo/README.md` — detailed Gazebo SIL architecture, v6.4 evidence and run instructions.
 - `edge-path-project/gazebo/results/README.md` — result-file conventions and current SIL reporting baseline.
 - `edge-path-project/hil/README.md` — detailed R2100 HIL architecture, deployment, preflight, diagnostics, tests and hardware evidence.
+- `edge-path-project/hil/NATIVE_DEPLOYMENT_ACCEPTANCE.md` — physical R2100 acceptance record for the standalone ARM64 executable.
 - `.github/workflows/offline-validation.yml` — automated offline test and deployment-build validation.
 - `VALIDATION.md` — this cross-project baseline/evidence index.
 
@@ -394,7 +404,7 @@ The requirements map links each objective to:
 
 ## Remaining acceptance work
 
-The verified R2100 baseline tag, common SIL/HIL emergency-braking scenario, independent HIL runner process-termination fail-safe and threshold-consistency regression are complete. No additional navigation or local-planning feature is required to close the current embedded AEB scope.
+The verified R2100 baseline tag, common SIL/HIL emergency-braking scenario, independent HIL runner process-termination fail-safe, threshold-consistency regression and native ARM64 deployment acceptance are complete. No additional navigation or local-planning feature is required to close the current embedded AEB scope.
 
 Remaining work is optional refinement:
 
