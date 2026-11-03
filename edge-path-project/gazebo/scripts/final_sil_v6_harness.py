@@ -4,6 +4,7 @@
 Uses simulation time, verifies the previous commanded pose against subsequent
 Gazebo observations, and fails closed if bounded retries cannot establish the commanded pose.
 """
+import argparse
 import json
 import math
 import threading
@@ -25,6 +26,10 @@ MAX_POSE_STEP_M = 0.35
 
 
 class ScenarioDriver:
+    speed = MOVING_SPEED_MPS
+    dwell = MOVING_CENTER_DWELL_S
+    update_period = MOVING_POSE_UPDATE_PERIOD_S
+
     def set_moving_pose(self, x, y, z, yaw):
         request = Pose_V()
         pose = request.pose.add()
@@ -59,19 +64,19 @@ class ScenarioDriver:
         second_length = 0.0
         for i in range(centre_index, len(MOVING_PATH) - 1):
             second_length += math.dist(MOVING_PATH[i], MOVING_PATH[i + 1])
-        first_time = first_length / MOVING_SPEED_MPS
-        second_time = second_length / MOVING_SPEED_MPS
+        first_time = first_length / self.speed
+        second_time = second_length / self.speed
         if elapsed <= first_time:
-            distance = elapsed * MOVING_SPEED_MPS
+            distance = elapsed * self.speed
             path_start = 0
             path_end = centre_index
-        elif elapsed <= first_time + MOVING_CENTER_DWELL_S:
+        elif elapsed <= first_time + self.dwell:
             return (MOVING_PATH[centre_index], False)
         else:
-            second_elapsed = elapsed - first_time - MOVING_CENTER_DWELL_S
+            second_elapsed = elapsed - first_time - self.dwell
             if second_elapsed >= second_time:
                 return (MOVING_PATH[-1], True)
-            distance = second_elapsed * MOVING_SPEED_MPS
+            distance = second_elapsed * self.speed
             path_start = centre_index
             path_end = len(MOVING_PATH) - 1
         remaining = distance
@@ -103,7 +108,7 @@ def target_for_time(driver, elapsed, confirmed_elapsed, confirmed_point):
     return target,final
 
 
-def main():
+def main(pitch=False):
     node=Node(); lock=threading.Lock()
     state={'sim':None,'poses':{},'pose_seq':0,'pose_sim':None,'obstacle_seq':0}
     def clock(msg):
@@ -121,6 +126,8 @@ def main():
     node.subscribe(Pose_V,POSE_TOPIC,poses)
     pub=node.advertise('/final_sil_v6/harness',StringMsg)
     driver=ScenarioDriver()
+    if pitch:
+        driver.speed, driver.dwell, driver.update_period = .85, 1.0, .16
     driver.node=node
     started=False; completed=False; failures=0; start=None; last=-math.inf
     previous_b=None; previous_sim=None; previous_seq=-1; stopped_since=None; stop_verified=False; resume_verified=False
@@ -162,7 +169,7 @@ def main():
                 failures+=1
                 print(f'[HARNESS] INVALID: pose not verified within {VERIFY_DEADLINE_S}s; target={pending}, observed={observed}, attempts={attempts}', flush=True)
                 pending=None
-        if started and not completed and not failures and pending is None and sim-last>=MOVING_POSE_UPDATE_PERIOD_S:
+        if started and not completed and not failures and pending is None and sim-last>=driver.update_period:
             elapsed=sim-start
             try:
                 target,final=target_for_time(driver,elapsed,confirmed_elapsed,confirmed_point)
@@ -185,4 +192,6 @@ def main():
         time.sleep(.02)
 
 if __name__=='__main__':
-    main()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--pitch", action="store_true", help="Shorter crossing for the live two-vehicle pitch")
+    main(parser.parse_args().pitch)

@@ -10,6 +10,7 @@ import signal
 import subprocess
 import sys
 import tempfile
+import time
 import uuid
 import xml.etree.ElementTree as ET
 
@@ -45,6 +46,9 @@ def paint_vehicle(model, letter):
 def make_world(path):
     tree = ET.parse(BASE_WORLD)
     world = tree.getroot().find("world")
+    world.find("physics/max_step_size").text = "0.004"
+    world.find("scene/shadows").text = "false"
+    world.find("light/cast_shadows").text = "false"
     vehicles = {"aeb_vehicle_360": "A", "aeb_vehicle_360_b": "B"}
     for include in world.findall("include"):
         name = include.findtext("name")
@@ -52,10 +56,32 @@ def make_world(path):
             model = ET.parse(GAZEBO / "models" / name / "model.sdf").getroot().find("model")
             model.insert(0, include.find("pose"))
             paint_vehicle(model, vehicles[name])
+            chassis = model.find("link[@name='chassis']")
+            camera = chassis.find("sensor[@type='camera']")
+            if vehicles[name] == "A":
+                camera.find("camera/image/width").text = "320"
+                camera.find("camera/image/height").text = "240"
+                camera.find("update_rate").text = "10"
+            else:
+                chassis.remove(camera)  # B's controller uses its full raw LiDAR scan.
+            for sensor in chassis.findall("sensor"):
+                sensor.find("visualize").text = "false"
             world.remove(include)
             world.append(model)
-    # Harmonic's MinimalScene owns the projector camera. This is independent
-    # of the vehicle cameras used for perception.
+    # Short centre dashes on the common exit, aligned to the collision mesh.
+    marks = ET.SubElement(world, "model", name="pitch_shared_lane")
+    ET.SubElement(marks, "static").text = "true"
+    road = ET.SubElement(marks, "link", name="paint")
+    for index, (z, slope) in enumerate(((-10.080, -.023), (-10.006, -.057), (-9.910, -.030), (-9.835, -.038),
+                                        (-9.797, -.044), (-9.803, .019), (-9.872, .021), (-9.897, .059))):
+        mark = ET.SubElement(road, "visual", name=f"dash_{index}")
+        ET.SubElement(mark, "pose").text = f"{-4.5-index*1.5} {27.5-index*1.5} {z} 0 {slope} {-3*math.pi/4}"
+        box = ET.SubElement(ET.SubElement(mark, "geometry"), "box")
+        ET.SubElement(box, "size").text = ".95 .20 .015"
+        material = ET.SubElement(mark, "material")
+        for key in ("ambient", "diffuse"):
+            ET.SubElement(material, key).text = ".95 .96 .96 1"
+    # An initial wide shot only. The audience's camera is independent of A's sensor.
     gui = ET.SubElement(world, "gui")
     scene = ET.SubElement(gui, "plugin", filename="MinimalScene", name="3D View")
     layout = ET.SubElement(scene, "gz-gui")
@@ -63,12 +89,12 @@ def make_world(path):
     ET.SubElement(layout, "property", key="showTitleBar", type="bool").text = "false"
     ET.SubElement(scene, "engine").text = "ogre2"
     ET.SubElement(scene, "scene").text = "scene"
-    ET.SubElement(scene, "camera_pose").text = "1 30.5 19.5 0 1.23 0"
-    manager = ET.SubElement(gui, "plugin", filename="GzSceneManager", name="Scene Manager")
-    layout = ET.SubElement(manager, "gz-gui")
-    for key, kind, value in (("state", "string", "floating"), ("showTitleBar", "bool", "false"),
-                             ("width", "double", "1"), ("height", "double", "1")):
-        ET.SubElement(layout, "property", key=key, type=kind).text = value
+    ET.SubElement(scene, "camera_pose").text = "4 7 20 0 .95 1.5708"
+    for plugin in ("GzSceneManager", "InteractiveViewControl"):
+        layout = ET.SubElement(ET.SubElement(gui, "plugin", filename=plugin, name=plugin), "gz-gui")
+        for key, kind, value in (("state", "string", "floating"), ("showTitleBar", "bool", "false"),
+                                 ("width", "double", "1"), ("height", "double", "1")):
+            ET.SubElement(layout, "property", key=key, type=kind).text = value
     tree.write(path, encoding="utf-8", xml_declaration=True)
 
 
@@ -120,17 +146,16 @@ def main(argv=None):
         cmd = ["gz", "sim", "-r"]
         if args.headless:
             cmd += ["-s", "--headless-rendering"]
+        launch_wall = time.monotonic()
         process = subprocess.Popen([*cmd, str(path)], start_new_session=True)
         panel = PitchPanel()
         try:
             if not args.headless and not args.no_panel:
                 panel.open()
             panel.update("Lähtöpaikalla", "Lähtöpaikalla", "SIL · simulaatio" if args.mode == "sil" else "CAN · odottaa yhteyttä", "Valmistellaan", live=False)
-            if not args.auto_start:
-                input("Kun Gazebo näkyy ja yleisö on valmis, aloita painamalla Enter. ")
             if process.poll() is not None:
                 sys.exit("Gazebo exited before the demo began.")
-            controller = PitchDemo(args.r2100_host, args.results_dir, panel)
+            controller = PitchDemo(args.r2100_host, args.results_dir, panel, launch_wall, interactive=not args.auto_start)
             passed = controller.run()
             if not args.auto_start:
                 input("Ajo päättyi. Sulje näkymä painamalla Enter. ")

@@ -43,14 +43,26 @@ class WorldTests(unittest.TestCase):
         original = ET.parse(BASE_WORLD).find("world")
         self.assertEqual(world.get("name"), original.get("name"))
         self.assertIsNotNone(world.find("gui/plugin[@filename='MinimalScene']/camera_pose"))
+        self.assertIsNotNone(world.find("gui/plugin[@filename='InteractiveViewControl']"))
+        self.assertEqual(world.findtext("physics/real_time_factor"), original.findtext("physics/real_time_factor"))
+        self.assertEqual(len(world.findall("model[@name='pitch_shared_lane']//visual")), 8)
         for model in original.findall("model"):
             self.assertEqual(ET.tostring(model), ET.tostring(world.find(f"model[@name='{model.get('name')}']")))
         for name, letter in ((pitch.MODEL_A, "A"), (pitch.MODEL_B, "B")):
             model = world.find(f"model[@name='{name}']")
             base = ET.parse(GAZEBO / "models" / name / "model.sdf").find("model")
             self.assertEqual(model.findtext("pose"), next(i.findtext("pose") for i in original.findall("include") if i.findtext("name") == name))
-            for query in (".//collision", ".//joint", ".//sensor", ".//plugin", ".//inertial"):
+            for query in (".//collision", ".//joint", ".//plugin", ".//inertial"):
                 self.assertEqual([ET.tostring(x) for x in model.findall(query)], [ET.tostring(x) for x in base.findall(query)])
+            original_lidar = base.find(".//sensor[@type='gpu_lidar']")
+            original_lidar.find("visualize").text = "false"
+            self.assertEqual(ET.tostring(model.find(".//sensor[@type='gpu_lidar']")), ET.tostring(original_lidar))
+            camera = model.find(".//sensor[@type='camera']")
+            if letter == "A":
+                self.assertEqual(camera.findtext("camera/image/width"), "320")
+                self.assertEqual(camera.findtext("topic"), base.findtext(".//sensor[@type='camera']/topic"))
+            else:
+                self.assertIsNone(camera)
             chassis = model.find("link[@name='chassis']")
             self.assertTrue(chassis.findall(f"visual[@name='pitch_{letter}_0']"))
 
@@ -66,12 +78,16 @@ class SceneTests(unittest.TestCase):
         d = self.demo
         d.lock = threading.Lock()
         d.events = {}
+        d.wall_events = {}
+        d.motion_wall = pitch.time.monotonic()
         d.link = None
         d.panel = Mock()
         d.last_panel = -math.inf
         d.observed = {"final_static_obstacle": (8, 34, 0, 0, 0)}
         d.static_line_ux, d.static_line_uy, d.static_line_nx, d.static_line_ny = d.static_line_geometry()
         d.passed_barrier = d.b_waited = d.b_resumed = False
+        d.b_released = d.b_waiting = False
+        d.shared_entry = d.shared_travel = None
 
     def replay_row(self, row, allow_stop=True, allow_resume=True):
         d = self.demo
@@ -120,6 +136,29 @@ class SceneTests(unittest.TestCase):
         self.assertFalse(d.b_resumed)
         self.assertFalse(d.passed_barrier)
 
+    def test_both_must_advance_in_the_same_corridor(self):
+        d = self.demo
+        d.b_resumed = d.passed_barrier = d.b_released = True
+        def vehicle(along, side=0, yaw=pitch.EXIT_YAW):
+            return dict(x=pitch.MERGE_POINT[0]+pitch.EXIT_X*along-pitch.EXIT_Y*side,
+                        y=pitch.MERGE_POINT[1]+pitch.EXIT_Y*along+pitch.EXIT_X*side,
+                        yaw=yaw, target_index=pitch.B_SHARED_INDEX)
+        d.a, d.b = vehicle(11), vehicle(3, side=3)  # Parallel branch.
+        d.observe_merge(20)
+        self.assertIsNone(d.shared_entry)
+        d.b = vehicle(3, yaw=pitch.EXIT_YAW + math.pi)  # Facing back towards the junction.
+        d.observe_merge(21)
+        self.assertIsNone(d.shared_entry)
+        d.b = vehicle(3)
+        d.observe_merge(22)
+        d.b = vehicle(4.5)
+        d.observe_merge(23)
+        self.assertIsNone(d.shared_travel)  # A remained stationary.
+        d.a = vehicle(12.5)
+        d.observe_merge(24)
+        self.assertAlmostEqual(d.shared_travel["headway_m"], 8)
+        self.assertIn("both_drove_shared_lane", d.events)
+
 
 class CommandGateTests(unittest.TestCase):
     def setUp(self):
@@ -134,6 +173,7 @@ class CommandGateTests(unittest.TestCase):
         d.lidar = types.SimpleNamespace(error=None)
         d.motion_wall = pitch.time.monotonic()
         d.passed_barrier = d.b_resumed = False
+        d.shared_travel = None
         d.observe = Mock()
         d.pub_a, d.pub_b = Publisher(), Publisher()
 
@@ -183,6 +223,9 @@ class FinalStopTests(unittest.TestCase):
         d.harness_wall = d.clock_wall = clock()
         d.a = d.b = dict(minimum_clearance_seen=2, last_pose_time=clock(), last_lidar_time=clock())
         d.passed_barrier = d.b_waited = d.b_resumed = True
+        d.shared_travel = dict(a_metres=12, b_metres=4, headway_m=8)
+        d.launch_wall, d.ready_wall, d.motion_wall = 0, 3, 8
+        d.wall_events = {}
         d.ground_min = 2
         d.moving_pose_failures = 0
         d.safety_ok = lambda: True
@@ -209,6 +252,8 @@ class FinalStopTests(unittest.TestCase):
         passed, report = self.finish(False)
         self.assertTrue(passed)
         self.assertTrue(report["checks"]["b_stopped_at_end"])
+        self.assertEqual(report["presenter_wait_s"], 5)
+        self.assertGreater(report["live_wall_s"], 2)
         self.assertNotIn("r2100", report)
 
     def test_ignored_b_stop_fails_the_whole_scene(self):

@@ -460,6 +460,7 @@ class FinalSilDemoLargeArea:
     trace_directory = RESULT_FILE.parent
     trace_prefix = 'final_sil_v6_4_trace_'
     mission_timeout = MISSION_TIMEOUT_S
+    harness_args = ()
 
     def __init__(self):
         self.node = Node()
@@ -2108,7 +2109,7 @@ class FinalSilDemoLargeArea:
         self.print_plan()
         if not self.prepare_fresh_world():
             return self.print_result(0.0)
-        self.harness = subprocess.Popen([sys.executable, str(Path(__file__).with_name('final_sil_v6_harness.py'))])
+        self.harness = subprocess.Popen([sys.executable, str(Path(__file__).with_name('final_sil_v6_harness.py')), *self.harness_args])
         start_time = self.sim_time
         if start_time is None:
             self.end_reason = 'clock_missing'
