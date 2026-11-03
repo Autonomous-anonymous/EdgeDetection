@@ -457,6 +457,10 @@ def body_radius_for_ray(
 
 class FinalSilDemoLargeArea:
 
+    trace_directory = RESULT_FILE.parent
+    trace_prefix = 'final_sil_v6_4_trace_'
+    mission_timeout = MISSION_TIMEOUT_S
+
     def __init__(self):
         self.node = Node()
         self.lock = threading.Lock()
@@ -2072,7 +2076,12 @@ class FinalSilDemoLargeArea:
     # MAIN
     # ========================================================
 
-    def _run(self):
+    def send_commands(self, elapsed, a_command, b_command):
+        self.publish(self.pub_a, *a_command)
+        self.publish(self.pub_b, *b_command)
+        return True
+
+    def print_plan(self):
         print()
         print('============================================================')
         print(' RUSKOTUNTURI FINAL SIL DEMO v6.4 - SAME-SIDE SUMMIT MERGE')
@@ -2094,6 +2103,9 @@ class FinalSilDemoLargeArea:
         print('Camera fusion           : A static obstacle confirmation')
         print('Local safety            : independent 360 LiDAR on A and B')
         print()
+
+    def _run(self):
+        self.print_plan()
         if not self.prepare_fresh_world():
             return self.print_result(0.0)
         self.harness = subprocess.Popen([sys.executable, str(Path(__file__).with_name('final_sil_v6_harness.py'))])
@@ -2112,7 +2124,7 @@ class FinalSilDemoLargeArea:
                 self.end_reason = 'harness_unavailable'
                 break
             elapsed = now - start_time
-            if elapsed > MISSION_TIMEOUT_S:
+            if elapsed > self.mission_timeout:
                 self.end_reason = 'timeout'
                 break
             with self.lock:
@@ -2147,8 +2159,8 @@ class FinalSilDemoLargeArea:
                     self.a_detour_phase, self.static_line_project(a['x'], a['y'])[1],
                     self.static_desired_offset_m, self.ground_min_pair])
                 self.trace_handle.flush()
-            self.publish(self.pub_a, a_speed, a_steering)
-            self.publish(self.pub_b, b_speed, b_steering)
+            if not self.send_commands(elapsed, (a_speed, a_steering), (b_speed, b_steering)):
+                break
             with self.lock:
                 done = self.a['goal_reached'] and self.b['goal_reached']
             if done:
@@ -2277,8 +2289,8 @@ class FinalSilDemoLargeArea:
 
     def run(self):
         try:
-            RESULT_FILE.parent.mkdir(parents=True, exist_ok=True)
-            trace = RESULT_FILE.parent / ('final_sil_v6_4_trace_' + datetime.now().strftime('%Y%m%dT%H%M%S_%f') + '.csv')
+            self.trace_directory.mkdir(parents=True, exist_ok=True)
+            trace = self.trace_directory / (self.trace_prefix + datetime.now().strftime('%Y%m%dT%H%M%S_%f') + '.csv')
             self.trace_path = trace.name
             self.trace_handle = trace.open('w', newline='', encoding='utf-8')
             self.trace_writer = csv.writer(self.trace_handle)
