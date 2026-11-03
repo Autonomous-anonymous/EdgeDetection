@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 import subprocess
 import sys
+import tempfile
 import unittest
 
 
@@ -54,6 +55,12 @@ class TestStagedScenario(unittest.TestCase):
             "ruskotunturi_hil9e_aeb_world.sdf",
         )
 
+        self.assertEqual(
+            data["signal_interface"],
+            "edge-path-project/hil/config/"
+            "ruskotunturi_aeb_interface.json",
+        )
+
         acceptance = data["acceptance"]
 
         self.assertTrue(
@@ -89,19 +96,36 @@ class TestStagedScenario(unittest.TestCase):
             r2100_host=None,
         )
 
-        command = self.runner.build_command(
-            args,
-            scenario,
-        )
-
-        self.assertEqual(command[0], sys.executable)
-        self.assertTrue(
-            command[2].endswith(
-                "ruskotunturi_emergency_braking_sil.py"
+        with tempfile.TemporaryDirectory() as directory:
+            stage_config = self.runner.generate_target_config(
+                scenario,
+                "sil",
+                Path(directory),
             )
-        )
 
-        self.assertNotIn("--r2100-host", command)
+            command = self.runner.build_command(
+                args,
+                scenario,
+                stage_config,
+            )
+
+            self.assertEqual(command[0], sys.executable)
+
+            self.assertTrue(
+                command[2].endswith(
+                    "ruskotunturi_emergency_braking_sil_stage.py"
+                )
+            )
+
+            self.assertIn("--stage-config", command)
+
+            config_index = command.index("--stage-config") + 1
+            self.assertEqual(
+                Path(command[config_index]),
+                stage_config,
+            )
+
+            self.assertNotIn("--r2100-host", command)
 
     def test_hil_requires_r2100_host(self):
         _path, scenario = self.runner.load_scenario(
@@ -113,11 +137,19 @@ class TestStagedScenario(unittest.TestCase):
             r2100_host=None,
         )
 
-        with self.assertRaises(SystemExit):
-            self.runner.build_command(
-                args,
+        with tempfile.TemporaryDirectory() as directory:
+            stage_config = self.runner.generate_target_config(
                 scenario,
+                "hil",
+                Path(directory),
             )
+
+            with self.assertRaises(SystemExit):
+                self.runner.build_command(
+                    args,
+                    scenario,
+                    stage_config,
+                )
 
     def test_hil_command(self):
         _path, scenario = self.runner.load_scenario(
@@ -129,26 +161,34 @@ class TestStagedScenario(unittest.TestCase):
             r2100_host="192.0.2.2",
         )
 
-        command = self.runner.build_command(
-            args,
-            scenario,
-        )
-
-        self.assertTrue(
-            command[2].endswith(
-                "ruskotunturi_hil10_b_test.py"
+        with tempfile.TemporaryDirectory() as directory:
+            stage_config = self.runner.generate_target_config(
+                scenario,
+                "hil",
+                Path(directory),
             )
-        )
 
-        self.assertEqual(
-            command[-4:],
-            [
-                "--mode",
-                "aeb",
-                "--r2100-host",
-                "192.0.2.2",
-            ],
-        )
+            command = self.runner.build_command(
+                args,
+                scenario,
+                stage_config,
+            )
+
+            self.assertTrue(
+                command[2].endswith(
+                    "ruskotunturi_hil10_b_test.py"
+                )
+            )
+
+            self.assertEqual(
+                command[-4:],
+                [
+                    "--mode",
+                    "aeb",
+                    "--r2100-host",
+                    "192.0.2.2",
+                ],
+            )
 
     def test_sil_dry_run(self):
         completed = subprocess.run(
@@ -170,6 +210,10 @@ class TestStagedScenario(unittest.TestCase):
             completed.returncode,
             0,
             msg=completed.stdout + completed.stderr,
+        )
+        self.assertIn(
+            "Signal config",
+            completed.stdout,
         )
         self.assertIn(
             "Scenario configuration: PASS",
@@ -198,6 +242,10 @@ class TestStagedScenario(unittest.TestCase):
             completed.returncode,
             0,
             msg=completed.stdout + completed.stderr,
+        )
+        self.assertIn(
+            "Signal config",
+            completed.stdout,
         )
         self.assertIn(
             "Scenario configuration: PASS",

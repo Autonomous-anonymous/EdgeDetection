@@ -10,3 +10,5 @@ edge-path-project/gazebo/results/pitch/
 
 # Generated R2100 deployment artifacts
 edge-path-project/hil/dist/
+
+.venv-requirements/
