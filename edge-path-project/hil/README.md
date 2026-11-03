@@ -4,7 +4,7 @@ This directory documents the Hardware-in-the-Loop implementation used to extend 
 
 The embedded platform is a **Seeed Studio reComputer Industrial R2100**. Gazebo Harmonic runs in WSL and provides the virtual vehicles, terrain, LiDAR and odometry. The R2100 receives simulation data over UDP, maps the relevant signals onto physical CAN, executes the AEB decision, and returns the brake state to the simulator.
 
-The current HIL platform is **Ruskotunturi R2100 HIL**. Its validated functional test suite is **HIL-10 Freshness and Fault Validation**. The HIL path also includes hardware-validated **Configurable Signal Mapping**, **Configuration-driven Signal Codec**, **Embedded Deployment**, **Deployment Preflight** and **HIL Startup Readiness Diagnostics** work packages.
+The current HIL platform is **Ruskotunturi R2100 HIL**. Its validated functional test suite is **HIL-10 Freshness and Fault Validation**. The HIL path also includes hardware-validated **Configurable Signal Mapping**, **Configuration-driven Signal Codec**, **Standalone Native Deployment**, **Deployment Preflight** and **HIL Startup Readiness Diagnostics** work packages.
 
 This is a research and development setup, not a certified functional-safety implementation.
 
@@ -72,12 +72,14 @@ R2100 and transport components:
 ```text
 edge-path-project/hil/
 ├── config/
+│   ├── ruskotunturi_aeb_interface.json
 │   ├── ruskotunturi_hil.json
 │   ├── ruskotunturi_hil_alt_ids.json
 │   └── ruskotunturi_hil_alt_scaling.json
 ├── deployment/
 │   ├── build_r2100_hil.py
 │   ├── deploy_r2100_hil.sh
+│   ├── requirements-build.txt
 │   ├── r2100_hil_main.py
 │   ├── start_hil.sh
 │   ├── status_hil.sh
@@ -85,12 +87,14 @@ edge-path-project/hil/
 ├── can_protocol.py
 ├── signal_codec.py
 ├── signal_mapping.py
+├── stage_signal_config.py
 ├── r2100_preflight.py
 ├── gazebo_hil_bridge.py
 ├── gazebo_lidar_sender.py
 ├── r2100_aeb_controller.py
 ├── r2100_can_gateway.py
 ├── r2100_lidar_perception.py
+├── NATIVE_DEPLOYMENT_ACCEPTANCE.md
 ├── HIL10_OFFLINE_VALIDATION.txt
 ├── HIL10_TESTING_FI.md
 ├── hil10_package_manifest.json
@@ -120,8 +124,13 @@ tests/
 ├── test_signal_codec.py
 ├── test_signal_codec_end_to_end.py
 ├── test_embedded_deployment.py
+├── test_native_build_design.py
+├── test_native_deployment_scripts.py
 ├── test_r2100_preflight.py
-└── test_hil_startup_diagnostics.py
+├── test_hil_startup_diagnostics.py
+├── test_stage_signal_config.py
+├── test_staged_mapping_integration.py
+└── test_generated_config_snapshot.py
 ```
 
 Earlier HIL-9 scripts and the dedicated AEB obstacle world remain available as development history.
@@ -310,7 +319,7 @@ This demonstrates that `vehicle_speed` and `obstacle_distance` scaling can be ch
 
 ## Embedded Deployment
 
-The embedded runtime can be built and deployed as a versioned package instead of copying individual Python source files to the R2100 manually.
+The current embedded runtime is packaged before transfer as a standalone Linux ELF executable rather than as loose Python source or a target-side Python zipapp.
 
 The build entry point is:
 
@@ -318,13 +327,18 @@ The build entry point is:
 edge-path-project/hil/deployment/build_r2100_hil.py
 ```
 
-It creates a generated deployment directory under `edge-path-project/hil/dist/r2100_hil/`. The generated `dist/` directory is ignored by Git and is rebuilt from source when needed.
-
-The package contains:
+It uses PyInstaller in one-file mode and creates a generated deployment directory under:
 
 ```text
-r2100_hil.pyz
+edge-path-project/hil/dist/r2100_hil/
+```
+
+The generated `dist/` directory is ignored by Git and is rebuilt from source when needed. The package contains:
+
+```text
+r2100_hil
 config/
+├── ruskotunturi_aeb_interface.json
 ├── ruskotunturi_hil.json
 ├── ruskotunturi_hil_alt_ids.json
 └── ruskotunturi_hil_alt_scaling.json
@@ -334,35 +348,54 @@ status_hil.sh
 stop_hil.sh
 ```
 
-The zipapp includes `signal_codec.py` and `r2100_preflight.py` together with the gateway, perception, AEB, mapping and protocol runtime modules.
+The default HIL mapping is generated from the canonical semantic interface during the build. The manifest identifies the package format as `standalone-linux-executable`, records the build architecture and declares no target Python runtime requirement.
 
-`r2100_hil.pyz` provides one executable entry point for validation, preflight and the three R2100 runtime components:
+`r2100_hil` provides one native entry point for validation, preflight and the three R2100 runtime components:
 
 ```bash
-r2100_hil.pyz check
-r2100_hil.pyz preflight
-r2100_hil.pyz perception
-r2100_hil.pyz gateway
-r2100_hil.pyz aeb
+./r2100_hil check
+./r2100_hil preflight
+./r2100_hil perception
+./r2100_hil gateway
+./r2100_hil aeb
 ```
 
 `check` validates the deployment configuration without opening CAN interfaces. `preflight` performs R2100 runtime-readiness checks before the managed processes are started.
 
-The current deployment format intentionally depends on `python3` being installed on the R2100. It is not a standalone native binary and does not claim to remove the target Python runtime dependency.
-
-Build locally from the repository root with:
+Install the pinned build dependency before running the build script:
 
 ```bash
+python3 -m pip install -r edge-path-project/hil/deployment/requirements-build.txt
 python3 edge-path-project/hil/deployment/build_r2100_hil.py
 ```
 
-Deploy the generated package over SSH/SCP with:
+PyInstaller builds for the host architecture rather than cross-compiling. An R2100 deployment artifact must therefore be produced in an ARM64 build environment. The accepted target artifact was built in Debian 12 ARM64, exercised there with `r2100_hil check`, and then transferred to the physical R2100.
+
+The physical target acceptance on 2026-11-03 verified:
+
+```text
+architecture                    ARM aarch64 ELF
+R2100 OS                        Debian 12 (bookworm)
+R2100 glibc                     2.36
+deployment configuration check  PASS
+R2100 preflight                 PASS
+can0 / can1                     UP, ERROR-ACTIVE, 500000 bit/s
+UDP 15000 / 15010               available
+```
+
+The detailed acceptance record is:
+
+```text
+edge-path-project/hil/NATIVE_DEPLOYMENT_ACCEPTANCE.md
+```
+
+The deploy script deliberately consumes an **already-built ARM64 package**. It refuses non-ARM64 artifacts and packages that still declare a Python runtime requirement:
 
 ```bash
 edge-path-project/hil/deployment/deploy_r2100_hil.sh <R2100_IP>
 ```
 
-The deploy script performs the build, creates an archive, transfers it to the R2100, extracts it into a timestamped release directory, runs the deployed `r2100_hil.pyz check`, and updates the `current` symlink only after successful validation.
+The deploy script creates a versioned archive, transfers it to the R2100, extracts it into a timestamped release directory, runs the deployed `r2100_hil check`, and updates the `current` symlink only after successful validation.
 
 The resulting target layout is:
 
@@ -377,6 +410,8 @@ The resulting target layout is:
 The deployed runtime is controlled with:
 
 ```bash
+~/r2100_hil/current/r2100_hil check
+~/r2100_hil/current/r2100_hil preflight
 ~/r2100_hil/current/start_hil.sh
 ~/r2100_hil/current/status_hil.sh
 ~/r2100_hil/current/stop_hil.sh
@@ -389,22 +424,18 @@ R2100_HIL_CONFIG=~/r2100_hil/current/config/ruskotunturi_hil_alt_scaling.json \
   ~/r2100_hil/current/start_hil.sh
 ```
 
-The start script records process IDs and creates a dedicated log directory. The stop script terminates the AEB, gateway and perception processes in a controlled order. The zipapp converts `SIGTERM` into the existing controller shutdown path so the AEB process can execute its final fail-safe brake transmission logic before exiting normally.
+The start script records process IDs and creates a dedicated log directory. The stop script terminates the AEB, gateway and perception processes in a controlled order. The native entry point preserves the existing component shutdown path so managed termination can execute the controller's final fail-safe brake transmission logic before normal exit.
 
-Versioned release directories also provide a simple rollback mechanism. Rollback was validated by creating two releases, changing the `current` symlink back to the older release and successfully running its deployment configuration check. The symlink was then returned to the newer validated release.
+Versioned release directories provide the same release-selection and rollback model used by the earlier deployment workflow.
 
-Hardware validation was performed with the R2100 processes running only from the deployed package under `~/r2100_hil/current/`, rather than from the Git working tree. The HIL-10 route completed with `route_complete` PASS.
-
-Independent developer validation was also completed from a second developer machine. The second developer built the deployment package locally, deployed it to the R2100 over SSH/SCP, started the deployed runtime, and completed the unchanged HIL-10 route with `route_complete` PASS. This provides an additional reproducibility check that the deployment workflow is not tied to the original development machine.
-
-This work package therefore demonstrates a repeatable build -> validate -> deploy -> run -> stop -> rollback workflow for the current R2100 HIL runtime.
+The earlier 2026-11-02 fresh-checkout acceptance used the historical Python zipapp deployment. Its hashes and route evidence remain valid historical reproducibility evidence in `VALIDATION.md`; they are not the description of the current deployment format.
 
 ## Deployment Preflight
 
-The deployed zipapp includes an R2100-specific readiness check:
+The standalone executable includes an R2100-specific readiness check:
 
 ```bash
-~/r2100_hil/current/r2100_hil.pyz preflight
+~/r2100_hil/current/r2100_hil preflight
 ```
 
 The preflight loads the selected mapping profile and verifies the runtime prerequisites that can be checked locally before the HIL processes start:
@@ -419,7 +450,7 @@ The preflight loads the selected mapping profile and verifies the runtime prereq
 
 `start_hil.sh` runs this preflight automatically before starting perception, gateway or AEB. Because the shell script uses fail-fast execution, a failed preflight prevents a partial or conflicting runtime startup.
 
-A normal hardware preflight on the validated R2100 bench produced:
+The 2026-11-03 native-executable hardware preflight on the R2100 produced:
 
 ```text
 [PASS] config: ruskotunturi_hil
@@ -431,7 +462,7 @@ A normal hardware preflight on the validated R2100 bench produced:
 R2100 HIL preflight: PASS
 ```
 
-Fail-closed behavior was validated by running `start_hil.sh` a second time while the original deployment processes were already running. Preflight detected both occupied UDP ports and returned `FAIL`; no second runtime was started, and the original perception, gateway and AEB processes remained `RUNNING`.
+Fail-closed behavior was previously validated by running `start_hil.sh` a second time while the original deployment processes were already running. Preflight detected both occupied UDP ports and returned `FAIL`; no second runtime was started, and the original perception, gateway and AEB processes remained `RUNNING`.
 
 After integrating automatic preflight into `start_hil.sh`, the normal HIL-10 route was regression-tested again over the deployed R2100 and physical CAN loop:
 
@@ -447,7 +478,7 @@ python3 -m unittest discover -s tests -p 'test_r2100_preflight.py' -v
 python3 -m unittest discover -s tests -p 'test_embedded_deployment.py' -v
 ```
 
-Validated results are:
+Validated focused results include:
 
 ```text
 preflight unit tests : 4 / 4 PASS
@@ -775,11 +806,13 @@ A physical CAN interruption can prevent the SocketCAN transmit queue from draini
 
 ### 6. Shared signal mapping must be validated end to end
 
-Moving CAN IDs into a configuration file is only useful if every active producer and consumer uses the same profile. The alternate-ID hardware run verified the configured IDs on the physical CAN bus and completed the route without Python runtime edits.
+Moving CAN IDs into a configuration file is only useful if every active producer and consumer uses the same profile. The alternate-ID hardware run verified the configured IDs on the physical CAN bus and completed the route without runtime-code edits.
 
-### 7. Deployment should not depend on the target Git working tree
+### 7. Deployment should not depend on the target Git working tree or target Python environment
 
-The validated embedded deployment packages the runtime into a generated Python zipapp plus external configuration and control scripts. Hardware routes were executed from the deployed `~/r2100_hil/current/` release rather than from `~/EdgeDetection`. A second developer independently built and deployed the same workflow from another development machine and also completed the HIL-10 route successfully.
+The current deployment packages the runtime into a standalone Linux ELF plus external configuration and control scripts. The deploy script consumes a prebuilt ARM64 artifact, verifies the manifest, transfers a versioned release and validates the executable on the target before moving the `current` symlink. The accepted native executable ran on the physical Debian 12 R2100 without the project Python environment.
+
+The earlier zipapp deployment remains useful historical reproducibility evidence, but it is no longer the current deployment format.
 
 ### 8. Numeric signal scaling must be shared by producer and consumer
 
@@ -797,12 +830,11 @@ A generic startup timeout hides whether the missing prerequisite is on the Gazeb
 
 The current validation still does **not** cover every possible hardware or system failure. Follow-on targets include:
 
-- a standalone native executable that does not require Python on the target,
 - arbitrary packet delay/jitter profiles,
-- forced process termination,
 - PC power loss,
-- an external command watchdog outside the current test runtime,
 - broader multi-node CAN fault cases beyond the current two-interface bench loop.
+
+Forced HIL-runner termination is already covered by the independent command-watchdog test, and the standalone native executable has been accepted on the physical R2100. Manual physical CAN interruption and recovery has also been exercised on the current two-interface bench loop.
 
 The scalar codec currently supports `uint16_le`; structured `brake_command_v1` remains a specialized codec rather than a fully generic schema-driven payload description.
 
@@ -812,7 +844,7 @@ The deployment preflight verifies local R2100 readiness but does not verify that
 
 If a test remains in a fail-safe state at startup, check the printed **HIL startup readiness** report first, then verify that:
 
-- `~/r2100_hil/current/r2100_hil.pyz preflight` passes,
+- `~/r2100_hil/current/r2100_hil preflight` passes,
 - the correct Gazebo world is running,
 - `can0` and `can1` are UP at 500 kbit/s,
 - all three R2100 processes were started with the same mapping profile,
@@ -837,10 +869,13 @@ CARLA experiments
  -> Ruskotunturi hybrid HIL-9
  -> HIL-10 freshness + communication fault validation
  -> configurable signal mapping on the R2100 CAN chain
- -> reproducible embedded deployment package
  -> configuration-driven scalar signal codec
+ -> automatic stage-specific SIL/HIL signal configuration
+ -> standalone native ARM64 executable deployment
  -> deployment preflight and fail-closed startup
  -> HIL startup readiness diagnostics
+ -> common SIL/HIL emergency-braking scenario
+ -> independent HIL-runner process-termination watchdog validation
 ```
 
 Current evidence:
@@ -850,8 +885,8 @@ HIL-10 offline software validation       : 42 / 42 PASS
 HIL-10 hardware scenarios                : 6 / 6 PASS
 HIL startup diagnostics unit tests       : 7 / 7 PASS
 HIL-10 integration regression            : 18 / 18 PASS
-Gazebo-absent startup diagnosis           : PASS / startup_gazebo_not_ready
-diagnostics-integrated HIL route          : PASS / route_complete
+Gazebo-absent startup diagnosis          : PASS / startup_gazebo_not_ready
+diagnostics-integrated HIL route         : PASS / route_complete
 original signal-mapping offline tests    : 12 / 12 PASS
 mapping + deployment offline tests       : 19 / 19 PASS
 codec work-package regression            : 37 / 37 PASS
@@ -866,12 +901,19 @@ alternate CAN-ID route                   : PASS
 alternate IDs on physical CAN            : 0x110 / 0x111 / 0x210 observed
 alternate scaling route                  : PASS
 default scaling on same new deployment   : PASS
-embedded package build/check             : PASS
-versioned SSH/SCP deployment             : PASS
-deployed-package HIL route               : PASS
-second-developer deployment route        : PASS
+historical zipapp deployment             : PASS / retained as baseline evidence
+standalone ARM64 ELF build               : PASS
+Debian 12 ARM64 container check          : PASS
+physical R2100 native check              : PASS
+physical R2100 native preflight          : PASS
+physical R2100 native architecture       : ARM aarch64 ELF
+physical R2100 native userspace          : Debian 12 / glibc 2.36
+common SIL/HIL emergency-braking         : SIL PASS / HIL PASS
+HIL runner SIGKILL fail-safe             : PASS
+full repository offline suite            : 190 / 190 PASS
+versioned SSH/SCP deployment workflow    : implemented
 start / stop / status control            : PASS
-release rollback                         : PASS
+release rollback model                   : retained
 wired Ethernet transport                 : validated
 alternate reachable network path         : validated
 physical CAN loop                        : validated
