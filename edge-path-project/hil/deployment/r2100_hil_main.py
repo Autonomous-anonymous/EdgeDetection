@@ -9,8 +9,11 @@ import signal
 from pathlib import Path
 import sys
 
-from signal_mapping import load_signal_mapping, print_summary
+HIL_DIR = Path(__file__).resolve().parents[1]
+if str(HIL_DIR) not in sys.path:
+    sys.path.insert(0, str(HIL_DIR))
 
+from signal_mapping import load_signal_mapping, print_summary
 
 COMPONENTS = {
     "perception": "r2100_lidar_perception",
@@ -28,81 +31,50 @@ def default_config_path() -> Path:
 
 
 def has_config_argument(args: list[str]) -> bool:
-    return any(
-        arg == "--config" or arg.startswith("--config=")
-        for arg in args
-    )
+    return any(arg == "--config" or arg.startswith("--config=") for arg in args)
 
 
 def print_help() -> None:
-    print("R2100 HIL deployment executable")
+    print("R2100 HIL standalone deployment executable")
     print()
     print("Usage:")
-    print("  r2100_hil.pyz check [--config FILE]")
-    print("  r2100_hil.pyz preflight [--config FILE]")
-    print("  r2100_hil.pyz perception [OPTIONS]")
-    print("  r2100_hil.pyz gateway [OPTIONS]")
-    print("  r2100_hil.pyz aeb [OPTIONS]")
+    print("  r2100_hil check [--config FILE]")
+    print("  r2100_hil preflight [--config FILE]")
+    print("  r2100_hil perception [OPTIONS]")
+    print("  r2100_hil gateway [OPTIONS]")
+    print("  r2100_hil aeb [OPTIONS]")
     print()
     print(f"Default config: {default_config_path()}")
 
 
 def run_check(args: list[str]) -> None:
     parser = argparse.ArgumentParser(
-        prog="r2100_hil.pyz check",
+        prog="r2100_hil check",
         description="Validate the deployed HIL configuration",
     )
-    parser.add_argument(
-        "--config",
-        default=str(default_config_path()),
-    )
-
+    parser.add_argument("--config", default=str(default_config_path()))
     parsed = parser.parse_args(args)
-
     mapping = load_signal_mapping(parsed.config)
-
     print()
     print("Deployment configuration: PASS")
     print()
     print_summary(mapping)
 
 
-
 def run_preflight(args: list[str]) -> None:
     if not has_config_argument(args):
-        args = [
-            "--config",
-            str(default_config_path()),
-            *args,
-        ]
-
+        args = ["--config", str(default_config_path()), *args]
     module = importlib.import_module("r2100_preflight")
-
-    sys.argv = [
-        "r2100_hil.pyz preflight",
-        *args,
-    ]
-
+    sys.argv = ["r2100_hil preflight", *args]
     module.main()
 
 
 def run_component(command: str, args: list[str]) -> None:
     module_name = COMPONENTS[command]
-
     if not has_config_argument(args):
-        args = [
-            "--config",
-            str(default_config_path()),
-            *args,
-        ]
-
+        args = ["--config", str(default_config_path()), *args]
     module = importlib.import_module(module_name)
-
-    sys.argv = [
-        f"r2100_hil.pyz {command}",
-        *args,
-    ]
-
+    sys.argv = [f"r2100_hil {command}", *args]
     module.main()
 
 
@@ -112,33 +84,24 @@ def _handle_sigterm(_signum, _frame) -> None:
 
 def main() -> None:
     signal.signal(signal.SIGTERM, _handle_sigterm)
-
     if len(sys.argv) < 2:
         print_help()
         return
-
     command = sys.argv[1]
-
     if command in {"-h", "--help", "help"}:
         print_help()
         return
-
     args = sys.argv[2:]
-
     if command == "check":
         run_check(args)
         return
-
     if command == "preflight":
         run_preflight(args)
         return
-
     if command not in COMPONENTS:
         raise SystemExit(
-            f"unknown component {command!r}; "
-            f"expected check, preflight, perception, gateway or aeb"
+            f"unknown component {command!r}; expected check, preflight, perception, gateway or aeb"
         )
-
     run_component(command, args)
 
 

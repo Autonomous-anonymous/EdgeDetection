@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "profile": "ruskotunturi_aeb",
+  "can": {
+    "bitrate": 500000,
+    "gateway_interface": "can0",
+    "controller_interface": "can1"
+  },
+  "signals": {
+    "vehicle_speed": {
+      "direction": "simulation_to_controller",
+      "encoding": "uint16_le",
+      "scale": 0.01,
+      "unit": "m/s",
+      "bindings": {
+        "sil": {
+          "source": "/model/aeb_vehicle_360_b/odometry"
+        },
+        "hil": {
+          "source": "gazebo.vehicle_b.odometry.speed",
+          "can_id": "0x100"
+        }
+      }
+    },
+    "obstacle_distance": {
+      "direction": "perception_to_controller",
+      "encoding": "uint16_le",
+      "scale": 0.001,
+      "unit": "m",
+      "no_value_raw": 65535,
+      "bindings": {
+        "sil": {
+          "source": "/aeb360b/lidar"
+        },
+        "hil": {
+          "source": "r2100.perception.front_clearance",
+          "can_id": "0x101"
+        }
+      }
+    },
+    "brake_command": {
+      "direction": "controller_to_simulation",
+      "encoding": "brake_command_v1",
+      "bindings": {
+        "sil": {
+          "source": "/model/aeb_vehicle_360_b/cmd_vel"
+        },
+        "hil": {
+          "source": "r2100.aeb.brake_command",
+          "can_id": "0x200"
+        }
+      }
+    }
+  },
+  "profiles": {
+    "sil": "ruskotunturi_sil",
+    "hil": "ruskotunturi_hil"
+  }
+}
