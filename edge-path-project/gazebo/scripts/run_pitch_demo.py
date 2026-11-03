@@ -90,7 +90,7 @@ def make_world(path):
     ET.SubElement(scene, "engine").text = "ogre2"
     ET.SubElement(scene, "scene").text = "scene"
     ET.SubElement(scene, "camera_pose").text = "4 7 20 0 .95 1.5708"
-    for plugin in ("GzSceneManager", "InteractiveViewControl"):
+    for plugin in ("GzSceneManager", "InteractiveViewControl", "CameraTracking"):
         layout = ET.SubElement(ET.SubElement(gui, "plugin", filename=plugin, name=plugin), "gz-gui")
         for key, kind, value in (("state", "string", "floating"), ("showTitleBar", "bool", "false"),
                                  ("width", "double", "1"), ("height", "double", "1")):
@@ -130,6 +130,7 @@ def main(argv=None):
     if not shutil.which("gz"):
         sys.exit("Gazebo Harmonic (gz) is required on the presentation computer.")
     os.environ["GZ_PARTITION"] = "camino_pitch_" + uuid.uuid4().hex
+    print(f"GZ_PARTITION={os.environ['GZ_PARTITION']}", flush=True)
     previous = os.environ.get("GZ_SIM_RESOURCE_PATH")
     os.environ["GZ_SIM_RESOURCE_PATH"] = str(GAZEBO / "models") + (os.pathsep + previous if previous else "")
     # Import after selecting the transport partition, before launching any world.

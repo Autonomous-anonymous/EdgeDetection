@@ -45,7 +45,7 @@ python3 edge-path-project/gazebo/scripts/run_pitch_demo.py hil --r2100-host 192.
 
 **Suggested closing line in Finnish**
 
-> A löysi reitin esteen ohi. B antoi tietä. Katsokaa nyt risteystä: autot tulivat eri suunnista, ja nyt B seuraa A:ta samalla työmaatiellä. Tämän haluamme voida testata jo ennen kenttäkoetta.
+> A löysi reitin esteen ohi. B antoi tietä. Katsokaa nyt risteystä. Autot tulivat eri suunnista, ja nyt B seuraa A:ta samalla työmaatiellä. Tämän haluamme voida testata jo ennen kenttäkoetta.
 
 For the CAN run, add *“B:n ajolupa kulki tässä ajossa oikean ohjaimen ja fyysisen CAN-väylän kautta.”* Use this line after rehearsing with the wired bench.
 

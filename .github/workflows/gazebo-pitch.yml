@@ -9,6 +9,7 @@ on:
       - 'edge-path-project/gazebo/scripts/*sil*v6*.py'
       - 'edge-path-project/gazebo/worlds/ruskotunturi_final_sil_demo_v6_world.sdf'
       - 'edge-path-project/gazebo/models/aeb_vehicle_360*/model.sdf'
+      - 'tests/rehearse_pitch_gui.sh'
 
 permissions:
   contents: read
@@ -26,14 +27,12 @@ jobs:
           echo 'deb [signed-by=/usr/share/keyrings/pkgs-osrf-archive-keyring.gpg] https://packages.osrfoundation.org/gazebo/ubuntu-stable noble main' |
             sudo tee /etc/apt/sources.list.d/gazebo-stable.list > /dev/null
           sudo apt-get update -q
-          sudo apt-get install -y --no-install-recommends gz-harmonic python3-gz-transport13 python3-gz-msgs10 libgl1-mesa-dri can-utils
-      - name: Drive the two cars in Gazebo with live cameras and LiDAR
+          sudo apt-get install -y --no-install-recommends gz-harmonic python3-gz-transport13 python3-gz-msgs10 libgl1-mesa-dri can-utils xvfb xauth xdotool scrot python3-tk
+      - name: Pan the Gazebo camera and drive both cars through the shared junction
         env:
           LIBGL_ALWAYS_SOFTWARE: '1'
         run: |
-          mkdir -p pitch-run
-          /usr/bin/python3 -u edge-path-project/gazebo/scripts/run_pitch_demo.py sil \
-            --headless --auto-start --results-dir pitch-run 2>&1 | tee pitch-run/console.log
+          xvfb-run -a -s '-screen 0 1280x800x24' bash tests/rehearse_pitch_gui.sh pitch-run
         shell: bash
       - name: Drive the scene through the production R2100 programs on virtual CAN
         env:
