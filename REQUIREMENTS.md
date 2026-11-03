@@ -13,8 +13,8 @@ The purpose of this map is traceability: each objective is linked to the current
 | Simple collision-avoidance / emergency-braking function | Static avoidance, moving-obstacle interaction, TTC logic and emergency braking are implemented across the staged SIL/HIL work. The shared `emergency_braking` scenario exercises equivalent SIL and HIL AEB acceptance conditions. | SIL v6.4 PASS evidence; HIL-10 hardware validation; 2026-11-02 fresh-checkout HIL acceptance; committed common HIL AEB JSON/CSV evidence; `tests/test_aeb_threshold_consistency.py` 5 / 5 PASS | **Implemented.** The required embedded scope is the safety/AEB path; a general-purpose WSMS or dynamic local path planner is outside the current core scope. SIL/HIL AEB threshold copies are protected by regression tests. |
 | Embedded controller with physical CAN | The R2100 receives simulated vehicle/sensor data, maps it to physical CAN, evaluates the AEB path and returns brake state to Gazebo. An independent WSL-side command watchdog also protects Vehicle B if the HIL runner process disappears. | HIL-10 hardware scenarios; R2100 deployment/preflight evidence; fresh-checkout physical-CAN route acceptance; common HIL emergency-braking committed evidence; committed `hil_process_termination_20261102T115256Z.json` | **Implemented and hardware-validated.** Forced HIL runner termination is fail-safe validated with `SIGKILL`; PC power loss, physical CAN disconnection and bus-off are not claimed. |
 | Automatic signal mapping and configuration between virtual signals and CAN | A canonical AEB signal interface defines semantic signals once and generates target-specific SIL virtual-sensor/actuator bindings and HIL CAN configuration automatically. The staged runner generates the required mapping when switching target phase. | `tests/test_stage_signal_config.py`; `tests/test_staged_mapping_integration.py`; `tests/test_generated_config_snapshot.py`; complete offline suite | **Implemented.** Phase-specific configuration is generated automatically from one canonical interface. Arbitrary signal discovery is not required or claimed. |
-| Executable deployment before transfer to embedded hardware | The R2100 runtime is packaged before transfer as a standalone Linux ELF executable using PyInstaller, with external configuration and managed deployment scripts. | `python3 edge-path-project/hil/deployment/build_r2100_hil.py`; `edge-path-project/hil/dist/r2100_hil/r2100_hil check`; `tests/test_embedded_deployment.py`; `tests/test_native_build_design.py`; `tests/test_native_deployment_scripts.py` | **Implemented.** The packaged runtime does not require the project Python environment on the target. Local x86-64 packaging is verified; the deployable R2100 artifact must be built and validated for the target ARM64 architecture before hardware transfer. |
-| Documentation and version-control workflow | Root, Gazebo, HIL, validation and requirements documentation identify the staged workflow and current baselines. Development uses dedicated branches. | `README.md`; `VALIDATION.md`; `REQUIREMENTS.md`; `edge-path-project/gazebo/README.md`; `edge-path-project/hil/README.md`; tag `r2100-hil-verified-2026-11-02` | **Established.** Fresh-checkout acceptance, raw route/AEB/watchdog evidence and the verified-baseline tag are complete. |
+| Executable deployment before transfer to embedded hardware | The R2100 runtime is packaged before transfer as a standalone Linux ELF executable using PyInstaller, with external configuration and managed deployment scripts. | `python3 edge-path-project/hil/deployment/build_r2100_hil.py`; native ARM64 artifact; `edge-path-project/hil/NATIVE_DEPLOYMENT_ACCEPTANCE.md`; `tests/test_embedded_deployment.py`; `tests/test_native_build_design.py`; `tests/test_native_deployment_scripts.py` | **Implemented and hardware-validated.** The standalone ARM64 ELF was built before transfer, executed on the physical R2100 running Debian 12/aarch64, passed `r2100_hil check`, and passed target `preflight` with CAN0/CAN1 UP and ERROR-ACTIVE at 500 kbit/s. The target does not require the project Python virtual environment to run the packaged executable. |
+| Documentation and version-control workflow | Root, Gazebo, HIL, validation and requirements documentation identify the staged workflow and current baselines. Development uses dedicated branches. | `README.md`; `VALIDATION.md`; `REQUIREMENTS.md`; `edge-path-project/gazebo/README.md`; `edge-path-project/hil/README.md`; `edge-path-project/hil/NATIVE_DEPLOYMENT_ACCEPTANCE.md`; tag `r2100-hil-verified-2026-11-02` | **Established.** Fresh-checkout acceptance, raw route/AEB/watchdog evidence, native target-executable acceptance and the verified-baseline tag are complete. |
 | Multiple vehicle instances | The v6.4 Ruskotunturi SIL baseline uses two vehicles, independent routes, coordination and a common loading-zone objective. A hybrid two-vehicle HIL mission has also passed. | v6.4 result/trace; HIL-9D / later hybrid evidence in the HIL guide | **Implemented and demonstrated.** |
 | Reproducibility and independent work packages | Offline tests, GitHub Actions, versioned deployment, configuration checks, target-side preflight, startup diagnostics, retained evidence, the verified baseline tag and an automated process-termination harness reduce hidden setup dependencies. | `python3 -m unittest discover -s tests -v`; `.github/workflows/offline-validation.yml`; deployment workflow; `VALIDATION.md`; tag `r2100-hil-verified-2026-11-02`; committed raw AEB/watchdog evidence | **Verified baseline established.** The clean run exposed the R2100 CAN-interface initialization as an explicit host prerequisite; later work adds traceable forced-process-failure evidence and threshold-drift regression coverage. |
 | Staged SIL -> HIL methodology with less manual intervention | SIL and HIL share the `emergency_braking` scenario definition, the same Gazebo world/Vehicle B acceptance case and one runner that selects either target. HIL deployment/readiness remains managed separately. | `edge-path-project/gazebo/scenarios/emergency_braking.json`; `edge-path-project/gazebo/scripts/run_staged_scenario.py`; 6 / 6 staged-scenario tests; SIL and HIL PASS on 2026-11-02 | **Implemented for the current SIL -> HIL AEB milestone.** Gazebo and R2100 lifecycle startup remain explicit and result formats remain target-specific. A VIL stage is not implemented and is explicitly out of scope for the current deliverable. |
@@ -41,16 +41,16 @@ That clean checkout used Python 3.12.3 / x86_64 WSL. The verified baseline was s
 r2100-hil-verified-2026-11-02
 ```
 
-After the common staged emergency-braking scenario, independent HIL command-watchdog work and five SIL/HIL AEB threshold-consistency tests, the current development suite is:
+After the common staged emergency-braking scenario, independent HIL command-watchdog work, automatic stage-signal configuration, standalone native deployment work and five SIL/HIL AEB threshold-consistency tests, the current development suite is:
 
 ```text
 Ran 190 tests
 OK
 ```
 
-The GitHub Actions workflow `.github/workflows/offline-validation.yml` runs the offline suite on Python 3.13 and independently builds and validates the R2100 deployment package.
+The GitHub Actions workflow `.github/workflows/offline-validation.yml` runs the offline suite on Python 3.13 and independently builds and validates the R2100 deployment package, including native ARM64 deployment validation.
 
-The clean checkout also completed:
+The earlier clean checkout also completed:
 
 ```text
 R2100 deployment build           PASS
@@ -63,13 +63,13 @@ physical-CAN HIL route           PASS
 end reason                       route_complete
 ```
 
-The tested deployment release was:
+The tested historical deployment release was:
 
 ```text
 /home/recomputer/r2100_hil/releases/r2100_hil_20261102T085551Z
 ```
 
-The local build and deployed target hashes matched exactly:
+The local build and deployed target hashes matched exactly for that historical zipapp acceptance:
 
 ```text
 manifest.json
@@ -78,6 +78,49 @@ manifest.json
 r2100_hil.pyz
 e92b8f7a6a3367a4e0b01ee52e5ba8eb23046aa76fb9cf7f6af1264ad948ec37
 ```
+
+## Native ARM64 executable acceptance — 2026-11-03
+
+The current deployment format replaces the earlier Python zipapp with a standalone Linux ELF executable built before transfer to the embedded target.
+
+The physical R2100 target reported:
+
+```text
+architecture : aarch64
+OS           : Debian GNU/Linux 12 (bookworm)
+glibc        : 2.36
+```
+
+The ARM64 artifact was first exercised in a Debian 12 ARM64 environment, then transferred to the physical R2100. On the target, `file r2100_hil` identified the runtime as an ARM aarch64 ELF executable using `/lib/ld-linux-aarch64.so.1`.
+
+The deployment configuration check passed directly on the target:
+
+```text
+Deployment configuration: PASS
+Profile             : ruskotunturi_hil
+CAN bitrate         : 500000
+Gateway interface   : can0
+Controller interface: can1
+```
+
+The target preflight also passed:
+
+```text
+[PASS] config: ruskotunturi_hil
+[PASS] CAN can0: UP, ERROR-ACTIVE, bitrate=500000
+[PASS] CAN can1: UP, ERROR-ACTIVE, bitrate=500000
+[PASS] UDP 15000: available for gateway
+[PASS] UDP 15010: available for LiDAR perception
+R2100 HIL preflight: PASS
+```
+
+The complete acceptance record is retained in:
+
+```text
+edge-path-project/hil/NATIVE_DEPLOYMENT_ACCEPTANCE.md
+```
+
+This closes the target-architecture/userspace compatibility caveat for the executable-before-deployment requirement.
 
 ## Common SIL/HIL emergency-braking milestone
 
@@ -217,7 +260,7 @@ txqueuelen        100
 physical loop     CAN0_H <-> CAN1_H, CAN0_L <-> CAN1_L
 ```
 
-This setup is a host prerequisite, not part of application deployment. Once applied, `r2100_hil.pyz preflight` passed and `start_hil.sh` started all three managed components successfully.
+This setup is a host prerequisite, not part of application deployment. The current native `r2100_hil preflight` has been verified to pass on the physical R2100 with this CAN state.
 
 ## Committed standalone HIL route evidence
 
@@ -251,7 +294,7 @@ stop_verified: true
 fault: null
 ```
 
-Unlike the older evidence record, this acceptance has an explicit external traceability record for its source revision, deployed release and exact manifest/zipapp hashes in `VALIDATION.md`. Commit `e78868d` added the evidence pair; commit `cee3445` normalized the CSV line endings without changing the measurement content.
+Unlike the older evidence record, this historical zipapp acceptance has an explicit external traceability record for its source revision, deployed release and exact manifest/zipapp hashes in `VALIDATION.md`. Commit `e78868d` added the evidence pair; commit `cee3445` normalized the CSV line endings without changing measurement content.
 
 ## Scope boundary
 
@@ -259,7 +302,7 @@ The current project deliverable validates the staged **SIL -> HIL** workflow. A 
 
 ## Remaining recommended milestones
 
-The verified baseline, common SIL/HIL emergency-braking scenario, independent process-termination fail-safe and threshold-consistency regression are complete. The current embedded AEB scope does not require a general-purpose local planner or additional showcase navigation.
+The verified baseline, common SIL/HIL emergency-braking scenario, automatic phase-specific signal configuration, standalone native R2100 executable acceptance, independent process-termination fail-safe and threshold-consistency regression are complete. The current embedded AEB scope does not require a general-purpose local planner or additional showcase navigation.
 
 Remaining work is optional refinement:
 
