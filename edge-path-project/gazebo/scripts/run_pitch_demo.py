@@ -158,7 +158,7 @@ def main(argv=None):
                 sys.exit("Gazebo exited before the demo began.")
             controller = PitchDemo(args.r2100_host, args.results_dir, panel, launch_wall, interactive=not args.auto_start)
             passed = controller.run()
-            if not args.auto_start:
+            if not args.auto_start and controller.end_reason != "interrupted":
                 input("Ajo päättyi. Sulje näkymä painamalla Enter. ")
             return 0 if passed else 1
         finally:

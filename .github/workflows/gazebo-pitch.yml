@@ -21,6 +21,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install Gazebo Harmonic and its Python transport bindings
+        id: gazebo
         run: |
           curl -fsSL --retry 3 https://packages.osrfoundation.org/gazebo.gpg |
             sudo tee /usr/share/keyrings/pkgs-osrf-archive-keyring.gpg > /dev/null
@@ -29,12 +30,15 @@ jobs:
           sudo apt-get update -q
           sudo apt-get install -y --no-install-recommends gz-harmonic python3-gz-transport13 python3-gz-msgs10 libgl1-mesa-dri can-utils xvfb xauth xdotool scrot python3-tk
       - name: Pan the Gazebo camera and drive both cars through the shared junction
+        timeout-minutes: 3
         env:
           LIBGL_ALWAYS_SOFTWARE: '1'
         run: |
           xvfb-run -a -s '-screen 0 1280x800x24' bash tests/rehearse_pitch_gui.sh pitch-run
         shell: bash
       - name: Drive the scene through the production R2100 programs on virtual CAN
+        if: ${{ !cancelled() && steps.gazebo.outcome == 'success' }}
+        timeout-minutes: 3
         env:
           LIBGL_ALWAYS_SOFTWARE: '1'
         shell: bash
