@@ -10,7 +10,7 @@ import time
 # Register the v6 message types before hil10_runtime loads native transport.
 # Ubuntu's C++ protobuf backend otherwise loses the nested Pose class in Pose_V.
 from ruskotunturi_final_sil_demo_v6 import (
-    FinalSilDemoLargeArea, MODEL_A, MODEL_B, A_ROUTE, A_SHARED_INDEX, B_SHARED_INDEX,
+    FinalSilDemoLargeArea, MODEL_A, MODEL_B, A_ROUTE, A_SHARED_INDEX, B_MERGE_INDEX, B_SHARED_INDEX,
     MERGE_POINT, SHARED_HEADWAY_SLOW_M, SHARED_HEADWAY_STOP_M,
 )
 from gz.msgs10.odometry_pb2 import Odometry
@@ -37,6 +37,19 @@ def convoy_positions(a, b):
             or any(math.cos(v["yaw"] - EXIT_YAW) < .84 for v in (a, b))):
         return None
     return a_s, b_s
+
+
+def follow_exit(vehicle, speed, shared_index):
+    """Aim ahead down the common lane instead of circling a missed junction waypoint."""
+    along, side = exit_position(vehicle)
+    if along >= 0 and abs(side) <= 1.5:
+        vehicle["target_index"] = max(vehicle["target_index"], shared_index)
+    lookahead = max(2.5, along + 4.0)
+    dx = MERGE_POINT[0] + EXIT_X*lookahead - vehicle["x"]
+    dy = MERGE_POINT[1] + EXIT_Y*lookahead - vehicle["y"]
+    # Pure pursuit. Preserve the Ackermann turn radius as the speed changes.
+    curvature = 2 * math.sin(math.atan2(dy, dx) - vehicle["yaw"]) / math.hypot(dx, dy)
+    return speed, speed * curvature
 
 
 def past_barrier(vehicle, barrier, direction):
@@ -210,22 +223,29 @@ class PitchDemo(FinalSilDemoLargeArea):
             # Build up speed only after the wheels have turned away from the
             # barrier. Entering this turn at cruise can cut the near corner.
             _, offset = self.static_line_project(self.a["x"], self.a["y"])
-            scale = min(scale, 1.45 + abs(offset))
+            scale = min(3.1, 1.0 + max(0, abs(offset) - .50))
         limit = 3.0
+        if self.a_detour_phase == "RETURN":
+            limit = 1.25
         if self.a["target_index"] >= A_SHARED_INDEX:
             # Lead through the junction and let B close the gap on the marked exit.
             a_s, _ = exit_position(self.a)
             b_s, _ = exit_position(self.b)
             limit = min(limit, max(0.0, 1.5 * (8.8 + max(b_s, 0) - a_s)))
-        return self.pitch_speed(self.a, cmd, scale, limit)
+        speed, turn = self.pitch_speed(self.a, cmd, scale, limit)
+        if self.static_avoidance_completed:
+            return follow_exit(self.a, speed, A_SHARED_INDEX)
+        return speed, turn
 
     def b_control(self, now):
         cmd = super().b_control(now)
         spacing = math.hypot(self.a["x"]-self.b["x"], self.a["y"]-self.b["y"])
-        if (not self.b_dynamic_resume_events or self.coordinator_profile_active
-                or (self.b_released and spacing <= SHARED_HEADWAY_SLOW_M)):
-            return cmd
-        return self.pitch_speed(self.b, cmd, 2.9, 2.35)
+        if (self.b_dynamic_resume_events and not self.coordinator_profile_active
+                and not (self.b_released and spacing <= SHARED_HEADWAY_SLOW_M)):
+            cmd = self.pitch_speed(self.b, cmd, 2.9, 2.35)
+        if self.b_released and self.b["target_index"] >= B_MERGE_INDEX:
+            return follow_exit(self.b, cmd[0], B_SHARED_INDEX)
+        return cmd
 
     def observe_merge(self, elapsed):
         if not (self.b_resumed and self.passed_barrier and self.b_released
@@ -317,7 +337,7 @@ class PitchDemo(FinalSilDemoLargeArea):
                            and now - self.clock_wall < .5 and now - self.harness_wall < 1
                            and all(now - v[key] < .5 for v in (self.a, self.b) for key in ("last_pose_time", "last_lidar_time")))
         can_ok = not self.link or (self.link.armed and self.link.replies >= 2 and not self.link.decision()[0] and not self.lidar.error)
-        live_wall = None if self.motion_wall is None else round(time.monotonic() - self.motion_wall, 3)
+        live_wall = None if self.motion_wall is None else time.monotonic() - self.motion_wall
         checks = dict(scene_finished=self.end_reason == "pitch_complete", a_passed=self.passed_barrier,
                       b_stopped=self.b_waited, b_resumed=self.b_resumed, shared_lane=bool(self.shared_travel),
                       within_live_budget=live_wall is not None and live_wall <= LIVE_BUDGET_S, a_stopped_at_end=self.a_odom.stopped(),
@@ -328,7 +348,8 @@ class PitchDemo(FinalSilDemoLargeArea):
         if not passed and self.end_reason == "pitch_complete":
             self.end_reason = next(k for k, ok in checks.items() if not ok)
         report = dict(mode=self.mode, passed=passed, reason=self.end_reason, simulation_seconds=round(duration, 3),
-                      events_s=self.events, events_wall_s=self.wall_events, live_wall_s=live_wall, shared_lane=self.shared_travel,
+                      events_s=self.events, events_wall_s=self.wall_events,
+                      live_wall_s=None if live_wall is None else round(live_wall, 3), shared_lane=self.shared_travel,
                       preparation_wall_s=None if self.ready_wall is None else round(self.ready_wall-self.launch_wall, 3),
                       presenter_wait_s=None if self.motion_wall is None else round(self.motion_wall-self.ready_wall, 3),
                       checks=checks, trace=self.trace_path,
@@ -343,8 +364,9 @@ class PitchDemo(FinalSilDemoLargeArea):
             output.write_text(json.dumps(report, indent=2, allow_nan=False) + "\n", encoding="utf-8")
             print(f"Evidence: {output}", flush=True)
         status = "Ajo valmis" if passed else "Ajo keskeytyi"
+        time_text = f"{live_wall:.1f} s" if live_wall is not None else "ei alkanut"
         self.panel.update("Johtaa yhteisellä tiellä" if self.shared_travel else "Ohitti esteen" if self.passed_barrier else "–",
                           "Seuraa A:ta" if self.shared_travel else "Pysähtyi ja jatkoi" if self.b_resumed else "–",
-                          self.can_state(), status if passed else f"{status} · {self.end_reason}", live=False)
-        print(f"{status} | {self.end_reason} | live {live_wall} s | {'PASS' if passed else 'FAIL'}", flush=True)
+                          self.can_state(), f"{status} · {time_text}" if passed else f"{status} · {self.end_reason}", live=False)
+        print(f"{status} | {self.end_reason} | live {time_text} | {'PASS' if passed else 'FAIL'}", flush=True)
         return passed

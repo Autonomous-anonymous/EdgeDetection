@@ -77,10 +77,10 @@ def make_world(path):
         mark = ET.SubElement(road, "visual", name=f"dash_{index}")
         ET.SubElement(mark, "pose").text = f"{-4.5-index*1.5} {27.5-index*1.5} {z} 0 {slope} {-3*math.pi/4}"
         box = ET.SubElement(ET.SubElement(mark, "geometry"), "box")
-        ET.SubElement(box, "size").text = ".95 .20 .015"
+        ET.SubElement(box, "size").text = "1.15 .36 .015"
         material = ET.SubElement(mark, "material")
         for key in ("ambient", "diffuse"):
-            ET.SubElement(material, key).text = ".95 .96 .96 1"
+            ET.SubElement(material, key).text = ".035 .13 .17 1"
     # An initial wide shot only. The audience's camera is independent of A's sensor.
     gui = ET.SubElement(world, "gui")
     scene = ET.SubElement(gui, "plugin", filename="MinimalScene", name="3D View")
@@ -89,7 +89,7 @@ def make_world(path):
     ET.SubElement(layout, "property", key="showTitleBar", type="bool").text = "false"
     ET.SubElement(scene, "engine").text = "ogre2"
     ET.SubElement(scene, "scene").text = "scene"
-    ET.SubElement(scene, "camera_pose").text = "4 7 20 0 .95 1.5708"
+    ET.SubElement(scene, "camera_pose").text = "4 11.5 17 0 1.03 1.5708"
     for plugin in ("GzSceneManager", "InteractiveViewControl", "CameraTracking"):
         layout = ET.SubElement(ET.SubElement(gui, "plugin", filename=plugin, name=plugin), "gz-gui")
         for key, kind, value in (("state", "string", "floating"), ("showTitleBar", "bool", "false"),

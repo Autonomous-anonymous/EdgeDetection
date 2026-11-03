@@ -159,6 +159,24 @@ class SceneTests(unittest.TestCase):
         self.assertAlmostEqual(d.shared_travel["headway_m"], 8)
         self.assertIn("both_drove_shared_lane", d.events)
 
+    def test_exit_lookahead_rejoins_after_detour_without_orbiting_the_waypoint(self):
+        # Measured pose after the detour, heading south towards the junction.
+        car = dict(x=.7, y=30, yaw=-1.8, target_index=pitch.B_MERGE_INDEX)
+        speed, yaw_rate = pitch.follow_exit(car, 2.0, pitch.B_SHARED_INDEX)
+        self.assertEqual(speed, 2.0)
+        self.assertLess(yaw_rate, 0)
+        self.assertLess(abs(yaw_rate/speed), .25)  # An achievable turn for these vehicles.
+        self.assertEqual(car["target_index"], pitch.B_MERGE_INDEX)
+        for _ in range(80):
+            speed, yaw_rate = pitch.follow_exit(car, 2.0, pitch.B_SHARED_INDEX)
+            car["x"] += .1 * speed * math.cos(car["yaw"])
+            car["y"] += .1 * speed * math.sin(car["yaw"])
+            car["yaw"] += .1 * yaw_rate
+        self.assertEqual(car["target_index"], pitch.B_SHARED_INDEX)
+        along, lateral = pitch.exit_position(car)
+        self.assertGreater(along, 7)
+        self.assertLess(abs(lateral), .8)
+
 
 class CommandGateTests(unittest.TestCase):
     def setUp(self):
