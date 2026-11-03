@@ -11,7 +11,7 @@ import time
 # Ubuntu's C++ protobuf backend otherwise loses the nested Pose class in Pose_V.
 from ruskotunturi_final_sil_demo_v6 import (
     FinalSilDemoLargeArea, MODEL_A, MODEL_B, A_ROUTE, A_SHARED_INDEX, B_SHARED_INDEX,
-    MERGE_POINT, SHARED_HEADWAY_SLOW_M, SHARED_HEADWAY_STOP_M, STATIC_APPROACH_SLOW_SPEED_MPS,
+    MERGE_POINT, SHARED_HEADWAY_SLOW_M, SHARED_HEADWAY_STOP_M,
 )
 from gz.msgs10.odometry_pb2 import Odometry
 from final_sil_v6_checks import footprint, HALF_LENGTH, HALF_WIDTH, HEIGHT, margins_ok, starting_scene_issue
@@ -203,15 +203,21 @@ class PitchDemo(FinalSilDemoLargeArea):
 
     def a_control(self, now):
         cmd = super().a_control(now)
-        if not self.static_avoidance_started and cmd[0] <= STATIC_APPROACH_SLOW_SPEED_MPS:
+        if not self.static_avoidance_started:
             return cmd
+        scale = 3.4
+        if self.a_detour_phase == "OUT":
+            # Build up speed only after the wheels have turned away from the
+            # barrier. Entering this turn at cruise can cut the near corner.
+            _, offset = self.static_line_project(self.a["x"], self.a["y"])
+            scale = min(scale, 1.45 + abs(offset))
         limit = 3.0
         if self.a["target_index"] >= A_SHARED_INDEX:
             # Lead through the junction and let B close the gap on the marked exit.
             a_s, _ = exit_position(self.a)
             b_s, _ = exit_position(self.b)
             limit = min(limit, max(0.0, 1.5 * (8.8 + max(b_s, 0) - a_s)))
-        return self.pitch_speed(self.a, cmd, 3.4, limit)
+        return self.pitch_speed(self.a, cmd, scale, limit)
 
     def b_control(self, now):
         cmd = super().b_control(now)

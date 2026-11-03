@@ -186,6 +186,12 @@ class CommandGateTests(unittest.TestCase):
         self.assertEqual(self.demo.pub_a.commands, [(0, 0)])
         self.assertEqual(self.demo.pub_b.commands, [(0, 0)])
 
+    def test_obstacles_alone_do_not_finish_the_demo(self):
+        self.demo.passed_barrier = self.demo.b_resumed = True
+        self.sock.incoming.append(brake(10))
+        self.assertTrue(self.step())
+        self.assertEqual(self.demo.pub_b.commands[-1], (.6, -.1))
+
     def test_real_gate_veto_survives_drive_in_same_batch(self):
         self.sock.incoming.append(brake(254))
         self.assertTrue(self.step())
@@ -210,7 +216,7 @@ class CommandGateTests(unittest.TestCase):
 
 
 class FinalStopTests(unittest.TestCase):
-    def finish(self, b_keeps_moving):
+    def finish(self, b_keeps_moving, elapsed=2):
         clock = Clock()
         d = pitch.PitchDemo.__new__(pitch.PitchDemo)
         d.link, d.mode = None, "sil"
@@ -224,7 +230,8 @@ class FinalStopTests(unittest.TestCase):
         d.a = d.b = dict(minimum_clearance_seen=2, last_pose_time=clock(), last_lidar_time=clock())
         d.passed_barrier = d.b_waited = d.b_resumed = True
         d.shared_travel = dict(a_metres=12, b_metres=4, headway_m=8)
-        d.launch_wall, d.ready_wall, d.motion_wall = 0, 3, 8
+        d.motion_wall = clock() - elapsed
+        d.ready_wall, d.launch_wall = d.motion_wall - 5, d.motion_wall - 8
         d.wall_events = {}
         d.ground_min = 2
         d.moving_pose_failures = 0
@@ -260,3 +267,8 @@ class FinalStopTests(unittest.TestCase):
         passed, report = self.finish(True)
         self.assertFalse(passed)
         self.assertEqual(report["reason"], "b_stopped_at_end")
+
+    def test_slow_wall_clock_cannot_pass_on_simulation_time(self):
+        passed, report = self.finish(False, elapsed=pitch.LIVE_BUDGET_S)
+        self.assertFalse(passed)
+        self.assertEqual(report["reason"], "within_live_budget")
