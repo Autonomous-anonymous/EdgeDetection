@@ -1,6 +1,6 @@
 # Gazebo result files
 
-This directory contains validation output from Gazebo and Ruskotunturi SIL tests.
+This directory contains validation output from **CAMINO Gazebo SIL and R2100 HIL** scenarios. The branch preserves Gazebo evidence, including earlier development runs, but excludes unrelated CARLA and video evidence.
 
 ## Current final SIL baseline
 
@@ -22,3 +22,7 @@ The v6.4 result records both vehicles completing their required mission state, s
 Other CSV files in this directory correspond to staged Gazebo validation tests such as AEB, TTC, LiDAR avoidance, Ruskotunturi baseline/static/moving obstacles, sensor fusion and multi-vehicle coordination.
 
 See the repository-level `VALIDATION.md` for the current SIL/HIL evidence catalogue and documentation index.
+
+## Native R2100 AEB hardware acceptance (2026-11-05)
+
+The physical R2100 running the Debian 12 CI-built ARM64 executable passed the common HIL AEB scenario with `aeb_stop_verified`, `ttc_threshold`, approximately zero final speed, four stop-confirmation samples, **1.236 m clearance** (minimum 1.0 m) and no runtime fault. The original committed evidence is `hil10/hil10_aeb_20261105T070006_b18e73a4.json` and the matching `.csv`. See `../../hil/NATIVE_DEPLOYMENT_ACCEPTANCE.md` for verified artifact hashes and target runtime identity.

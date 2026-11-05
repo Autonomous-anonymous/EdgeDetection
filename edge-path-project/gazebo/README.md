@@ -1,6 +1,6 @@
-# Gazebo SIL baseline: v6.4
+# CAMINO Gazebo SIL baseline: v6.4
 
-This guide describes the v6.4 SIL baseline merged into `main` from `sil-development`. Earlier scripts,
+This guide describes the v6.4 SIL baseline preserved in the **CAMINO Gazebo SIL/HIL branch**. Earlier scripts,
 worlds and CSV results remain available as development evidence. Mevea is outside
 this project's scope. The later HIL stage uses a real reComputer Industrial R2100
 with physical CAN while Gazebo remains the virtual world and vehicle-dynamics source.

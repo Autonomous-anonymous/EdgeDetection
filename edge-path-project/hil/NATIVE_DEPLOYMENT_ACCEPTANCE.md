@@ -1,10 +1,11 @@
 # R2100 native executable acceptance
 
-This record documents the final target-hardware acceptance of the standalone R2100 HIL executable required for deployment before transfer to the embedded device.
+This CAMINO record documents the final target-hardware acceptance of the standalone R2100 HIL executable required for deployment before transfer to the embedded device.
 
-## Acceptance date
+## Acceptance dates
 
-2026-11-03
+2026-11-03: standalone native ELF compatibility/readiness.  
+2026-11-05: cryptographically traced native CI release and full physical-CAN HIL AEB functional **PASS**.
 
 ## Target platform
 
@@ -160,7 +161,7 @@ The generated result file on the operator's WSL checkout was:
 edge-path-project/gazebo/results/hil10/hil10_aeb_20261105T070006_b18e73a4.json
 ```
 
-**Evidence retention status:** The result above is supported by operator-supplied terminal output and a field-by-field reading of the local JSON. This documentation update does **not** claim that the raw 2026-11-05 JSON/CSV or the R2100 process logs have been committed. Commit the original unmodified raw results as a separate evidence change; check the CSV filename and hash rather than reconstructing measurements from this summary. The older 2026-11-02 zipapp evidence remains committed and distinct.
+**Evidence retention status:** The original 2026-11-05 HIL JSON **and CSV are now committed** in `edge-path-project/gazebo/results/hil10/` as `hil10_aeb_20261105T070006_b18e73a4.json` and `hil10_aeb_20261105T070006_b18e73a4.csv` (introduced in evidence commit `22e457e`, merged to `main` by PR #44). The R2100 process logs remain on the physical device at `/home/recomputer/hil_test_logs/r2100_hil_20261105T065838Z` and are **not** claimed to be committed. The older 2026-11-02 zipapp evidence remains committed and distinct.
 
 This closes the previously missing **functional runtime demonstration with the CI-built standalone ARM64 executable**; it does not claim the full system would remain safe under PC power loss, physical CAN cable disconnection or bus-off.
 
@@ -178,4 +179,4 @@ The final acceptance demonstrates that:
 - the required UDP ports are available,
 - the target-side HIL preflight passes from the native executable.
 
-This closes the remaining target-compatibility caveat for the executable-before-deployment course requirement. The existing SIL/HIL functional evidence remains separate and is indexed in `VALIDATION.md` and `REQUIREMENTS.md`.
+This closes the target-compatibility requirement and, together with the committed 2026-11-05 full-HIL JSON/CSV, the combined native-executable emergency-braking acceptance step. The existing SIL/HIL functional evidence remains separate and is indexed in `VALIDATION.md` and `REQUIREMENTS.md`.

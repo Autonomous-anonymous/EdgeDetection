@@ -2,7 +2,7 @@
 
 This directory documents the Hardware-in-the-Loop implementation used to extend the Gazebo SIL baseline onto a real embedded controller and physical CAN link.
 
-The embedded platform is a **Seeed Studio reComputer Industrial R2100**. Gazebo Harmonic runs in WSL and provides the virtual vehicles, terrain, LiDAR and odometry. The R2100 receives simulation data over UDP, maps the relevant signals onto physical CAN, executes the AEB decision, and returns the brake state to the simulator.
+On the **CAMINO-only** branch, the repository retains Gazebo SIL and physical R2100 HIL assets, results and validation; earlier unrelated prototype scripts, results and videos are excluded. The embedded platform is a **Seeed Studio reComputer Industrial R2100**. Gazebo Harmonic runs in WSL and provides the virtual vehicles, terrain, LiDAR and odometry. The R2100 receives simulation data over UDP, maps the relevant signals onto physical CAN, executes the AEB decision, and returns the brake state to the simulator.
 
 The current HIL platform is **Ruskotunturi R2100 HIL**. Its validated functional test suite is **HIL-10 Freshness and Fault Validation**. The HIL path also includes hardware-validated **Configurable Signal Mapping**, **Configuration-driven Signal Codec**, **Standalone Native Deployment**, **Deployment Preflight** and **HIL Startup Readiness Diagnostics** work packages.
 
@@ -862,8 +862,7 @@ Only one process should publish Vehicle B commands during a test.
 The repository now contains a verified progression from SIL to embedded HIL:
 
 ```text
-CARLA experiments
- -> Gazebo ADAS SIL
+Gazebo ADAS SIL
  -> Ruskotunturi multi-vehicle SIL
  -> physical CAN HIL
  -> Ruskotunturi hybrid HIL-9
@@ -906,6 +905,9 @@ standalone ARM64 ELF build               : PASS
 Debian 12 ARM64 container check          : PASS
 physical R2100 native check              : PASS
 physical R2100 native preflight          : PASS
+native CI-built full HIL AEB (2026-11-05): PASS / aeb_stop_verified
+native HIL 2026-11-05 clearance         : 1.236 m (minimum 1.0 m)
+native HIL JSON/CSV evidence             : committed
 physical R2100 native architecture       : ARM aarch64 ELF
 physical R2100 native userspace          : Debian 12 / glibc 2.36
 common SIL/HIL emergency-braking         : SIL PASS / HIL PASS

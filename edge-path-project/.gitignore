@@ -1,20 +1,13 @@
-# Python
+# Python and editors
 __pycache__/
 *.pyc
-
-# VS Code
 .vscode/
 
-# Input videos
-videos/*.mp4
-videos/*.avi
-videos/*.mov
-
-# Generated output videos
-output/*.mp4
-output/*.avi
-output/*.mov
-
-# Temporary files
+# Temporary/generated files
 *.tmp
 *.log
+
+# Do not add unrelated local video recordings to CAMINO.
+*.mp4
+*.avi
+*.mov

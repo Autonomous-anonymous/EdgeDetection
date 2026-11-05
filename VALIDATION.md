@@ -1,5 +1,7 @@
 # Validation and documentation index
 
+The **CAMINO branch** intentionally includes Gazebo SIL and R2100 HIL only, with no earlier CARLA scripts, CSV evidence or videos in its checked-out tree.
+
 This file identifies the current SIL/HIL baselines, the role of the different preflight checks, and the evidence that should be used for current reporting.
 
 It is intentionally small and does not replace the detailed Gazebo or HIL guides. Course/project requirement traceability is maintained separately in `REQUIREMENTS.md`.
@@ -340,7 +342,7 @@ This complements the R2100 deployment preflight: the target preflight checks the
 | Common emergency-braking HIL run | PASS / committed raw evidence | `hil10_aeb_20261102T102033_e21c05af.json/.csv`; R2100 and physical-CAN AEB path exercised. |
 | Command-watchdog state tests | 5 / 5 PASS | Arming, freshness, timeout latch, invalid timeout and unarmed behaviour. |
 | HIL runner `SIGKILL` fail-safe | PASS / committed raw evidence | `hil_process_termination_20261102T115256Z.json`; watchdog zero at 0.261 s after SIGKILL, 17 stop samples, source clean. |
-| Standalone ARM64 deployment and native functional AEB | PASS / operator-verified; raw 2026-11-05 JSON/CSV pending commit | Physical R2100: Debian 12 ARM64 CI executable, artifact SHA-256 matched on target, `check`/`preflight`/managed runtime PASS, full physical-CAN `emergency_braking` HIL-10 PASS, `aeb_stop_verified`, 1.236 m clearance, 4 stop samples, no fault. See `edge-path-project/hil/NATIVE_DEPLOYMENT_ACCEPTANCE.md`. |
+| Standalone ARM64 deployment and native functional AEB | PASS / committed JSON/CSV on 2026-11-05 | Physical R2100: Debian 12 ARM64 CI executable, artifact SHA-256 matched on target, `check`/`preflight`/managed runtime PASS, full physical-CAN `emergency_braking` HIL-10 PASS, `aeb_stop_verified`, 1.236 m clearance, 4 stop samples, no fault. Committed evidence: `edge-path-project/gazebo/results/hil10/hil10_aeb_20261105T070006_b18e73a4.json/.csv`; see `edge-path-project/hil/NATIVE_DEPLOYMENT_ACCEPTANCE.md`. |
 | Full repository offline suite | 190 / 190 PASS | Current development suite after automatic stage mapping and native deployment work. |
 | GitHub Actions offline validation | PASS | Full offline suite plus standalone deployment build/configuration check and deployment regression tests. |
 | Fresh-checkout R2100 acceptance | PASS | Historical zipapp baseline: clean checkout -> build -> deploy -> preflight -> managed runtime -> physical-CAN route; `route_complete`. |

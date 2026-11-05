@@ -1,375 +1,179 @@
-# Autonomous Vehicle SIL-to-HIL Testing
+# CAMINO — Gazebo SIL and R2100 Hardware-in-the-Loop
 
-This repository documents a staged autonomous-vehicle development and validation workflow using **CARLA**, **Gazebo Harmonic**, and a real embedded **Seeed Studio reComputer Industrial R2100** connected through physical CAN.
+This `camino` branch is a focused, runnable delivery of the **CAMINO Software-in-the-Loop (SIL) → Hardware-in-the-Loop (HIL)** workflow. It contains **Gazebo Harmonic** vehicle simulations, Ruskotunturi worlds and models, scenario runners, recorded SIL/HIL evidence, and the **Seeed Studio reComputer Industrial R2100** controller with physical CAN.
 
-The project progresses from perception and ADAS experiments to off-road multi-vehicle Software-in-the-Loop (SIL) validation and Hardware-in-the-Loop (HIL) execution in the Ruskotunturi environment.
+This branch intentionally excludes the earlier CARLA prototype, its standalone scripts and CSV results, and its input/output videos. Those assets remain on the original repository branches. Gazebo result CSV/JSON/trace files are retained as SIL/HIL evidence, including historical failed/diagnostic runs identified as such.
 
-## Current reference points
+## Project scope and current baselines
 
-- **Gazebo SIL baseline:** v6.4 multi-vehicle Ruskotunturi demo
-- **HIL platform:** Ruskotunturi R2100 HIL
-- **Historical functional validation suite:** HIL-10 Freshness and Fault Validation
-- **Common SIL/HIL scenario:** `emergency_braking`
-- **Independent HIL command watchdog:** process-termination fail-safe validated
-- **SIL/HIL AEB threshold consistency:** 5 / 5 PASS
-- **Standalone R2100 executable:** native ARM64 ELF, physical-target `check` + `preflight` PASS
-- **Verified baseline tag:** `r2100-hil-verified-2026-11-02`
-- **Development branch:** `hil-development`
-- **Current offline repository suite:** 190 / 190 PASS
+| Area | Current implementation and evidence |
+| --- | --- |
+| Gazebo SIL | Ruskotunturi final two-vehicle **v6.4** demo: **PASS**, `final_demo_complete` |
+| Obstacle handling in SIL | Camera/LiDAR static avoidance, moving-obstacle hold-and-resume, merge coordination and loading-zone arrival |
+| Shared SIL/HIL AEB | One `emergency_braking` scenario and target-selecting runner; SIL and HIL **PASS** |
+| R2100 physical HIL | Perception → physical CAN → embedded AEB → returned brake state |
+| Native embedded release | Debian 12 ARM64 CI-built ELF, verified hashes and physical R2100 `check` / `preflight` / runtime startup |
+| Native functional acceptance | **2026-11-05 PASS:** `aeb_stop_verified`, `ttc_threshold`, 1.236 m clearance, four stop-confirmation samples, no fault |
+| Regression coverage | 190/190 offline Python tests previously PASS; CI also checks ARM64 packaging and deployment design |
+| Boundary | **SIL → HIL only**; VIL is not implemented or claimed |
 
-Detailed documentation:
+The final SIL demo's moving obstacle is managed by **path-clearance-based LiDAR hold/resume**; it does not use the shared scenario's TTC-based AEB policy for that moving obstacle. The TTC-based emergency brake is demonstrated by the separate shared `emergency_braking` scenario.
 
-- [Gazebo SIL guide](edge-path-project/gazebo/README.md)
-- [R2100 HIL guide](edge-path-project/hil/README.md)
-- [Native R2100 executable acceptance](edge-path-project/hil/NATIVE_DEPLOYMENT_ACCEPTANCE.md)
-- [Validation and evidence index](VALIDATION.md)
-
-## Project goals
-
-The project provides a reproducible staged workflow for autonomous-vehicle function development:
-
-1. develop ADAS and navigation logic in simulation,
-2. validate perception and safety functions independently,
-3. integrate navigation, obstacle handling and multi-vehicle coordination,
-4. record repeatable PASS / FAIL evidence,
-5. move selected safety functions onto real embedded hardware,
-6. preserve scenario and signal semantics across SIL and HIL where practical.
-
-Earlier CARLA, Gazebo and HIL stages are retained intentionally as development evidence rather than treated as disposable code.
-
-## Development stages
-
-### 1. CARLA perception and AEB
-
-The first stage used CARLA for basic virtual-vehicle and ADAS development, including RGB camera processing, edge detection/path prediction, static-obstacle AEB, TTC tests, moving-obstacle experiments, route navigation and early multi-vehicle coordination.
-
-The main CARLA files are under:
+## Repository layout
 
 ```text
-edge-path-project/
-edge-path-project/aeb_sil/
-```
-
-### 2. Gazebo ADAS development
-
-The workflow was ported to Gazebo Harmonic and expanded with:
-
-- Automatic Emergency Braking,
-- TTC-based collision handling,
-- LiDAR obstacle avoidance,
-- 360-degree LiDAR safety monitoring,
-- RGB camera input and camera + LiDAR fusion work,
-- automated PASS / FAIL checks,
-- CSV result logging.
-
-Gazebo files are organised as:
-
-```text
-edge-path-project/gazebo/
-├── models/
-├── scenarios/
-├── scripts/
-├── worlds/
-└── results/
-```
-
-### 3. Ruskotunturi off-road SIL
-
-The current committed SIL baseline is **v6.4**. It demonstrates a two-vehicle Ruskotunturi mission with static-obstacle avoidance, moving-obstacle interaction, camera-assisted control, coordination and a common loading-zone objective.
-
-Primary committed evidence:
-
-```text
-edge-path-project/gazebo/results/ruskotunturi_final_sil_demo_v6_4_results.csv
-edge-path-project/gazebo/results/final_sil_v6_4_trace_20261026T133025_782767.csv
-```
-
-The v6.4 result records `PASS` with `end_reason=final_demo_complete` and no failed checks.
-
-See the [Gazebo SIL guide](edge-path-project/gazebo/README.md) for architecture, validation details and startup instructions.
-
-### 4. Ruskotunturi R2100 HIL
-
-The HIL phase moves the longitudinal AEB safety path onto a real reComputer Industrial R2100 while Gazebo continues to provide the virtual world and vehicle dynamics.
-
-The current bench architecture is:
-
-```text
-Gazebo Vehicle B LiDAR
-        |
-        v
-UDP LiDAR transport
-        |
-        v
-R2100 LiDAR perception
-        |
-physical CAN
-        |
-R2100 AEB controller
-        |
-physical CAN
-        |
-R2100 CAN gateway
-        |
-        v
-UDP brake state
-        |
-        v
-Gazebo Vehicle B brake override
-```
-
-Vehicle speed also travels from Gazebo to the R2100 gateway and onto physical CAN. The bench uses classic 11-bit CAN at **500 kbit/s** with CAN0 and CAN1 physically connected.
-
-Vehicle B retains SIL route steering while its longitudinal AEB decision is evaluated on the R2100. The current embedded AEB safety path is LiDAR-based; camera + LiDAR fusion is demonstrated on the SIL side rather than claimed as part of the current embedded HIL decision path.
-
-### 5. Common SIL/HIL emergency-braking scenario
-
-The repository includes one shared staged scenario definition:
-
-```text
-edge-path-project/gazebo/scenarios/emergency_braking.json
-```
-
-It uses the same Gazebo world, Vehicle B route, static obstacle and acceptance criteria for both targets. The target-selecting runner is:
-
-```text
-edge-path-project/gazebo/scripts/run_staged_scenario.py
-```
-
-The shared acceptance criteria require the vehicle to move before braking, use a valid AEB reason (`emergency_distance` or `ttc_threshold`), stop below 0.05 m/s for three confirmation samples and retain at least 1.00 m ground-truth clearance.
-
-With the world running, the SIL target is selected with:
-
-```bash
-python3 edge-path-project/gazebo/scripts/run_staged_scenario.py \
-  --scenario emergency_braking \
-  --target sil
-```
-
-With the same world and the R2100 HIL runtime ready, the HIL target is selected with:
-
-```bash
-python3 edge-path-project/gazebo/scripts/run_staged_scenario.py \
-  --scenario emergency_braking \
-  --target hil \
-  --r2100-host <R2100_IP>
-```
-
-Both targets passed on 2026-11-02 with `end_reason=aeb_stop_verified` and AEB reason `ttc_threshold`. The SIL run stopped with 1.253 m ground-truth clearance. The HIL run exercised raw Gazebo LiDAR transport, R2100 perception, physical CAN, the embedded AEB controller and the returned brake state before stopping successfully.
-
-The successful HIL run now has committed raw evidence:
-
-```text
-edge-path-project/gazebo/results/hil10/hil10_aeb_20261102T102033_e21c05af.json
-edge-path-project/gazebo/results/hil10/hil10_aeb_20261102T102033_e21c05af.csv
-```
-
-The common runner selects and validates the target-specific backend but intentionally does not yet launch Gazebo or start the R2100 runtime itself; those lifecycle steps remain explicit.
-
-### 6. Independent HIL process-termination fail-safe
-
-An independent WSL-side command watchdog protects Vehicle B against loss of the HIL command-producing process:
-
-```text
-edge-path-project/gazebo/scripts/hil_command_watchdog.py
-edge-path-project/gazebo/scripts/hil_process_termination_test.py
-```
-
-The watchdog arms only after it has observed the normal Vehicle B command stream. If command updates then stop for 0.30 s, it latches a fail-safe STOP and continuously publishes zero speed and steering commands. The latch is not automatically released during the same watchdog run.
-
-The automated process-termination harness starts the watchdog and HIL route runner, waits until Vehicle B is moving, kills the HIL runner with `SIGKILL`, verifies that the watchdog publishes a post-kill zero command, and verifies the physical simulated vehicle stop from new odometry measurements.
-
-The final committed 2026-11-02 evidence run produced:
-
-```text
-Vehicle B before fault        0.850 m/s
-HIL runner termination        SIGKILL
-watchdog STOP latency         0.261 s after SIGKILL
-final observed speed          ~0.000 m/s
-stop confirmation samples     17
-stop-and-hold verification    1.616 s after SIGKILL
-source commit                 269a1c4feb5ce91a5174f25243f21be71cce959f
-source dirty                  false
-result                        PASS
-```
-
-The committed machine-readable result is:
-
-```text
-edge-path-project/gazebo/results/hil10/hil_process_termination_20261102T115256Z.json
-```
-
-This is stronger than a normal controller cleanup test because `SIGKILL` prevents the killed HIL runner from executing its own final STOP cleanup. The independent watchdog therefore provides the post-failure Vehicle B command that is explicitly verified by the test harness.
-
-With the Phase 6 Gazebo world running and the R2100 runtime ready, the automated test is:
-
-```bash
-python3 -u edge-path-project/gazebo/scripts/hil_process_termination_test.py \
-  --r2100-host <R2100_IP>
-```
-
-### 7. SIL/HIL AEB threshold consistency
-
-The SIL emergency-braking backend and the embedded R2100 AEB controller keep separate runtime constants so the validated embedded runtime does not depend on Gazebo code. A regression test now prevents those copies from drifting silently:
-
-```text
-tests/test_aeb_threshold_consistency.py
-```
-
-It verifies equality of the TTC threshold, emergency distance, sensor timeout, control period and minimum TTC speed. The dedicated result is **5 / 5 PASS**.
-
-## HIL validation progression
-
-### HIL-9 development history
-
-HIL-9 established the Ruskotunturi hybrid architecture:
-
-| Stage | Purpose | Result |
-| --- | --- | --- |
-| HIL-9A | Ruskotunturi Phase 6 SIL baseline | PASS |
-| HIL-9B | Vehicle B raw LiDAR to R2100 perception | PASS |
-| HIL-9C | Vehicle B route with R2100 longitudinal AEB | PASS |
-| HIL-9D | Full hybrid two-vehicle mission | PASS |
-| HIL-9E | Intentional end-to-end R2100 AEB intervention | PASS |
-
-HIL-9 remains useful development history, but it is not the current HIL reference point.
-
-### HIL-10 Freshness and Fault Validation
-
-HIL-10 added explicit freshness and fail-safe validation for odometry, returned brake state and LiDAR-related sensor timeout behaviour. The focused HIL-10 offline suite passed **42 / 42**, and all six planned hardware scenarios passed.
-
-Later R2100 HIL work packages added:
-
-- configurable signal mapping,
-- configuration-driven scalar signal codecs,
-- standalone native ARM64 executable deployment,
-- R2100 deployment preflight and fail-closed startup,
-- WSL-side HIL startup-readiness diagnostics,
-- a common SIL/HIL emergency-braking scenario and target-selecting runner,
-- an independent HIL command watchdog with automated `SIGKILL` process-termination validation,
-- SIL/HIL AEB threshold-consistency regression coverage.
-
-The current full offline repository suite passes:
-
-```text
-Ran 190 tests
-OK
-```
-
-See [VALIDATION.md](VALIDATION.md) for the current evidence catalogue and the distinction between historical and current preflight checks.
-
-## CAN and signal configuration
-
-The default HIL signal set is:
-
-```text
-0x100 VEHICLE_SPEED
-0x101 OBSTACLE_DISTANCE
-0x200 BRAKE_COMMAND
-```
-
-CAN IDs, interfaces and scalar scaling are no longer treated as fixed runtime constants. The R2100 runtime loads shared JSON signal-mapping profiles, and alternate CAN-ID and alternate-scaling profiles have been validated on the physical CAN bench.
-
-`OBSTACLE_DISTANCE` represents physical vehicle-body clearance in the current Ruskotunturi HIL perception path.
-
-## Deployment
-
-The current R2100 runtime is built before transfer as a standalone Linux ELF executable using PyInstaller, with external configuration and managed deployment scripts. The deployment format does not require the project Python environment on the target.
-
-The ARM64 artifact was built and exercised in a Debian 12 ARM64 environment and then transferred to the physical R2100. On the target, `file` identified it as an `ELF 64-bit LSB executable, ARM aarch64`; both the deployment configuration check and target preflight passed on Debian 12 / glibc 2.36. The detailed acceptance record is [NATIVE_DEPLOYMENT_ACCEPTANCE.md](edge-path-project/hil/NATIVE_DEPLOYMENT_ACCEPTANCE.md).
-
-Typical target control is:
-
-```bash
-~/r2100_hil/current/r2100_hil check
-~/r2100_hil/current/r2100_hil preflight
-~/r2100_hil/current/start_hil.sh
-~/r2100_hil/current/status_hil.sh
-~/r2100_hil/current/stop_hil.sh
-```
-
-## Repository structure
-
-```text
-EdgeDetection/
-├── README.md
-├── VALIDATION.md
-├── tests/
+.
+├── README.md                         # CAMINO scope and quick start
+├── REQUIREMENTS.md                   # CAMINO/course requirements traceability
+├── VALIDATION.md                     # Evidence catalogue and test history
+├── .github/workflows/                # Offline and Debian 12 ARM64 CI
+├── tests/                            # SIL, HIL, mapping and deployment tests
 └── edge-path-project/
-    ├── aeb_sil/                 # CARLA SIL controllers and scenarios
-    ├── results/                 # CARLA / early SIL evidence
     ├── gazebo/
-    │   ├── README.md            # Current Gazebo SIL guide
-    │   ├── models/
-    │   ├── scenarios/           # Shared staged SIL/HIL scenario definitions
-    │   ├── scripts/
-    │   ├── worlds/
-    │   └── results/
+    │   ├── README.md                 # Final SIL architecture and instructions
+    │   ├── models/                   # Vehicles and Ruskotunturi terrain
+    │   ├── worlds/                   # Gazebo SIL/HIL scenarios
+    │   ├── scenarios/                # Shared emergency-braking definition
+    │   ├── scripts/                  # Gazebo simulations and HIL runners
+    │   └── results/                  # Versioned Gazebo SIL/HIL evidence
     └── hil/
-        ├── README.md            # Detailed R2100 HIL guide
+        ├── README.md                 # R2100 physical-CAN HIL and deployment
         ├── NATIVE_DEPLOYMENT_ACCEPTANCE.md
-        ├── config/
-        ├── deployment/
+        ├── config/                    # CAN/sensor mapping profiles
+        ├── deployment/                # Native build and managed runtime scripts
         ├── signal_mapping.py
         ├── signal_codec.py
-        ├── r2100_preflight.py
-        ├── r2100_can_gateway.py
         ├── r2100_lidar_perception.py
+        ├── r2100_can_gateway.py
         └── r2100_aeb_controller.py
 ```
 
-## Running current validation
+## Prerequisites
 
-The full offline suite includes a standalone-executable build test and therefore requires the pinned **PyInstaller** build dependency. From the repository root in WSL, use a dedicated virtual environment:
+- Linux/WSL Ubuntu with **Gazebo Harmonic** and its Python `gz` transport/message bindings available to the Python interpreter used for simulation.
+- Python for controller scripts and offline tests. The complete offline suite also requires the pinned **PyInstaller** build dependency.
+- **For physical HIL only:** network access to the R2100, a Debian 12 ARM64 standalone release, CAN0/CAN1 physical wiring and the expected 500 kbit/s CAN configuration.
+- Keep the Gazebo and R2100 runtime sessions separate; do not run multiple controllers publishing to the same Gazebo topics.
+
+The standalone R2100 executable does **not** require the development Python virtual environment on the embedded device. Build it in Debian 12 **ARM64** (as in GitHub Actions), not in x86-64 WSL. The CI release contains a provenance file recording its source commit and artifact SHA-256 digests.
+
+## Run the final Gazebo SIL v6.4 demo
+
+From **WSL terminal 1** (with the system Python/Gazebo environment):
 
 ```bash
+cd ~/edge-path-project-git
+export GZ_SIM_RESOURCE_PATH="$PWD/edge-path-project/gazebo/models${GZ_SIM_RESOURCE_PATH:+:$GZ_SIM_RESOURCE_PATH}"
+gz sim -r edge-path-project/gazebo/worlds/ruskotunturi_final_sil_demo_v6_world.sdf
+```
+
+From **WSL terminal 2**:
+
+```bash
+cd ~/edge-path-project-git
+python3 edge-path-project/gazebo/scripts/ruskotunturi_final_sil_demo_v6.py
+```
+
+Start with a fresh Gazebo world each run; do not use the world reset feature while a prior controller or watchdog is still active. Consult the [Gazebo SIL guide](edge-path-project/gazebo/README.md) for state-machine behaviour, metrics and reset limitations.
+
+**Committed SIL v6.4 PASS evidence:**
+
+- [Final result CSV](edge-path-project/gazebo/results/ruskotunturi_final_sil_demo_v6_4_results.csv)
+- [Matching trace](edge-path-project/gazebo/results/final_sil_v6_4_trace_20261026T133025_782767.csv)
+
+## Run the shared emergency-braking SIL/HIL scenario
+
+Use the **dedicated** AEB world for both targets (not the two-vehicle final SIL world).
+
+**WSL terminal 1:**
+
+```bash
+cd ~/edge-path-project-git
+export GZ_SIM_RESOURCE_PATH="$PWD/edge-path-project/gazebo/models${GZ_SIM_RESOURCE_PATH:+:$GZ_SIM_RESOURCE_PATH}"
+gz sim -r edge-path-project/gazebo/worlds/ruskotunturi_hil9e_aeb_world.sdf
+```
+
+**WSL terminal 2, SIL target:**
+
+```bash
+cd ~/edge-path-project-git
+python3 -u edge-path-project/gazebo/scripts/run_staged_scenario.py \
+  --scenario emergency_braking --target sil
+```
+
+**WSL terminal 2, physical HIL target (instead of SIL):** First start the verified R2100 managed runtime from its deployed **ARM64 release**. Then run:
+
+```bash
+cd ~/edge-path-project-git
+python3 -u edge-path-project/gazebo/scripts/run_staged_scenario.py \
+  --scenario emergency_braking --target hil --r2100-host <R2100_IP>
+```
+
+The R2100 host is whichever **reachable IP or hostname** your laptop uses for UDP transport. It is not hard-coded in the staged runner. The HIL data channels use UDP **15010** (raw LiDAR) and **15000** (brake/gateway); SSH credentials and SSH port are separate. Do not commit passwords or site-specific access credentials.
+
+**The common AEB acceptance criteria:** the vehicle must move before braking; intervention reason is `ttc_threshold` or `emergency_distance`; final speed ≤0.05 m/s with at least three independent stop samples; ground-truth clearance ≥1.0 m.
+
+The native full-HIL acceptance on **2026-11-05** reported `HIL-10 RESULT: PASS`, `aeb_stop_verified`, `ttc_threshold`, final speed ≈0, **1.2356799457994787 m** clearance, four stop samples and `fault=null`.
+
+**Committed native AEB evidence:**
+
+- [2026-11-05 result JSON](edge-path-project/gazebo/results/hil10/hil10_aeb_20261105T070006_b18e73a4.json)
+- [2026-11-05 trace CSV](edge-path-project/gazebo/results/hil10/hil10_aeb_20261105T070006_b18e73a4.csv)
+- [Native release hash/target acceptance](edge-path-project/hil/NATIVE_DEPLOYMENT_ACCEPTANCE.md)
+
+## R2100 hardware and native deployment
+
+```text
+Gazebo Vehicle B LiDAR + speed
+          │ UDP
+          v
+R2100 LiDAR perception / CAN gateway
+          │ physical CAN0 ↔ CAN1 (500 kbit/s)
+          v
+R2100 TTC / emergency-distance AEB controller
+          │ CAN brake + UDP return
+          v
+Gazebo Vehicle B braking response
+```
+
+Default signal IDs: `0x100` vehicle speed, `0x101` obstacle distance, `0x200` brake command. Stage-specific SIL/HIL signal configuration is generated from the shared semantic interface; the R2100 supports mapping profiles and codecs.
+
+On the device, use the control scripts **in the specific deployed native release directory** after checking that it contains `r2100_hil`:
+
+```bash
+cd ~/r2100_hil/releases/<NATIVE_RELEASE>
+./r2100_hil check
+./r2100_hil preflight
+./start_hil.sh
+./status_hil.sh
+# After testing:
+./stop_hil.sh
+```
+
+The earlier `~/r2100_hil/current` symlink may point to an older deployment: do **not** assume it points to the CI-built native executable. See the [R2100 HIL guide](edge-path-project/hil/README.md) and the [native hardware acceptance](edge-path-project/hil/NATIVE_DEPLOYMENT_ACCEPTANCE.md). The 2026-11-05 accepted release was separately deployed into `~/r2100_hil/releases/r2100_hil_ci_46b51c5_20261105`.
+
+## Offline regression tests and CI
+
+On WSL:
+
+```bash
+cd ~/edge-path-project-git
 python3 -m venv .venv-requirements
 source .venv-requirements/bin/activate
 python -m pip install -r edge-path-project/hil/deployment/requirements-build.txt
 python -m unittest discover -s tests -v
 ```
 
-The expected result is **190 tests / OK**. The environment is for offline validation and packaging; the Gazebo demonstration may require the system Python installation containing the Gazebo `gz` bindings. Building a native executable in WSL produces an x86-64 artifact, **not** the deployable ARM64 R2100 artifact.
+A previously observed full-suite baseline is **190 tests / OK**; the GitHub workflow also runs offline and deployment-design tests and builds/smoke-tests the native executable **inside Debian 12 on ARM64**. The virtual environment used for packaging may not contain Gazebo Python bindings: use the appropriate system Python for Gazebo scenarios.
 
-For the current Gazebo SIL baseline and the shared emergency-braking scenario, follow:
+Results generated by tests can be ignored by Git unless deliberately force-added as acceptance evidence. Prior unsuccessful/diagnostic results are not presented as successful current validation.
 
-```text
-edge-path-project/gazebo/README.md
-```
+## Documentation and scope boundaries
 
-For the current R2100 HIL setup, deployment and HIL-10-based validation workflow, follow:
+- [Gazebo SIL guide](edge-path-project/gazebo/README.md)
+- [R2100 HIL guide](edge-path-project/hil/README.md)
+- [Native ARM64 acceptance and provenance](edge-path-project/hil/NATIVE_DEPLOYMENT_ACCEPTANCE.md)
+- [SIL/HIL results catalogue](VALIDATION.md)
+- [Requirements and acceptance mapping](REQUIREMENTS.md)
 
-```text
-edge-path-project/hil/README.md
-```
-
-The filename `edge-path-project/gazebo/scripts/hil10_preflight.py` is historical. It checks integrity against the original HIL-9-derived dependency snapshot and is **not** the current R2100 readiness check. Current target readiness is checked with the deployed native `r2100_hil preflight`; WSL-side startup conditions are reported by the HIL startup diagnostics.
-
-## Evidence policy
-
-Validation results are retained when they provide useful development or acceptance evidence. Failed or interrupted runs may be kept deliberately as development history and must not be presented as current PASS evidence.
-
-The cross-project evidence catalogue in [VALIDATION.md](VALIDATION.md) identifies the current baseline artifacts and any known evidence gaps.
-
-## Scope boundary
-
-The current deliverable covers the staged **SIL -> HIL** workflow and embedded AEB validation. A Vehicle-in-the-Loop (VIL) stage is **not implemented and is explicitly out of scope for the current project deliverable**. The repository does not claim a completed VIL implementation.
-
-## Current status
-
-**CARLA development:** retained as development history  
-**Gazebo ADAS SIL:** implemented  
-**Ruskotunturi multi-vehicle SIL v6.4:** PASS  
-**R2100 + physical CAN HIL:** implemented and hardware-validated  
-**HIL-10 freshness/fault hardware scenarios:** 6 / 6 PASS  
-**Automatic SIL/HIL signal configuration:** implemented and validated  
-**Standalone ARM64 R2100 executable:** physical-target check + preflight PASS  
-**HIL startup readiness diagnostics:** implemented and validated  
-**Verified R2100 baseline tag:** `r2100-hil-verified-2026-11-02`  
-**Common SIL/HIL emergency-braking scenario:** SIL PASS / HIL PASS  
-**Independent HIL process-termination fail-safe:** PASS  
-**SIL/HIL AEB threshold consistency:** 5 / 5 PASS  
-**Full offline repository suite:** 190 / 190 PASS  
-**VIL stage:** out of scope / not implemented  
-
-The current embedded AEB scope is complete. Remaining work is optional refinement such as unified SIL/HIL result formatting, additional lifecycle automation or a second shared SIL/HIL scenario; full local path planning is not required for the validated scope.
+This is a **Gazebo SIL → physical R2100 HIL** scope, not CARLA or Vehicle-in-the-Loop (VIL). The final SIL demo contains obstacle avoidance and moving-obstacle hold/resume; the standalone shared scenario validates TTC-based emergency braking. The evidence is simulation and HIL test evidence, not a certified safety case. PC power loss, physical CAN disconnection, bus-off and full WSMS/digital-twin capabilities remain outside the demonstrated acceptance.
