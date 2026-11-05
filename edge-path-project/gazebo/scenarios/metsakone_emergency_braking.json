@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "name": "metsakone_emergency_braking",
+  "description": "Experimental LiDAR-only Metsakone SIL AEB; not a validated HIL or common staged scenario.",
+  "world": "edge-path-project/gazebo/worlds/metsakone_aeb_world.sdf",
+  "vehicle": "metsakone",
+  "start": {
+    "x": -8,
+    "y": 36,
+    "yaw": -0.6435011088
+  },
+  "obstacle": {
+    "name": "metsakone_test_obstacle",
+    "x": -3,
+    "y": 32.25,
+    "half_x": 0.75,
+    "half_y": 0.75
+  },
+  "topics": {
+    "cmd_vel": "/model/metsakone/cmd_vel",
+    "odometry": "/model/metsakone/odometry",
+    "lidar": "/model/metsakone/lidar",
+    "pose": "/world/metsakone_aeb_world/pose/info",
+    "front_contacts": "/model/metsakone/contacts/front"
+  },
+  "safety": {
+    "cruise_speed_mps": 0.65,
+    "front_half_angle_deg": 15,
+    "ttc_threshold_s": 1.7,
+    "emergency_distance_m": 0.8,
+    "assumed_braking_deceleration_mps2": 1,
+    "reaction_allowance_s": 0.25,
+    "lidar_to_front_envelope_m": 0.65,
+    "estimated_model_front_reach_m": 2.5,
+    "sensor_timeout_s": 0.75
+  },
+  "acceptance": {
+    "vehicle_must_move_before_braking": true,
+    "minimum_travel_before_braking_m": 0.3,
+    "stop_speed_mps": 0.05,
+    "stop_confirm_samples": 3,
+    "stop_hold_s": 0.75,
+    "required_clearance_m": 1,
+    "maximum_lateral_error_m": 0.8,
+    "trial_timeout_s": 30
+  }
+}
