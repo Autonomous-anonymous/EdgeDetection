@@ -12,15 +12,17 @@ The project progresses from perception and ADAS experiments to off-road multi-ve
 - **Common SIL/HIL scenario:** `emergency_braking`
 - **Independent HIL command watchdog:** process-termination fail-safe validated
 - **SIL/HIL AEB threshold consistency:** 5 / 5 PASS
+- **Standalone R2100 executable:** native ARM64 ELF, physical-target `check` + `preflight` PASS
 - **Verified baseline tag:** `r2100-hil-verified-2026-11-02`
 - **Development branch:** `hil-development`
-- **Current offline repository suite:** 168 / 168 PASS (2026-11-02)
+- **Current offline repository suite:** 190 / 190 PASS
 
 Detailed documentation:
 
 - [Gazebo SIL guide](edge-path-project/gazebo/README.md)
-- [Short two-vehicle Gazebo pitch with optional live R2100/CAN](edge-path-project/gazebo/PITCH_DEMO.md)
+- [Short two-vehicle pitch and CAN rehearsal](edge-path-project/gazebo/PITCH_DEMO.md)
 - [R2100 HIL guide](edge-path-project/hil/README.md)
+- [Native R2100 executable acceptance](edge-path-project/hil/NATIVE_DEPLOYMENT_ACCEPTANCE.md)
 - [Validation and evidence index](VALIDATION.md)
 
 ## Project goals
@@ -241,7 +243,7 @@ Later R2100 HIL work packages added:
 
 - configurable signal mapping,
 - configuration-driven scalar signal codecs,
-- repeatable embedded zipapp deployment,
+- standalone native ARM64 executable deployment,
 - R2100 deployment preflight and fail-closed startup,
 - WSL-side HIL startup-readiness diagnostics,
 - a common SIL/HIL emergency-braking scenario and target-selecting runner,
@@ -251,7 +253,7 @@ Later R2100 HIL work packages added:
 The current full offline repository suite passes:
 
 ```text
-Ran 168 tests
+Ran 190 tests
 OK
 ```
 
@@ -273,14 +275,15 @@ CAN IDs, interfaces and scalar scaling are no longer treated as fixed runtime co
 
 ## Deployment
 
-The current R2100 runtime is built as a Python zipapp plus external configuration and control scripts. It supports versioned SSH/SCP deployment, configuration validation, target-side preflight, managed start/status/stop operation and rollback.
+The current R2100 runtime is built before transfer as a standalone Linux ELF executable using PyInstaller, with external configuration and managed deployment scripts. The deployment format does not require the project Python environment on the target.
 
-The deployed runtime intentionally requires `python3` on the R2100; the project does not currently claim a Python-free native executable.
+The ARM64 artifact was built and exercised in a Debian 12 ARM64 environment and then transferred to the physical R2100. On the target, `file` identified it as an `ELF 64-bit LSB executable, ARM aarch64`; both the deployment configuration check and target preflight passed on Debian 12 / glibc 2.36. The detailed acceptance record is [NATIVE_DEPLOYMENT_ACCEPTANCE.md](edge-path-project/hil/NATIVE_DEPLOYMENT_ACCEPTANCE.md).
 
 Typical target control is:
 
 ```bash
-~/r2100_hil/current/r2100_hil.pyz preflight
+~/r2100_hil/current/r2100_hil check
+~/r2100_hil/current/r2100_hil preflight
 ~/r2100_hil/current/start_hil.sh
 ~/r2100_hil/current/status_hil.sh
 ~/r2100_hil/current/stop_hil.sh
@@ -305,6 +308,7 @@ EdgeDetection/
     │   └── results/
     └── hil/
         ├── README.md            # Detailed R2100 HIL guide
+        ├── NATIVE_DEPLOYMENT_ACCEPTANCE.md
         ├── config/
         ├── deployment/
         ├── signal_mapping.py
@@ -335,7 +339,7 @@ For the current R2100 HIL setup, deployment and HIL-10-based validation workflow
 edge-path-project/hil/README.md
 ```
 
-The filename `edge-path-project/gazebo/scripts/hil10_preflight.py` is historical. It checks integrity against the original HIL-9-derived dependency snapshot and is **not** the current R2100 readiness check. Current target readiness is checked with the deployed `r2100_hil.pyz preflight`; WSL-side startup conditions are reported by the HIL startup diagnostics.
+The filename `edge-path-project/gazebo/scripts/hil10_preflight.py` is historical. It checks integrity against the original HIL-9-derived dependency snapshot and is **not** the current R2100 readiness check. Current target readiness is checked with the deployed native `r2100_hil preflight`; WSL-side startup conditions are reported by the HIL startup diagnostics.
 
 ## Evidence policy
 
@@ -354,13 +358,14 @@ The current deliverable covers the staged **SIL -> HIL** workflow and embedded A
 **Ruskotunturi multi-vehicle SIL v6.4:** PASS  
 **R2100 + physical CAN HIL:** implemented and hardware-validated  
 **HIL-10 freshness/fault hardware scenarios:** 6 / 6 PASS  
-**Configurable mapping / codec / deployment / preflight:** implemented and validated  
+**Automatic SIL/HIL signal configuration:** implemented and validated  
+**Standalone ARM64 R2100 executable:** physical-target check + preflight PASS  
 **HIL startup readiness diagnostics:** implemented and validated  
 **Verified R2100 baseline tag:** `r2100-hil-verified-2026-11-02`  
 **Common SIL/HIL emergency-braking scenario:** SIL PASS / HIL PASS  
 **Independent HIL process-termination fail-safe:** PASS  
 **SIL/HIL AEB threshold consistency:** 5 / 5 PASS  
-**Full offline repository suite:** 168 / 168 PASS  
+**Full offline repository suite:** 190 / 190 PASS  
 **VIL stage:** out of scope / not implemented  
 
 The current embedded AEB scope is complete. Remaining work is optional refinement such as unified SIL/HIL result formatting, additional lifecycle automation or a second shared SIL/HIL scenario; full local path planning is not required for the validated scope.
