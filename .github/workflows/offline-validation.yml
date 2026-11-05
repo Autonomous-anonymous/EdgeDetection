@@ -45,22 +45,36 @@ jobs:
           python -m unittest discover -s tests -p 'test_embedded_deployment.py' -v
 
   r2100-native-arm64:
+    # Build for the R2100's Debian 12 / glibc 2.36 userspace, not the
+    # newer glibc of the GitHub-hosted Ubuntu ARM64 runner.
     runs-on: ubuntu-24.04-arm
     steps:
       - name: Check out repository
         uses: actions/checkout@v7
-      - name: Set up Python
+      - name: Set up Python for manifest verification
         uses: actions/setup-python@v7
         with:
           python-version: '3.12'
-      - name: Install standalone build dependency
-        run: python -m pip install -r edge-path-project/hil/deployment/requirements-build.txt
-      - name: Build ARM64 standalone R2100 package
-        run: python edge-path-project/hil/deployment/build_r2100_hil.py
-      - name: Smoke-test standalone executable
+      - name: Build and smoke-test native ARM64 package in Debian 12
         run: |
-          edge-path-project/hil/dist/r2100_hil/r2100_hil --help
-          edge-path-project/hil/dist/r2100_hil/r2100_hil check
+          docker run --rm --platform linux/arm64 \
+            -v "$PWD:/workspace" \
+            -w /workspace \
+            debian:12 bash -euc '
+              export DEBIAN_FRONTEND=noninteractive
+              apt-get update
+              apt-get install -y --no-install-recommends \
+                python3 python3-venv python3-pip libpython3.11 gcc binutils libc6-dev file
+              python3 -m venv /tmp/r2100-build-venv
+              /tmp/r2100-build-venv/bin/python -m pip install \
+                -r edge-path-project/hil/deployment/requirements-build.txt
+              /tmp/r2100-build-venv/bin/python \
+                edge-path-project/hil/deployment/build_r2100_hil.py
+              getconf GNU_LIBC_VERSION
+              file edge-path-project/hil/dist/r2100_hil/r2100_hil
+              ./edge-path-project/hil/dist/r2100_hil/r2100_hil --help
+              ./edge-path-project/hil/dist/r2100_hil/r2100_hil check
+            '
       - name: Verify ARM64/Python-free manifest
         run: |
           python - <<'PY'
@@ -70,13 +84,32 @@ jobs:
           assert manifest['format'] == 'standalone-linux-executable'
           assert manifest['architecture'] == 'aarch64'
           assert manifest['python_requirement'] is None
-          print('ARM64 standalone manifest: PASS')
+          print('Debian 12 ARM64 standalone manifest: PASS')
           PY
-      - name: Pack deployment artifact
-        run: tar -C edge-path-project/hil/dist -czf r2100_hil-aarch64.tar.gz r2100_hil
-      - name: Upload ARM64 deployment artifact
+      - name: Record source commit and artifact SHA-256
+        shell: bash
+        run: |
+          set -euo pipefail
+          binary=edge-path-project/hil/dist/r2100_hil/r2100_hil
+          manifest=edge-path-project/hil/dist/r2100_hil/manifest.json
+          {
+            printf 'source_commit=%s\n' "$(git rev-parse HEAD)"
+            printf 'builder_image=debian:12\n'
+            printf 'architecture=aarch64\n'
+            printf 'binary_sha256=%s\n' "$(sha256sum "$binary" | cut -d ' ' -f1)"
+            printf 'manifest_sha256=%s\n' "$(sha256sum "$manifest" | cut -d ' ' -f1)"
+          } > r2100-hil-aarch64.provenance.txt
+      - name: Pack deployment artifact and record archive hash
+        shell: bash
+        run: |
+          tar -C edge-path-project/hil/dist -czf r2100_hil-aarch64.tar.gz r2100_hil
+          printf 'archive_sha256=%s\n' "$(sha256sum r2100_hil-aarch64.tar.gz | cut -d ' ' -f1)" >> r2100-hil-aarch64.provenance.txt
+          cat r2100-hil-aarch64.provenance.txt
+      - name: Upload ARM64 deployment and provenance
         uses: actions/upload-artifact@v4
         with:
           name: r2100-hil-aarch64
-          path: r2100_hil-aarch64.tar.gz
+          path: |
+            r2100_hil-aarch64.tar.gz
+            r2100-hil-aarch64.provenance.txt
           if-no-files-found: error

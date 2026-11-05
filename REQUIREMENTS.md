@@ -21,9 +21,10 @@ The purpose of this map is traceability: each objective is linked to the current
 
 ## Current verification baseline
 
-Run the complete offline suite from the repository root:
+Run the complete offline suite from the repository root after installing the pinned standalone-build dependency (preferably in a virtual environment; see the root `README.md`):
 
 ```bash
+python3 -m pip install -r edge-path-project/hil/deployment/requirements-build.txt
 python3 -m unittest discover -s tests -v
 ```
 
@@ -48,7 +49,7 @@ Ran 190 tests
 OK
 ```
 
-The GitHub Actions workflow `.github/workflows/offline-validation.yml` runs the offline suite on Python 3.13 and independently builds and validates the R2100 deployment package, including native ARM64 deployment validation.
+The GitHub Actions workflow `.github/workflows/offline-validation.yml` runs the offline suite on Python 3.12 and independently builds and validates the R2100 deployment package, including native ARM64 deployment validation.
 
 The earlier clean checkout also completed:
 

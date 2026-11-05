@@ -44,11 +44,17 @@ Ran 190 tests
 OK
 ```
 
-Run the current offline suite from the repository root with:
+The full offline suite includes `test_embedded_deployment.py`, which builds a standalone executable with PyInstaller. Install the pinned build dependency in a virtual environment **before** running the suite (this was necessary for the successful local 190-test run on 2026-11-03):
 
 ```bash
-python3 -m unittest discover -s tests -v
+cd ~/edge-path-project-git
+python3 -m venv .venv-requirements
+source .venv-requirements/bin/activate
+python -m pip install -r edge-path-project/hil/deployment/requirements-build.txt
+python -m unittest discover -s tests -v
 ```
+
+A missing PyInstaller installation causes the deployment test class to fail at setup, so the test suite is offline at execution time but **not** standard-library-only for initial environment provisioning. If a previous Docker build left root-owned generated files under `edge-path-project/hil/dist/`, fix their ownership before rerunning the native build test. The CI workflow provisions PyInstaller explicitly.
 
 The same command is part of `.github/workflows/offline-validation.yml`. The workflow also builds and validates the standalone R2100 deployment package and runs the deployment regression tests.
 

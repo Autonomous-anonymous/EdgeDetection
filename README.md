@@ -320,11 +320,16 @@ EdgeDetection/
 
 ## Running current validation
 
-Run the complete offline repository suite from the repository root:
+The full offline suite includes a standalone-executable build test and therefore requires the pinned **PyInstaller** build dependency. From the repository root in WSL, use a dedicated virtual environment:
 
 ```bash
-python3 -m unittest discover -s tests -v
+python3 -m venv .venv-requirements
+source .venv-requirements/bin/activate
+python -m pip install -r edge-path-project/hil/deployment/requirements-build.txt
+python -m unittest discover -s tests -v
 ```
+
+The expected result is **190 tests / OK**. The environment is for offline validation and packaging; the Gazebo demonstration may require the system Python installation containing the Gazebo `gz` bindings. Building a native executable in WSL produces an x86-64 artifact, **not** the deployable ARM64 R2100 artifact.
 
 For the current Gazebo SIL baseline and the shared emergency-braking scenario, follow:
 
