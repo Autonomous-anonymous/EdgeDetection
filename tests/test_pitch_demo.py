@@ -17,6 +17,7 @@ from test_hil10_integration import Publisher, Twist
 from test_hil10_safety import Clock, FakeSocket, brake
 from hil10_safety import OdometryMonitor
 from run_pitch_demo import BASE_WORLD, GAZEBO, arguments, make_world
+from pitch_obstacles import ObstacleObservation
 
 
 def load_controller():
@@ -88,6 +89,7 @@ class SceneTests(unittest.TestCase):
         d.passed_barrier = d.b_waited = d.b_resumed = False
         d.b_released = d.b_waiting = False
         d.shared_entry = d.shared_travel = None
+        d.obstacles = {"a": ObstacleObservation(), "b": ObstacleObservation()}
 
     def replay_row(self, row, allow_stop=True, allow_resume=True):
         d = self.demo
@@ -192,6 +194,8 @@ class CommandGateTests(unittest.TestCase):
         d.motion_wall = pitch.time.monotonic()
         d.passed_barrier = d.b_resumed = False
         d.shared_travel = None
+        d.odometry_pause_start = None
+        d.odometry_failure = None
         d.observe = Mock()
         d.pub_a, d.pub_b = Publisher(), Publisher()
 
@@ -256,6 +260,10 @@ class FinalStopTests(unittest.TestCase):
         d.safety_ok = lambda: True
         d.end_reason, d.trace_path = "pitch_complete", "pitch_sil_test.csv"
         d.events, d.panel = {}, Mock()
+        d.a_stationary_evidence = dict(stationary_seconds=2.1, stationary_scans=22)
+        d.obstacles = {"a": ObstacleObservation(), "b": ObstacleObservation()}
+        d.odometry_pauses = []
+        d.odometry_failure = None
 
         def new_odometry(dt):
             clock.advance(dt)
@@ -290,3 +298,96 @@ class FinalStopTests(unittest.TestCase):
         passed, report = self.finish(False, elapsed=pitch.LIVE_BUDGET_S)
         self.assertFalse(passed)
         self.assertEqual(report["reason"], "within_live_budget")
+
+
+class StopThenDetourTests(unittest.TestCase):
+    def test_stationary_surface_without_measured_stop_does_not_release_detour(self):
+        d = pitch.PitchDemo.__new__(pitch.PitchDemo)
+        clock = Clock()
+        d.a_odom = OdometryMonitor(clock)
+        d.a_odom.update(.5, (1, 0))
+        d.a = dict(left_range=12, right_range=15)
+        o = ObstacleObservation()
+        o.hold()
+        o.valid, o.stationary_seconds, o.stationary_scans = True, 2.2, 23
+        o.received = pitch.time.monotonic()
+        d.obstacles = {"a": o}
+        d.scene_event = Mock()
+        d.a_stationary_evidence = None
+        with patch.object(pitch.FinalSilDemoLargeArea, "start_a_detour") as start:
+            d.start_a_detour(10)
+            start.assert_not_called()
+            d.a_odom.begin_stop()
+            for i in range(3):
+                clock.advance(.05)
+                d.a_odom.update(0, (2, i))
+            # A static classification alone cannot authorize a blocked side.
+            d.a.update(left_range=3, right_range=4)
+            d.start_a_detour(10)
+            start.assert_not_called()
+            d.a["right_range"] = 15
+            d.start_a_detour(10)
+            start.assert_called_once()
+        self.assertEqual(d.a_stationary_evidence["stationary_scans"], 23)
+
+
+class SilOdometryPauseTests(unittest.TestCase):
+    def setUp(self):
+        self.clock = Clock()
+        d = self.demo = pitch.PitchDemo.__new__(pitch.PitchDemo)
+        d.link = None
+        d.a_odom, d.b_odom = OdometryMonitor(self.clock), OdometryMonitor(self.clock)
+        for monitor in (d.a_odom, d.b_odom):
+            monitor.update(.5, (1, 0))
+        self.clock.advance(.6)
+        d.odometry_pause_start = None
+        d.odometry_pauses = []
+        d.odometry_failure = None
+        d.motion_wall = self.clock() - 10
+        d.obstacles = {"a": ObstacleObservation(), "b": ObstacleObservation()}
+        d.panel = Mock()
+        d.stop_both = Mock()
+        d.lock = threading.Lock()
+        d.watchdog = Mock()
+        d.watchdog.poll.return_value = None
+        d.a = dict(last_pose_time=self.clock(), last_lidar_time=self.clock())
+        d.b = dict(d.a)
+        d.clock_wall = self.clock()
+
+    def pause(self):
+        with patch.object(pitch.time, "monotonic", self.clock):
+            return self.demo.pause_for_sil_odometry()
+
+    def fresh(self, serial, speed=0):
+        self.clock.advance(.05)
+        for monitor in (self.demo.a_odom, self.demo.b_odom):
+            monitor.update(speed, (2, serial))
+        for v in (self.demo.a, self.demo.b):
+            v.update(last_pose_time=self.clock(), last_lidar_time=self.clock())
+        self.demo.clock_wall = self.clock()
+
+    def test_sil_gap_sends_zero_until_three_new_standstill_samples(self):
+        self.assertTrue(self.pause())
+        for serial in range(2):
+            self.fresh(serial)
+            self.assertTrue(self.pause())
+            self.assertIsNotNone(self.demo.odometry_pause_start)
+        self.fresh(2)
+        self.assertTrue(self.pause())
+        self.assertIsNone(self.demo.odometry_pause_start)
+        self.assertTrue(self.demo.odometry_pauses[-1]["recovered"])
+        self.assertEqual(self.demo.stop_both.call_count, 4)
+
+    def test_delivery_recovery_while_vehicle_moves_does_not_rearm(self):
+        self.pause()
+        for serial in range(4):
+            self.fresh(serial, speed=.2)
+            self.pause()
+        self.assertIsNotNone(self.demo.odometry_pause_start)
+
+    def test_persistent_gap_fails_without_extending_data_age_limit(self):
+        self.pause()
+        self.clock.advance(2.01)
+        self.assertFalse(self.pause())
+        self.assertEqual(self.demo.end_reason, "odometry_timeout")
+        self.assertGreater(self.demo.odometry_failure["a"]["age_s"], 2)

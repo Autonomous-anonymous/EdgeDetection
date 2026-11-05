@@ -15,7 +15,7 @@ The project progresses from perception and ADAS experiments to off-road multi-ve
 - **Standalone R2100 executable:** native ARM64 ELF, physical-target `check` + `preflight` PASS
 - **Verified baseline tag:** `r2100-hil-verified-2026-11-02`
 - **Development branch:** `hil-development`
-- **Current offline repository suite:** 203 / 203 PASS
+- **Current offline repository suite:** 218 / 218 PASS
 
 Detailed documentation:
 
@@ -365,7 +365,7 @@ The current deliverable covers the staged **SIL -> HIL** workflow and embedded A
 **Common SIL/HIL emergency-braking scenario:** SIL PASS / HIL PASS  
 **Independent HIL process-termination fail-safe:** PASS  
 **SIL/HIL AEB threshold consistency:** 5 / 5 PASS  
-**Full offline repository suite:** 203 / 203 PASS\
+**Full offline repository suite:** 218 / 218 PASS\
 **VIL stage:** out of scope / not implemented  
 
 The current embedded AEB scope is complete. Remaining work is optional refinement such as unified SIL/HIL result formatting, additional lifecycle automation or a second shared SIL/HIL scenario; full local path planning is not required for the validated scope.

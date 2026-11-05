@@ -2,9 +2,17 @@
 
 Use this Gazebo scene during a five-minute CAMINO pitch. The turquoise A steers around a stationary orange barrier while the violet B yields to a crossing obstacle. Their two branches meet at the orange junction. A leads onto the dashed exit lane and B follows. Both drive down the same road before the scene ends.
 
+Both cars use a LiDAR/TTC command guard. Before its detour, A first brakes and stops. It then observes the LiDAR surface for at least two seconds while measured odometry confirms standstill. A constant nearest range alone is insufficient: the visible surface's longitudinal and lateral bounds must remain within 0.15 m, using at least 15 distinct fresh scans with no gap longer than 0.30 s of sensor time. Motion, missing returns, invalid scans or stale speed restart the observation. Camera confirmation remains part of the existing A encounter.
+
+After this observation, A may use its existing detour only if the chosen side has at least 6.7 m of visible range. The independent clearance watchdog still supervises the maneuver. B waits for the moving obstacle to clear and then resumes. A stationary classification does not create a route: the short scene has an existing detour corridor for A; B remains stopped if its branch stays blocked. This is not a general obstacle-tracking or arbitrary-route planner.
+
+TTC is estimated as bumper clearance divided by measured vehicle speed, consistent with the R2100 baseline's stationary-obstacle approximation. The local guard brakes at TTC <= 2.0 s or clearance <= 1.1 m, and limits requested speed to preserve a 3.0 s clearance/speed margin. The R2100's independent 1.7 s TTC and 0.8 m emergency-distance limits keep their existing latched behavior. Neither a stationary classification nor a detour request can override a CAN brake.
+
 ## At the presentation computer
 
 Use the team's Gazebo Harmonic installation on Ubuntu 24.04 or WSL with a working GUI and the system Python bindings `gz.transport13` and `gz.msgs10`. Install `python3-tk` for the optional presenter window. Run from the repository root.
+
+If the terminal reports `No module named 'tkinter'`, install the panel dependency with `sudo apt-get install python3-tk` and launch the scene again. Driving and terminal status still work without the panel.
 
 **SIL rehearsal**
 
@@ -37,6 +45,7 @@ python3 edge-path-project/gazebo/scripts/run_pitch_demo.py hil --r2100-host 192.
 | Projector cue | What to point out |
 | --- | --- |
 | The two labeled cars approach on separate branches | Both vehicles use the same virtual worksite. Each needs a different response. |
+| **A · Jarruttaa · LiDAR/TTC**, then **Tutkii esteen liikettä** | A stops first. New LiDAR scans, measured standstill and surface stability determine whether it can start the existing detour. |
 | **A · Väistää estettä** | A's camera confirms the orange object. Its LiDAR helps select the side for the detour. |
 | **B · Odottaa** | A separate observer has seen B come to rest near the crossing. The ordinary yield decision uses B's own LiDAR. |
 | **B · Jatkaa matkaa** | The obstacle crossed and the observer measured B moving again. In HIL, every B motion request also passes the R2100 brake gate. |
@@ -53,7 +62,9 @@ For the CAN run, add *“B:n ajolupa kulki tässä ajossa oikean ohjaimen ja fyy
 
 Vehicle A stays in SIL. In HIL the computer sends B's measured odometry and raw LiDAR to the R2100 over Ethernet. With the default project mapping, the gateway and perception processes place speed (`0x100`) and distance (`0x101`) on `can0`. The AEB controller on `can1` returns the brake decision (`0x200`) across the physical bus. The gateway relays that decision to Gazebo. The panel's *ajolupa* and rolling counter come from accepted replies. A remains under its local controller while the existing independent watchdog supervises both cars.
 
-A planned yield can resume after distinct clear scans and a fresh DRIVE. A hardware emergency brake, stale odometry, missing brake replies or a sender error ends the scene and requests zero for both cars. If a CAN run ends early, read the reported reason and the bench status. The launcher never changes mode during a run. For an independent wire-level check, run `candump -tz can1` on the R2100 and watch the three configured identifiers while presenting.
+A planned yield can resume after distinct clear scans and a fresh DRIVE. A hardware emergency brake, stale odometry in HIL, missing brake replies or a sender error ends the scene and requests zero for both cars. If a CAN run ends early, read the reported reason and the bench status. The launcher never changes mode during a run. For an independent wire-level check, run `candump -tz can1` on the R2100 and watch the three configured identifiers while presenting.
+
+In SIL, a brief odometry delivery gap sends zero to both cars immediately. Recovery requires three new standstill samples from each car plus fresh pose, LiDAR and simulation-clock data. If recovery is not established within two seconds, the run fails. The 0.5 s freshness limit and independent watchdog are unchanged, and the live clock continues during the stop. The report records each pause and the last odometry age for each car; a missing sample is never treated as zero speed. HIL communication faults remain latched and require a fresh run.
 
 ## Run evidence
 
@@ -63,9 +74,9 @@ For a headless rehearsal on a machine with working OGRE2/EGL rendering, run the 
 
 The GitHub rehearsal workflow first runs SIL, then launches the same scene with the production R2100 perception, gateway and AEB programs connected to a Linux virtual CAN bus. Its artifacts keep the two results separate and include the virtual bus capture. A physical bench rehearsal adds the board, Ethernet link, transceivers and wiring used at the presentation.
 
-## Verified short rehearsal
+## Previous rehearsal before stop-and-observe
 
-The [5 November 2026 Gazebo run](https://github.com/Autonomous-anonymous/EdgeDetection/actions/runs/41980665706) tested runtime commit `b172c29` on Ubuntu 24.04 with software rendering. Both runs passed every scene, clearance, timing and final-standstill check.
+The [5 November 2026 Gazebo run](https://github.com/Autonomous-anonymous/EdgeDetection/actions/runs/41980665706) tested runtime commit `b172c29` on Ubuntu 24.04 with software rendering, before the added stop-and-observe phase. Both runs passed every then-existing scene, clearance, timing and final-standstill check. Use a new rehearsal's report for the revised scene's timing.
 
 | Rehearsal | Preparation before the cue | Actual time from cue to standstill | Shared-lane headway |
 | --- | ---: | ---: | ---: |

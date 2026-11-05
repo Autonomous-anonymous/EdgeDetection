@@ -17,6 +17,7 @@ from gz.msgs10.odometry_pb2 import Odometry
 from final_sil_v6_checks import footprint, HALF_LENGTH, HALF_WIDTH, HEIGHT, margins_ok, starting_scene_issue
 from hil10_runtime import ManagedLidarSender, odometry_values
 from hil10_safety import HILLink, OdometryMonitor, REASONS
+from pitch_obstacles import ObstacleObservation, STATIONARY_SECONDS, TTC_BRAKE_S, TTC_CAUTION_S
 
 LIVE_BUDGET_S = 55.0
 EXIT_YAW = math.atan2(A_ROUTE[A_SHARED_INDEX][1] - MERGE_POINT[1], A_ROUTE[A_SHARED_INDEX][0] - MERGE_POINT[0])
@@ -86,6 +87,13 @@ class PitchDemo(FinalSilDemoLargeArea):
     harness_args = ("--pitch",)
 
     def __init__(self, host, results, panel, launch_wall, interactive):
+        self.obstacles = {"a": ObstacleObservation(), "b": ObstacleObservation()}
+        self.a_odom = OdometryMonitor()
+        self.b_odom = OdometryMonitor()
+        self.a_stationary_evidence = None
+        self.odometry_pause_start = None
+        self.odometry_pauses = []
+        self.odometry_failure = None
         super().__init__()
         self.mode = "hil" if host else "sil"
         self.trace_directory = Path(results)
@@ -94,8 +102,6 @@ class PitchDemo(FinalSilDemoLargeArea):
         self.host = host
         self.link = None
         self.lidar = None
-        self.a_odom = OdometryMonitor()
-        self.b_odom = OdometryMonitor()
         self.passed_barrier = False
         self.b_waited = False
         self.b_resumed = False
@@ -109,6 +115,46 @@ class PitchDemo(FinalSilDemoLargeArea):
         self.can_at_events = {}
         self.last_panel = -math.inf
         self.sensor_callbacks = []
+
+    def update_lidar(self, state, msg):
+        super().update_lidar(state, msg)
+        key = "a" if state is self.a else "b"
+        monitor = self.a_odom if key == "a" else self.b_odom
+        sample = monitor.snapshot()
+        if state["x"] is None or state["y"] is None:
+            return
+        self.obstacles[key].update(msg, sample.speed if sample else 0,
+                                   (state["x"], state["y"], state["yaw"]),
+                                   odometry_fresh=monitor.fresh(), received=state["last_lidar_time"])
+
+    def scene_event(self, name):
+        # These events describe decisions; independent observers still prove
+        # motion, passing the barrier, yielding and the shared-road result.
+        elapsed = max(0.0, (self.sim_time or 0) - getattr(self, "pitch_start_sim", self.sim_time or 0))
+        self.event(name, elapsed)
+
+    def start_a_detour(self, now):
+        observation = self.obstacles["a"]
+        if not observation.holding:
+            observation.hold()
+            self.a_odom.begin_stop()
+            self.scene_event("a_braked_to_observe")
+        if not self.a_odom.stopped():
+            return
+        self.scene_event("a_stopped_to_observe")
+        if time.monotonic() - observation.received >= .5:
+            observation.reset_observation()
+            return
+        if not observation.stationary:
+            return
+        # Use the existing, validated A detour corridor only when its selected
+        # side is visible and clear. A stationary classification is not a route.
+        if max(self.a["left_range"], self.a["right_range"]) < 6.7:
+            return
+        self.a_stationary_evidence = observation.evidence()
+        self.scene_event("a_stationary_confirmed")
+        super().start_a_detour(now)
+        observation.release()
 
     def print_plan(self):
         print(f"CAMINO | kahden auton liveajo | {self.mode.upper()}", flush=True)
@@ -204,6 +250,7 @@ class PitchDemo(FinalSilDemoLargeArea):
                     self.end_reason = "start_scene_not_ready"
                     return False
                 self.motion_wall = now
+                self.pitch_start_sim = self.sim_time
                 return True
 
     def pitch_speed(self, vehicle, command, scale, limit=math.inf):
@@ -215,9 +262,17 @@ class PitchDemo(FinalSilDemoLargeArea):
         return faster, yaw_rate * faster / speed
 
     def a_control(self, now):
+        observation = self.obstacles["a"]
+        if observation.holding:
+            if observation.clear_scans >= 5:
+                observation.release()
+                self.scene_event("a_obstacle_cleared_without_detour")
+            else:
+                self.start_a_detour(now)
+            return 0.0, 0.0
         cmd = super().a_control(now)
         if not self.static_avoidance_started:
-            return cmd
+            return observation.command(cmd)
         scale = 3.4
         if self.a_detour_phase == "OUT":
             # Build up speed only after the wheels have turned away from the
@@ -234,18 +289,23 @@ class PitchDemo(FinalSilDemoLargeArea):
             limit = min(limit, max(0.0, 1.5 * (8.8 + max(b_s, 0) - a_s)))
         speed, turn = self.pitch_speed(self.a, cmd, scale, limit)
         if self.static_avoidance_completed:
-            return follow_exit(self.a, speed, A_SHARED_INDEX)
-        return speed, turn
+            speed, turn = follow_exit(self.a, speed, A_SHARED_INDEX)
+        return observation.command((speed, turn))
 
     def b_control(self, now):
         cmd = super().b_control(now)
+        observation = self.obstacles["b"]
+        if self.b_dynamic_hold and not observation.holding:
+            observation.hold()
+        elif not self.b_dynamic_hold and observation.holding:
+            observation.release()
         spacing = math.hypot(self.a["x"]-self.b["x"], self.a["y"]-self.b["y"])
         if (self.b_dynamic_resume_events and not self.coordinator_profile_active
                 and not (self.b_released and spacing <= SHARED_HEADWAY_SLOW_M)):
             cmd = self.pitch_speed(self.b, cmd, 2.9, 2.35)
         if self.b_released and self.b["target_index"] >= B_MERGE_INDEX:
-            return follow_exit(self.b, cmd[0], B_SHARED_INDEX)
-        return cmd
+            cmd = follow_exit(self.b, cmd[0], B_SHARED_INDEX)
+        return observation.command(cmd)
 
     def observe_merge(self, elapsed):
         if not (self.b_resumed and self.passed_barrier and self.b_released
@@ -284,6 +344,16 @@ class PitchDemo(FinalSilDemoLargeArea):
             if time.monotonic() - self.last_panel >= .20:
                 a_text = "Ohitti kiinteän esteen" if self.passed_barrier else "Väistää estettä" if self.static_avoidance_started else "Lähestyy estettä"
                 b_text = "Odottaa" if self.b_dynamic_hold and self.b_waited else "Jarruttaa" if self.b_dynamic_hold else "Jatkaa matkaa" if self.b_resumed else "Ajossa"
+                if self.obstacles["a"].holding:
+                    a_text = "Tutkii esteen liikettä" if self.a_odom.stopped() else "Jarruttaa · LiDAR/TTC"
+                    if self.obstacles["a"].stationary:
+                        a_text = "Este paikallaan · etsii kiertotilaa"
+                elif self.obstacles["a"].braking:
+                    a_text = "Jarruttaa · LiDAR/TTC"
+                if self.obstacles["b"].holding and self.obstacles["b"].stationary:
+                    b_text = "Este paikallaan · odottaa vapaata reittiä"
+                elif self.obstacles["b"].braking:
+                    b_text = "Jarruttaa · LiDAR/TTC"
                 if self.b_released:
                     a_text = "Yhteisellä tiellä"
                     b_text = "Seuraa A:ta" if self.shared_entry else "Liittyy yhteiselle tielle"
@@ -291,6 +361,45 @@ class PitchDemo(FinalSilDemoLargeArea):
                     b_text = "Antaa A:n liittyä ensin"
                 self.panel.update(a_text, b_text, self.can_state(), f"Live  ·  {time.monotonic()-self.motion_wall:.0f} s", live=True)
                 self.last_panel = time.monotonic()
+
+    def odometry_status(self):
+        now = time.monotonic()
+        return {key: dict(age_s=None if monitor.snapshot() is None else round(now-monitor.snapshot().received, 3),
+                          samples=monitor.serial)
+                for key, monitor in (("a", self.a_odom), ("b", self.b_odom))}
+
+    def pause_for_sil_odometry(self):
+        """Zero during a brief SIL delivery gap; rearm only at measured rest.
+
+        The HIL gate keeps its existing latched-fault behavior. Neither mode
+        relaxes the 0.5 s data-age limit or the independent command watchdog.
+        """
+        now = time.monotonic()
+        if self.odometry_pause_start is None:
+            self.odometry_pause_start = now
+            self.odometry_pauses.append(dict(at_wall_s=round(now-self.motion_wall, 3),
+                                             odometry=self.odometry_status(), recovered=False))
+            for monitor in (self.a_odom, self.b_odom):
+                monitor.begin_stop()
+            for observation in self.obstacles.values():
+                observation.reset_observation()
+            print("Nopeustieto viivästyi: molemmat autot pysäytetään ennen uutta tilatarkistusta.", flush=True)
+            self.panel.update("SEIS", "SEIS", self.can_state(), "Odottaa tuoretta nopeustietoa", live=False)
+        self.stop_both()
+        if now - self.odometry_pause_start >= 2.0:
+            self.end_reason = "odometry_timeout"
+            self.odometry_failure = self.odometry_status()
+            return False
+        with self.lock:
+            scene_fresh = (self.watchdog.poll() is None and now-self.clock_wall < .5
+                           and all(now-v[k] < .5 for v in (self.a, self.b)
+                                   for k in ("last_pose_time", "last_lidar_time")))
+        if self.a_odom.stopped() and self.b_odom.stopped() and scene_fresh:
+            self.odometry_pauses[-1].update(recovered=True, duration_s=round(now-self.odometry_pause_start, 3))
+            self.odometry_pause_start = None
+            self.last_panel = -math.inf
+            print("Molempien pysähdys ja tuore anturitieto varmistettu. SIL-ajo jatkuu.", flush=True)
+        return True  # This entire iteration sends only zero, including recovery.
 
     def send_commands(self, elapsed, a_command, b_command):
         reason = None
@@ -301,13 +410,19 @@ class PitchDemo(FinalSilDemoLargeArea):
             if self.lidar.error or gate != "none":
                 reason = "lidar_send_error" if self.lidar.error else gate
         if not self.a_odom.fresh() or not self.b_odom.fresh():
-            reason = reason or "odometry_timeout"
+            if self.link:
+                reason = reason or "odometry_timeout"
         if time.monotonic() - self.motion_wall >= LIVE_BUDGET_S:
             reason = reason or "wall_timeout"
         if reason:
             self.end_reason = reason
+            if "odometry" in reason:
+                self.odometry_failure = self.odometry_status()
             self.stop_both()
             return False
+        if (not self.link and (self.odometry_pause_start is not None
+                               or not self.a_odom.fresh() or not self.b_odom.fresh())):
+            return self.pause_for_sil_odometry()
         self.observe(elapsed)
         if self.shared_travel:
             self.end_reason = "pitch_complete"
@@ -339,6 +454,7 @@ class PitchDemo(FinalSilDemoLargeArea):
         can_ok = not self.link or (self.link.armed and self.link.replies >= 2 and not self.link.decision()[0] and not self.lidar.error)
         live_wall = None if self.motion_wall is None else time.monotonic() - self.motion_wall
         checks = dict(scene_finished=self.end_reason == "pitch_complete", a_passed=self.passed_barrier,
+                      a_stopped_and_observed=bool(self.a_stationary_evidence),
                       b_stopped=self.b_waited, b_resumed=self.b_resumed, shared_lane=bool(self.shared_travel),
                       within_live_budget=live_wall is not None and live_wall <= LIVE_BUDGET_S, a_stopped_at_end=self.a_odom.stopped(),
                       b_stopped_at_end=self.b_odom.stopped(), scene_healthy=scenario_ok, clearance=clearance_ok)
@@ -354,6 +470,13 @@ class PitchDemo(FinalSilDemoLargeArea):
                       presenter_wait_s=None if self.motion_wall is None else round(self.motion_wall-self.ready_wall, 3),
                       checks=checks, trace=self.trace_path,
                       minimum_clearance_m=self.ground_min if math.isfinite(self.ground_min) else None)
+        report["obstacle_decisions"] = dict(a_stationary=self.a_stationary_evidence,
+                                            a=self.obstacles["a"].evidence(), b=self.obstacles["b"].evidence(),
+                                            stationary_required_s=STATIONARY_SECONDS,
+                                            ttc_brake_s=TTC_BRAKE_S, ttc_caution_s=TTC_CAUTION_S,
+                                            ttc_method="bumper_clearance / measured_speed")
+        report["odometry_pauses"] = self.odometry_pauses
+        report["odometry_failure"] = self.odometry_failure
         if self.link:
             report["r2100"] = dict(host=self.host, speed_packets=self.link.sent_count, brake_replies=self.link.replies,
                                    rejected_replies=self.link.rejected_replies, last_counter=self.link.brake_counter,
