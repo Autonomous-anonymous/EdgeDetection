@@ -412,7 +412,7 @@
             <right_joint>rear_right_wheel_joint</right_joint>
             <right_joint>front_right_wheel_joint</right_joint>
             <wheel_separation>1.25</wheel_separation>
-            <wheel_radius>0.3</wheel_radius>
+            <wheel_radius>0.6</wheel_radius>
             <topic>/model/metsakone/cmd_vel</topic>
             <odom_topic>/model/metsakone/odometry</odom_topic>
             <odom_publish_frequency>20</odom_publish_frequency>
