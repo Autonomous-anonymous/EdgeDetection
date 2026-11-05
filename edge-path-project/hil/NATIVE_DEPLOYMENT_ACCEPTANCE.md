@@ -94,16 +94,75 @@ After downloading the CI artifact, verify the archive SHA-256 against the proven
 
 These new CI checks prove that the build *runs in Debian 12* and produces a traceable artifact. They do **not** themselves prove that a particular CI-built binary has subsequently been exercised on the physical R2100.
 
-## Follow-up: full native-executable HIL functional acceptance (not yet recorded)
+## Full native-executable HIL AEB acceptance — 2026-11-05
 
-The 2026-11-02 committed functional AEB and route results used the earlier managed Python zipapp package. To close the remaining *combined-evidence* gap, perform one end-to-end AEB run **after deploying a Debian-12-built ARM64 release** into the managed `~/r2100_hil/current` directory:
+**Operator-verified PASS on the physical R2100.** This test used the **CI-built Debian 12 ARM64 release**, rather than the historical zipapp deployment. The operator supplied the target terminal output, the stage-runner result, and the key fields from the generated HIL JSON.
 
-1. On the R2100, verify the downloaded binary/manifest SHA-256 digests against that build's provenance, then run `./r2100_hil check` and `./r2100_hil preflight`.
-2. On the R2100, launch `./start_hil.sh` and inspect `./status_hil.sh`. The runtime must show active perception, CAN gateway and AEB processes rather than stale PIDs.
-3. On WSL, start `edge-path-project/gazebo/worlds/ruskotunturi_hil9e_aeb_world.sdf` and run the common scenario with `python3 -u edge-path-project/gazebo/scripts/run_staged_scenario.py --scenario emergency_braking --target hil --r2100-host <R2100_IP>`.
-4. Require `aeb_stop_verified`, a permitted AEB intervention reason, stop confirmation, and the minimum-clearance acceptance condition. Archive the HIL JSON/CSV, runtime logs, timestamp, source commit, and both native artifact hashes.
+### Source and exact deployed artifact
 
-Do not mark this follow-up as PASS until it has been executed with the native release and its evidence has been inspected and committed.
+| Field | Verified value |
+| --- | --- |
+| Source commit / CI release | `46b51c5c772c2a4f37d54b8a83b1f8e5ce6862eb` |
+| CI builder image / architecture | `debian:12` / `aarch64` |
+| CI workflow run | [main push run 41980942845](https://github.com/Autonomous-anonymous/EdgeDetection/actions/runs/41980942845) |
+| R2100 release directory | `~/r2100_hil/releases/r2100_hil_ci_46b51c5_20261105` |
+| Native executable SHA-256 | `cc83d60385bdf0db5cf8490c54e87d026e66930a528f1d15ec6e91802fbef6cc` |
+| Manifest SHA-256 | `4444db47705b97dce249aa17df439e6b4986830bb5f53f4171f1c8f3fe17cf10` |
+| Archive SHA-256 | `7556aed3f7cd9ebc7d12a4506d75b50d170b3d99cb0623aa96b24bc9f94e9700` |
+
+The operator verified the downloaded archive digest on WSL and the extracted binary and manifest against the provenance file. The R2100 then reported the **same binary and manifest hashes** from the deployed release directory.
+
+### Native physical runtime and scenario
+
+The new release passed `./r2100_hil check` and `./r2100_hil preflight` on the R2100 (Debian 12, `aarch64`; CAN0/CAN1 UP, ERROR-ACTIVE at 500 kbit/s; UDP ports 15000/15010 available). `./start_hil.sh` reported **R2100 HIL startup: PASS**, and `./status_hil.sh` showed all three components running from the native release:
+
+```text
+perception PID=2294 RUNNING
+gateway    PID=2295 RUNNING
+aeb        PID=2296 RUNNING
+```
+
+The R2100 runtime log directory was:
+
+```text
+/home/recomputer/hil_test_logs/r2100_hil_20261105T065838Z
+```
+
+On WSL, the operator ran the same shared HIL scenario used for the earlier zipapp tests:
+
+```bash
+python3 -u edge-path-project/gazebo/scripts/run_staged_scenario.py \
+  --scenario emergency_braking \
+  --target hil \
+  --r2100-host <R2100_IP>
+```
+
+The stage runner reported raw LiDAR transport to the R2100, Vehicle B motion at 0.850 m/s, and an AEB zero-speed command with reason `ttc_threshold`.
+
+### Operator-verified JSON acceptance values
+
+| Acceptance field | Observed result |
+| --- | --- |
+| `passed` | `true` |
+| `end_reason` | `aeb_stop_verified` |
+| `aeb_reason` | `ttc_threshold` |
+| `stop_verified` | `true` |
+| `observer_stop_samples` | `4` (minimum 3) |
+| `final_speed_mps` | `3.730349362740526e-12` (threshold 0.05 m/s) |
+| `clearance_m` | `1.2356799457994787` (minimum 1.0 m) |
+| `required_clearance_m` | `1.0` |
+| `fault` | `null` |
+| Terminal test result | `HIL-10 RESULT: PASS` |
+
+The generated result file on the operator's WSL checkout was:
+
+```text
+edge-path-project/gazebo/results/hil10/hil10_aeb_20261105T070006_b18e73a4.json
+```
+
+**Evidence retention status:** The result above is supported by operator-supplied terminal output and a field-by-field reading of the local JSON. This documentation update does **not** claim that the raw 2026-11-05 JSON/CSV or the R2100 process logs have been committed. Commit the original unmodified raw results as a separate evidence change; check the CSV filename and hash rather than reconstructing measurements from this summary. The older 2026-11-02 zipapp evidence remains committed and distinct.
+
+This closes the previously missing **functional runtime demonstration with the CI-built standalone ARM64 executable**; it does not claim the full system would remain safe under PC power loss, physical CAN cable disconnection or bus-off.
 
 ## Acceptance conclusion
 
