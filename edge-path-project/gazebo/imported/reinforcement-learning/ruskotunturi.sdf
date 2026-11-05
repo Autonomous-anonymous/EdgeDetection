@@ -1,0 +1,147 @@
+<?xml version="1.0" ?>
+<sdf version="1.10">
+  <!-- Geminillä generoitu yksinkertainen pohja, jota on jälkeenpäin siivottu ja korjattu. -R2 -->
+  <world name="ruskotunturi">
+    <!-- Perusfysiikka (1 ms aika-askel) -->
+    <!-- <physics name="1ms" type="ignored">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>10.0</real_time_factor>
+    </physics> -->
+    <physics name="fast_physics" type="dart">
+        <max_step_size>0.005</max_step_size>
+        <real_time_factor>100.0</real_time_factor>
+        <real_time_update_rate>0</real_time_update_rate>
+    </physics>
+
+    <scene> <!-- varjot -->
+      <ambient>0.3 0.3 0.3 1</ambient>
+      <background>0.7 0.8 0.9 1</background>
+      <shadows>true</shadows>
+    </scene>
+    <!-- Gazebon ydinjärjestelmät -->
+    <plugin filename="gz-sim-physics-system" name="gz::sim::systems::Physics"/>
+    <plugin filename="gz-sim-user-commands-system" name="gz::sim::systems::UserCommands"/>
+    <plugin filename="gz-sim-scene-broadcaster-system" name="gz::sim::systems::SceneBroadcaster"/>
+    <plugin filename="gz-sim-contact-system" name="gz::sim::systems::Contact"/>
+    <plugin filename="gz-sim-sensors-system" name="gz::sim::systems::Sensors"> <!-- Sensorit tulee lisätä itse ajoneuvoon. -->
+      <render_engine>ogre2</render_engine>
+    </plugin>
+
+    <!-- Valaistus -->
+    <light type="directional" name="sun">
+      <cast_shadows>true</cast_shadows>
+      <pose>0 0 50 0 0 0</pose>
+      <diffuse>0.8 0.8 0.8 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+      <direction>-0.5 0.1 -0.9</direction>
+    </light>
+
+    <!-- Meveasta tuotu maasto -->
+    <model name="ruskotunturi_terrain">
+      <static>true</static>
+      <!-- Säädä tarvittaessa sijaintia: X Y Z Roll Pitch Yaw -->
+      <pose>0 0 0 0 0 0</pose>
+
+      <link name="terrain_link">
+        <visual name="visual">
+          <pose>0 0 0 1.5708 0 0</pose> <!-- Visuaalinen kartta oli jostain syystä sivuttain.. tämä korjaa sen -->
+          <geometry>
+            <mesh>
+              <uri>model://ruskotunturi-map.obj</uri> <!-- Tähän pitää laittaa ruskotunturin graaffisen kartan tiedostonimi -->
+              <scale>1.0 1.0 1.0</scale>
+            </mesh>
+          </geometry>
+          <material>
+          <diffuse>1.0 1.0 1.0 1</diffuse>
+          <specular>0.1 0.1 0.1 1</specular>
+          </material>
+        </visual>
+
+        <collision name="collision">
+          <geometry>
+            <mesh>
+              <uri>model://ruskotunturi-map-collision.stl</uri> <!-- Tähän pitää laittaa ruskotunturin collision-kartan tiedostonimi -->
+              <scale>1.0 1.0 1.0</scale>
+            </mesh>
+          </geometry>
+          <surface>
+            <friction>
+              <ode>
+                <mu>1.0</mu>
+                <mu2>1.0</mu2>
+              </ode>
+            </friction>
+          </surface>
+        </collision>
+      </link>
+    </model>
+    <model name='goal'>
+        <static>true</static>
+        <pose relative_to='world'>75.0 100.0 0 0 0 0</pose>
+        <link name='cylinder'>
+            <visual name='visual'>
+                <geometry>
+                    <cylinder>
+                        <radius>0.8</radius>
+                        <length>10.4</length>
+                    </cylinder>
+                </geometry>
+                <!--let's
+                add color to our link-->
+                <material>
+                    <ambient>1.0 0.85 0 0.8</ambient>
+                    <diffuse>1.0 0.85 0.0 0.8</diffuse>
+                    <specular>0.4 0.3 0.0 1</specular>
+                </material>
+            </visual>
+            
+        </link>
+    </model>
+    <model name='este1'>
+        <pose relative_to='world'>0 3 0 0 0 0</pose>
+        <link name='rock'>
+            <inertial> <!--inertial
+              properties of the link mass, inertia matrix-->
+              <mass>100.14395</mass>
+              <inertia>
+                  <ixx>0.095329</ixx>
+                  <ixy>0</ixy>
+                  <ixz>0</ixz>
+                  <iyy>0.381317</iyy>
+                  <iyz>0</iyz>
+                  <izz>0.476646</izz>
+              </inertia>
+          </inertial>
+            <visual name='visual'>
+                <geometry>
+                    <box>
+                        <size>2.0 1.5 2.0</size>
+                    </box>
+                </geometry>
+                <material>
+                    <ambient>1.0 0.85 0 0.8</ambient>
+                    <diffuse>1.0 0.85 0.0 0.8</diffuse>
+                    <specular>0.4 0.3 0.0 1</specular>
+                </material>
+            </visual>
+            <collision name="collision">
+                <geometry>
+                <box><size>2.0 1.5 1.5</size></box>
+                </geometry>
+            </collision>
+        </link>
+    </model>
+    <include>
+      <uri>model://gemini-lidar-robot.sdf</uri>
+      <pose>-5.0 5.0 2.0 0 0 0</pose>
+    </include>
+    <!-- <include>
+        <uri>model://telalaite-kuormaajalla.sdf</uri>
+        <pose>5.0 -5.0 2.0 0 0 0</pose>
+    </include> -->
+    <include>
+        <uri>model://metsakone.sdf</uri>
+        <pose>5.0 -5.0 2.0 0 0 0</pose>
+    </include>
+  </world>
+</sdf>
