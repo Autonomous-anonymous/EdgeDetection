@@ -80,6 +80,31 @@ Result:
 R2100 HIL preflight: PASS
 ```
 
+
+## Build identity and reproducible artifact hashes
+
+**Historical evidence limitation:** The physical acceptance on 2026-11-03 recorded the ELF identity and the target-side `check` / `preflight` results. It did **not** capture a source commit or SHA-256 digest for the precise binary and manifest inspected that day. The existing results are valid for native compatibility and readiness, but must not be described as a cryptographically traced full native HIL scenario.
+
+The ARM64 GitHub Actions job now builds inside a **Debian 12 ARM64 container** to match the target's older glibc userspace. Its downloadable `r2100-hil-aarch64` artifact contains:
+
+- `r2100_hil-aarch64.tar.gz` — the packaged native executable, config and managed scripts;
+- `r2100-hil-aarch64.provenance.txt` — source Git commit, builder image, target architecture, and SHA-256 digests of the executable, manifest and archive.
+
+After downloading the CI artifact, verify the archive SHA-256 against the provenance file before deployment. After extracting the release on the R2100, run `sha256sum r2100_hil manifest.json` inside its deployment directory and compare both values against `binary_sha256` and `manifest_sha256` in the corresponding provenance file. Record the matching source commit and run timestamp with the acceptance result.
+
+These new CI checks prove that the build *runs in Debian 12* and produces a traceable artifact. They do **not** themselves prove that a particular CI-built binary has subsequently been exercised on the physical R2100.
+
+## Follow-up: full native-executable HIL functional acceptance (not yet recorded)
+
+The 2026-11-02 committed functional AEB and route results used the earlier managed Python zipapp package. To close the remaining *combined-evidence* gap, perform one end-to-end AEB run **after deploying a Debian-12-built ARM64 release** into the managed `~/r2100_hil/current` directory:
+
+1. On the R2100, verify the downloaded binary/manifest SHA-256 digests against that build's provenance, then run `./r2100_hil check` and `./r2100_hil preflight`.
+2. On the R2100, launch `./start_hil.sh` and inspect `./status_hil.sh`. The runtime must show active perception, CAN gateway and AEB processes rather than stale PIDs.
+3. On WSL, start `edge-path-project/gazebo/worlds/ruskotunturi_hil9e_aeb_world.sdf` and run the common scenario with `python3 -u edge-path-project/gazebo/scripts/run_staged_scenario.py --scenario emergency_braking --target hil --r2100-host <R2100_IP>`.
+4. Require `aeb_stop_verified`, a permitted AEB intervention reason, stop confirmation, and the minimum-clearance acceptance condition. Archive the HIL JSON/CSV, runtime logs, timestamp, source commit, and both native artifact hashes.
+
+Do not mark this follow-up as PASS until it has been executed with the native release and its evidence has been inspected and committed.
+
 ## Acceptance conclusion
 
 The standalone deployment requirement is **hardware-validated on the physical R2100**.
