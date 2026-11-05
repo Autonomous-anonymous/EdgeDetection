@@ -62,3 +62,16 @@ Each run produces its own CSV of requested commands and observed poses, plus a J
 For a headless rehearsal on a machine with working OGRE2/EGL rendering, run the same launcher with `sil --headless --auto-start`. For a projected run using terminal labels only, add `--no-panel`.
 
 The GitHub rehearsal workflow first runs SIL, then launches the same scene with the production R2100 perception, gateway and AEB programs connected to a Linux virtual CAN bus. Its artifacts keep the two results separate and include the virtual bus capture. A physical bench rehearsal adds the board, Ethernet link, transceivers and wiring used at the presentation.
+
+## Verified short rehearsal
+
+The [5 November 2026 Gazebo run](https://github.com/Autonomous-anonymous/EdgeDetection/actions/runs/41980665706) tested runtime commit `b172c29` on Ubuntu 24.04 with software rendering. Both runs passed every scene, clearance, timing and final-standstill check.
+
+| Rehearsal | Preparation before the cue | Actual time from cue to standstill | Shared-lane headway |
+| --- | ---: | ---: | ---: |
+| Gazebo GUI, SIL | 7.7 s | 39.0 s | 8.00 m |
+| Production R2100 programs, virtual CAN, headless Gazebo | 4.6 s | 38.4 s | 8.08 m |
+
+The GUI rehearsal sent the presenter's Enter cue, moved the camera with an actual mouse drag and captured the starting and final views. The CAN rehearsal recorded IDs `0x100`, `0x101` and `0x200`, accepted 771 brake replies and sent 390 raw LiDAR scans. The workflow artifact contains both JSON reports, pose/command traces, screenshots and the bus capture. The same runtime commit passed all 203 offline tests and the ARM64 executable build checks.
+
+These times are measured wall time on that runner, separate from simulation time and preparation. Rehearse on the presentation computer with its display and, when used, the physical R2100/CAN bench; that combination was not tested by this workflow.
