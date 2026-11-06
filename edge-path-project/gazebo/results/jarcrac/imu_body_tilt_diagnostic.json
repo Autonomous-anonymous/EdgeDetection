@@ -1,0 +1,539 @@
+{
+  "callback_errors": [],
+  "case": "body_tilt",
+  "counters": {
+    "imu_count": 1778,
+    "pose_count": 1154
+  },
+  "diagnostic_expectation_met": true,
+  "gravity_zero_for_orientation_bench": true,
+  "imu_reference_frame": "ENU",
+  "max_orientation_error_deg": 0.0,
+  "orientation_samples": 40,
+  "read_only": true,
+  "samples": [
+    {
+      "imu_rpy_deg": [
+        3.0,
+        -5.0,
+        -153.435
+      ],
+      "orientation_error_deg": 0.0,
+      "true_rpy_deg": [
+        3.0,
+        -5.0,
+        -153.435
+      ]
+    },
+    {
+      "imu_rpy_deg": [
+        3.0,
+        -5.0,
+        -153.435
+      ],
+      "orientation_error_deg": 0.0,
+      "true_rpy_deg": [
+        3.0,
+        -5.0,
+        -153.435
+      ]
+    },
+    {
+      "imu_rpy_deg": [
+        3.0,
+        -5.0,
+        -153.435
+      ],
+      "orientation_error_deg": 0.0,
+      "true_rpy_deg": [
+        3.0,
+        -5.0,
+        -153.435
+      ]
+    },
+    {
+      "imu_rpy_deg": [
+        3.0,
+        -5.0,
+        -153.435
+      ],
+      "orientation_error_deg": 0.0,
+      "true_rpy_deg": [
+        3.0,
+        -5.0,
+        -153.435
+      ]
+    },
+    {
+      "imu_rpy_deg": [
+        3.0,
+        -5.0,
+        -153.435
+      ],
+      "orientation_error_deg": 0.0,
+      "true_rpy_deg": [
+        3.0,
+        -5.0,
+        -153.435
+      ]
+    },
+    {
+      "imu_rpy_deg": [
+        3.0,
+        -5.0,
+        -153.435
+      ],
+      "orientation_error_deg": 0.0,
+      "true_rpy_deg": [
+        3.0,
+        -5.0,
+        -153.435
+      ]
+    },
+    {
+      "imu_rpy_deg": [
+        3.0,
+        -5.0,
+        -153.435
+      ],
+      "orientation_error_deg": 0.0,
+      "true_rpy_deg": [
+        3.0,
+        -5.0,
+        -153.435
+      ]
+    },
+    {
+      "imu_rpy_deg": [
+        3.0,
+        -5.0,
+        -153.435
+      ],
+      "orientation_error_deg": 0.0,
+      "true_rpy_deg": [
+        3.0,
+        -5.0,
+        -153.435
+      ]
+    },
+    {
+      "imu_rpy_deg": [
+        3.0,
+        -5.0,
+        -153.435
+      ],
+      "orientation_error_deg": 0.0,
+      "true_rpy_deg": [
+        3.0,
+        -5.0,
+        -153.435
+      ]
+    },
+    {
+      "imu_rpy_deg": [
+        3.0,
+        -5.0,
+        -153.435
+      ],
+      "orientation_error_deg": 0.0,
+      "true_rpy_deg": [
+        3.0,
+        -5.0,
+        -153.435
+      ]
+    },
+    {
+      "imu_rpy_deg": [
+        3.0,
+        -5.0,
+        -153.435
+      ],
+      "orientation_error_deg": 0.0,
+      "true_rpy_deg": [
+        3.0,
+        -5.0,
+        -153.435
+      ]
+    },
+    {
+      "imu_rpy_deg": [
+        3.0,
+        -5.0,
+        -153.435
+      ],
+      "orientation_error_deg": 0.0,
+      "true_rpy_deg": [
+        3.0,
+        -5.0,
+        -153.435
+      ]
+    },
+    {
+      "imu_rpy_deg": [
+        3.0,
+        -5.0,
+        -153.435
+      ],
+      "orientation_error_deg": 0.0,
+      "true_rpy_deg": [
+        3.0,
+        -5.0,
+        -153.435
+      ]
+    },
+    {
+      "imu_rpy_deg": [
+        3.0,
+        -5.0,
+        -153.435
+      ],
+      "orientation_error_deg": 0.0,
+      "true_rpy_deg": [
+        3.0,
+        -5.0,
+        -153.435
+      ]
+    },
+    {
+      "imu_rpy_deg": [
+        3.0,
+        -5.0,
+        -153.435
+      ],
+      "orientation_error_deg": 0.0,
+      "true_rpy_deg": [
+        3.0,
+        -5.0,
+        -153.435
+      ]
+    },
+    {
+      "imu_rpy_deg": [
+        3.0,
+        -5.0,
+        -153.435
+      ],
+      "orientation_error_deg": 0.0,
+      "true_rpy_deg": [
+        3.0,
+        -5.0,
+        -153.435
+      ]
+    },
+    {
+      "imu_rpy_deg": [
+        3.0,
+        -5.0,
+        -153.435
+      ],
+      "orientation_error_deg": 0.0,
+      "true_rpy_deg": [
+        3.0,
+        -5.0,
+        -153.435
+      ]
+    },
+    {
+      "imu_rpy_deg": [
+        3.0,
+        -5.0,
+        -153.435
+      ],
+      "orientation_error_deg": 0.0,
+      "true_rpy_deg": [
+        3.0,
+        -5.0,
+        -153.435
+      ]
+    },
+    {
+      "imu_rpy_deg": [
+        3.0,
+        -5.0,
+        -153.435
+      ],
+      "orientation_error_deg": 0.0,
+      "true_rpy_deg": [
+        3.0,
+        -5.0,
+        -153.435
+      ]
+    },
+    {
+      "imu_rpy_deg": [
+        3.0,
+        -5.0,
+        -153.435
+      ],
+      "orientation_error_deg": 0.0,
+      "true_rpy_deg": [
+        3.0,
+        -5.0,
+        -153.435
+      ]
+    },
+    {
+      "imu_rpy_deg": [
+        3.0,
+        -5.0,
+        -153.435
+      ],
+      "orientation_error_deg": 0.0,
+      "true_rpy_deg": [
+        3.0,
+        -5.0,
+        -153.435
+      ]
+    },
+    {
+      "imu_rpy_deg": [
+        3.0,
+        -5.0,
+        -153.435
+      ],
+      "orientation_error_deg": 0.0,
+      "true_rpy_deg": [
+        3.0,
+        -5.0,
+        -153.435
+      ]
+    },
+    {
+      "imu_rpy_deg": [
+        3.0,
+        -5.0,
+        -153.435
+      ],
+      "orientation_error_deg": 0.0,
+      "true_rpy_deg": [
+        3.0,
+        -5.0,
+        -153.435
+      ]
+    },
+    {
+      "imu_rpy_deg": [
+        3.0,
+        -5.0,
+        -153.435
+      ],
+      "orientation_error_deg": 0.0,
+      "true_rpy_deg": [
+        3.0,
+        -5.0,
+        -153.435
+      ]
+    },
+    {
+      "imu_rpy_deg": [
+        3.0,
+        -5.0,
+        -153.435
+      ],
+      "orientation_error_deg": 0.0,
+      "true_rpy_deg": [
+        3.0,
+        -5.0,
+        -153.435
+      ]
+    },
+    {
+      "imu_rpy_deg": [
+        3.0,
+        -5.0,
+        -153.435
+      ],
+      "orientation_error_deg": 0.0,
+      "true_rpy_deg": [
+        3.0,
+        -5.0,
+        -153.435
+      ]
+    },
+    {
+      "imu_rpy_deg": [
+        3.0,
+        -5.0,
+        -153.435
+      ],
+      "orientation_error_deg": 0.0,
+      "true_rpy_deg": [
+        3.0,
+        -5.0,
+        -153.435
+      ]
+    },
+    {
+      "imu_rpy_deg": [
+        3.0,
+        -5.0,
+        -153.435
+      ],
+      "orientation_error_deg": 0.0,
+      "true_rpy_deg": [
+        3.0,
+        -5.0,
+        -153.435
+      ]
+    },
+    {
+      "imu_rpy_deg": [
+        3.0,
+        -5.0,
+        -153.435
+      ],
+      "orientation_error_deg": 0.0,
+      "true_rpy_deg": [
+        3.0,
+        -5.0,
+        -153.435
+      ]
+    },
+    {
+      "imu_rpy_deg": [
+        3.0,
+        -5.0,
+        -153.435
+      ],
+      "orientation_error_deg": 0.0,
+      "true_rpy_deg": [
+        3.0,
+        -5.0,
+        -153.435
+      ]
+    },
+    {
+      "imu_rpy_deg": [
+        3.0,
+        -5.0,
+        -153.435
+      ],
+      "orientation_error_deg": 0.0,
+      "true_rpy_deg": [
+        3.0,
+        -5.0,
+        -153.435
+      ]
+    },
+    {
+      "imu_rpy_deg": [
+        3.0,
+        -5.0,
+        -153.435
+      ],
+      "orientation_error_deg": 0.0,
+      "true_rpy_deg": [
+        3.0,
+        -5.0,
+        -153.435
+      ]
+    },
+    {
+      "imu_rpy_deg": [
+        3.0,
+        -5.0,
+        -153.435
+      ],
+      "orientation_error_deg": 0.0,
+      "true_rpy_deg": [
+        3.0,
+        -5.0,
+        -153.435
+      ]
+    },
+    {
+      "imu_rpy_deg": [
+        3.0,
+        -5.0,
+        -153.435
+      ],
+      "orientation_error_deg": 0.0,
+      "true_rpy_deg": [
+        3.0,
+        -5.0,
+        -153.435
+      ]
+    },
+    {
+      "imu_rpy_deg": [
+        3.0,
+        -5.0,
+        -153.435
+      ],
+      "orientation_error_deg": 0.0,
+      "true_rpy_deg": [
+        3.0,
+        -5.0,
+        -153.435
+      ]
+    },
+    {
+      "imu_rpy_deg": [
+        3.0,
+        -5.0,
+        -153.435
+      ],
+      "orientation_error_deg": 0.0,
+      "true_rpy_deg": [
+        3.0,
+        -5.0,
+        -153.435
+      ]
+    },
+    {
+      "imu_rpy_deg": [
+        3.0,
+        -5.0,
+        -153.435
+      ],
+      "orientation_error_deg": 0.0,
+      "true_rpy_deg": [
+        3.0,
+        -5.0,
+        -153.435
+      ]
+    },
+    {
+      "imu_rpy_deg": [
+        3.0,
+        -5.0,
+        -153.435
+      ],
+      "orientation_error_deg": 0.0,
+      "true_rpy_deg": [
+        3.0,
+        -5.0,
+        -153.435
+      ]
+    },
+    {
+      "imu_rpy_deg": [
+        3.0,
+        -5.0,
+        -153.435
+      ],
+      "orientation_error_deg": 0.0,
+      "true_rpy_deg": [
+        3.0,
+        -5.0,
+        -153.435
+      ]
+    },
+    {
+      "imu_rpy_deg": [
+        3.0,
+        -5.0,
+        -153.435
+      ],
+      "orientation_error_deg": 0.0,
+      "true_rpy_deg": [
+        3.0,
+        -5.0,
+        -153.435
+      ]
+    }
+  ],
+  "terrain_driving_verified": false,
+  "test": "jarcrac_imu_body_tilt_orientation",
+  "world": "jarcrac_imu_body_tilt"
+}

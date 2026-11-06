@@ -1,0 +1,486 @@
+{
+  "analysis": {
+    "diagnostic_expectation_met": true,
+    "exact_invalid_samples": 0,
+    "imu_expected_scene_samples": 12,
+    "imu_invalid_samples": 0,
+    "map_classification_agreement_samples": 12,
+    "max_orientation_error_deg": 0.0,
+    "median_orientation_error_deg": 0.0,
+    "missing_or_stale_samples": 0,
+    "orientation_consistent_samples": 12,
+    "paired_fresh_samples": 12,
+    "total_samples": 12,
+    "unmatched_reasons": {}
+  },
+  "callback_errors": [],
+  "case": "clear",
+  "counters": {
+    "dropped": 0,
+    "imu_count": 1530,
+    "pose_count": 1171,
+    "raw_scans": 154
+  },
+  "exact_gazebo_position_used": true,
+  "exact_gazebo_yaw_reference_used_for_validation": true,
+  "imu_mount_rpy_deg": [
+    0.0,
+    0.0,
+    0.0
+  ],
+  "imu_reference_frame": "ENU",
+  "imu_used_for_orientation": true,
+  "note": "Stationary SIL calibration only. IMU angle is substituted into map projection with *ground-truth XYZ*; no drift, stochastic IMU error, real sensor synchronization, or drive test.",
+  "processing_errors": [],
+  "read_only": true,
+  "real_localization_or_terrain_aeb_verified": false,
+  "samples": [
+    {
+      "exact": {
+        "ground": 1331,
+        "nearest_m": null,
+        "objects": 0,
+        "reason": "ok",
+        "unknown": 0,
+        "valid": true
+      },
+      "gt_rpy_deg": [
+        2.62,
+        -1.756,
+        -156.643
+      ],
+      "imu": {
+        "ground": 1331,
+        "nearest_m": null,
+        "objects": 0,
+        "reason": "ok",
+        "unknown": 0,
+        "valid": true
+      },
+      "imu_age_s": 0.0086,
+      "imu_rpy_deg": [
+        2.62,
+        -1.756,
+        -156.643
+      ],
+      "orientation_error_deg": 0.0,
+      "pair_valid": true,
+      "pitch_error_deg": -0.0,
+      "pose_age_s": 0.0172,
+      "pose_imu_reception_delta_s": 0.0086,
+      "roll_error_deg": -0.0,
+      "scan_number": 12,
+      "yaw_error_deg": -0.0
+    },
+    {
+      "exact": {
+        "ground": 1331,
+        "nearest_m": null,
+        "objects": 0,
+        "reason": "ok",
+        "unknown": 0,
+        "valid": true
+      },
+      "gt_rpy_deg": [
+        2.62,
+        -1.756,
+        -156.643
+      ],
+      "imu": {
+        "ground": 1331,
+        "nearest_m": null,
+        "objects": 0,
+        "reason": "ok",
+        "unknown": 0,
+        "valid": true
+      },
+      "imu_age_s": 0.0124,
+      "imu_rpy_deg": [
+        2.62,
+        -1.756,
+        -156.643
+      ],
+      "orientation_error_deg": 0.0,
+      "pair_valid": true,
+      "pitch_error_deg": -0.0,
+      "pose_age_s": 0.0104,
+      "pose_imu_reception_delta_s": 0.002,
+      "roll_error_deg": -0.0,
+      "scan_number": 24,
+      "yaw_error_deg": 0.0
+    },
+    {
+      "exact": {
+        "ground": 1331,
+        "nearest_m": null,
+        "objects": 0,
+        "reason": "ok",
+        "unknown": 0,
+        "valid": true
+      },
+      "gt_rpy_deg": [
+        2.62,
+        -1.756,
+        -156.643
+      ],
+      "imu": {
+        "ground": 1331,
+        "nearest_m": null,
+        "objects": 0,
+        "reason": "ok",
+        "unknown": 0,
+        "valid": true
+      },
+      "imu_age_s": 0.0024,
+      "imu_rpy_deg": [
+        2.62,
+        -1.756,
+        -156.643
+      ],
+      "orientation_error_deg": 0.0,
+      "pair_valid": true,
+      "pitch_error_deg": -0.0,
+      "pose_age_s": 0.014,
+      "pose_imu_reception_delta_s": 0.0116,
+      "roll_error_deg": 0.0,
+      "scan_number": 36,
+      "yaw_error_deg": 0.0
+    },
+    {
+      "exact": {
+        "ground": 1331,
+        "nearest_m": null,
+        "objects": 0,
+        "reason": "ok",
+        "unknown": 0,
+        "valid": true
+      },
+      "gt_rpy_deg": [
+        2.62,
+        -1.756,
+        -156.643
+      ],
+      "imu": {
+        "ground": 1331,
+        "nearest_m": null,
+        "objects": 0,
+        "reason": "ok",
+        "unknown": 0,
+        "valid": true
+      },
+      "imu_age_s": 0.0043,
+      "imu_rpy_deg": [
+        2.62,
+        -1.756,
+        -156.643
+      ],
+      "orientation_error_deg": 0.0,
+      "pair_valid": true,
+      "pitch_error_deg": -0.0,
+      "pose_age_s": 0.0025,
+      "pose_imu_reception_delta_s": 0.0019,
+      "roll_error_deg": 0.0,
+      "scan_number": 48,
+      "yaw_error_deg": 0.0
+    },
+    {
+      "exact": {
+        "ground": 1331,
+        "nearest_m": null,
+        "objects": 0,
+        "reason": "ok",
+        "unknown": 0,
+        "valid": true
+      },
+      "gt_rpy_deg": [
+        2.62,
+        -1.756,
+        -156.643
+      ],
+      "imu": {
+        "ground": 1331,
+        "nearest_m": null,
+        "objects": 0,
+        "reason": "ok",
+        "unknown": 0,
+        "valid": true
+      },
+      "imu_age_s": 0.0101,
+      "imu_rpy_deg": [
+        2.62,
+        -1.756,
+        -156.643
+      ],
+      "orientation_error_deg": 0.0,
+      "pair_valid": true,
+      "pitch_error_deg": -0.0,
+      "pose_age_s": 0.0059,
+      "pose_imu_reception_delta_s": 0.0042,
+      "roll_error_deg": 0.0,
+      "scan_number": 60,
+      "yaw_error_deg": 0.0
+    },
+    {
+      "exact": {
+        "ground": 1331,
+        "nearest_m": null,
+        "objects": 0,
+        "reason": "ok",
+        "unknown": 0,
+        "valid": true
+      },
+      "gt_rpy_deg": [
+        2.62,
+        -1.756,
+        -156.643
+      ],
+      "imu": {
+        "ground": 1331,
+        "nearest_m": null,
+        "objects": 0,
+        "reason": "ok",
+        "unknown": 0,
+        "valid": true
+      },
+      "imu_age_s": 0.0022,
+      "imu_rpy_deg": [
+        2.62,
+        -1.756,
+        -156.643
+      ],
+      "orientation_error_deg": 0.0,
+      "pair_valid": true,
+      "pitch_error_deg": -0.0,
+      "pose_age_s": 0.0047,
+      "pose_imu_reception_delta_s": 0.0025,
+      "roll_error_deg": 0.0,
+      "scan_number": 72,
+      "yaw_error_deg": 0.0
+    },
+    {
+      "exact": {
+        "ground": 1331,
+        "nearest_m": null,
+        "objects": 0,
+        "reason": "ok",
+        "unknown": 0,
+        "valid": true
+      },
+      "gt_rpy_deg": [
+        2.62,
+        -1.756,
+        -156.643
+      ],
+      "imu": {
+        "ground": 1331,
+        "nearest_m": null,
+        "objects": 0,
+        "reason": "ok",
+        "unknown": 0,
+        "valid": true
+      },
+      "imu_age_s": 0.0087,
+      "imu_rpy_deg": [
+        2.62,
+        -1.756,
+        -156.643
+      ],
+      "orientation_error_deg": 0.0,
+      "pair_valid": true,
+      "pitch_error_deg": -0.0,
+      "pose_age_s": 0.0099,
+      "pose_imu_reception_delta_s": 0.0012,
+      "roll_error_deg": 0.0,
+      "scan_number": 84,
+      "yaw_error_deg": 0.0
+    },
+    {
+      "exact": {
+        "ground": 1331,
+        "nearest_m": null,
+        "objects": 0,
+        "reason": "ok",
+        "unknown": 0,
+        "valid": true
+      },
+      "gt_rpy_deg": [
+        2.62,
+        -1.756,
+        -156.643
+      ],
+      "imu": {
+        "ground": 1331,
+        "nearest_m": null,
+        "objects": 0,
+        "reason": "ok",
+        "unknown": 0,
+        "valid": true
+      },
+      "imu_age_s": 0.0106,
+      "imu_rpy_deg": [
+        2.62,
+        -1.756,
+        -156.643
+      ],
+      "orientation_error_deg": 0.0,
+      "pair_valid": true,
+      "pitch_error_deg": -0.0,
+      "pose_age_s": 0.0144,
+      "pose_imu_reception_delta_s": 0.0038,
+      "roll_error_deg": 0.0,
+      "scan_number": 96,
+      "yaw_error_deg": 0.0
+    },
+    {
+      "exact": {
+        "ground": 1331,
+        "nearest_m": null,
+        "objects": 0,
+        "reason": "ok",
+        "unknown": 0,
+        "valid": true
+      },
+      "gt_rpy_deg": [
+        2.62,
+        -1.756,
+        -156.643
+      ],
+      "imu": {
+        "ground": 1331,
+        "nearest_m": null,
+        "objects": 0,
+        "reason": "ok",
+        "unknown": 0,
+        "valid": true
+      },
+      "imu_age_s": 0.0169,
+      "imu_rpy_deg": [
+        2.62,
+        -1.756,
+        -156.643
+      ],
+      "orientation_error_deg": 0.0,
+      "pair_valid": true,
+      "pitch_error_deg": -0.0,
+      "pose_age_s": 0.008,
+      "pose_imu_reception_delta_s": 0.0089,
+      "roll_error_deg": 0.0,
+      "scan_number": 108,
+      "yaw_error_deg": 0.0
+    },
+    {
+      "exact": {
+        "ground": 1331,
+        "nearest_m": null,
+        "objects": 0,
+        "reason": "ok",
+        "unknown": 0,
+        "valid": true
+      },
+      "gt_rpy_deg": [
+        2.62,
+        -1.756,
+        -156.643
+      ],
+      "imu": {
+        "ground": 1331,
+        "nearest_m": null,
+        "objects": 0,
+        "reason": "ok",
+        "unknown": 0,
+        "valid": true
+      },
+      "imu_age_s": 0.0148,
+      "imu_rpy_deg": [
+        2.62,
+        -1.756,
+        -156.643
+      ],
+      "orientation_error_deg": 0.0,
+      "pair_valid": true,
+      "pitch_error_deg": -0.0,
+      "pose_age_s": 0.0132,
+      "pose_imu_reception_delta_s": 0.0016,
+      "roll_error_deg": 0.0,
+      "scan_number": 120,
+      "yaw_error_deg": 0.0
+    },
+    {
+      "exact": {
+        "ground": 1331,
+        "nearest_m": null,
+        "objects": 0,
+        "reason": "ok",
+        "unknown": 0,
+        "valid": true
+      },
+      "gt_rpy_deg": [
+        2.62,
+        -1.756,
+        -156.643
+      ],
+      "imu": {
+        "ground": 1331,
+        "nearest_m": null,
+        "objects": 0,
+        "reason": "ok",
+        "unknown": 0,
+        "valid": true
+      },
+      "imu_age_s": 0.0081,
+      "imu_rpy_deg": [
+        2.62,
+        -1.756,
+        -156.643
+      ],
+      "orientation_error_deg": 0.0,
+      "pair_valid": true,
+      "pitch_error_deg": -0.0,
+      "pose_age_s": 0.0173,
+      "pose_imu_reception_delta_s": 0.0091,
+      "roll_error_deg": 0.0,
+      "scan_number": 132,
+      "yaw_error_deg": 0.0
+    },
+    {
+      "exact": {
+        "ground": 1331,
+        "nearest_m": null,
+        "objects": 0,
+        "reason": "ok",
+        "unknown": 0,
+        "valid": true
+      },
+      "gt_rpy_deg": [
+        2.62,
+        -1.756,
+        -156.643
+      ],
+      "imu": {
+        "ground": 1331,
+        "nearest_m": null,
+        "objects": 0,
+        "reason": "ok",
+        "unknown": 0,
+        "valid": true
+      },
+      "imu_age_s": 0.0017,
+      "imu_rpy_deg": [
+        2.62,
+        -1.756,
+        -156.643
+      ],
+      "orientation_error_deg": 0.0,
+      "pair_valid": true,
+      "pitch_error_deg": -0.0,
+      "pose_age_s": 0.009,
+      "pose_imu_reception_delta_s": 0.0073,
+      "roll_error_deg": 0.0,
+      "scan_number": 144,
+      "yaw_error_deg": 0.0
+    }
+  ],
+  "test": "jarcrac_imu_assisted_map_lidar",
+  "wall_reception_pairing_not_sim_timestamp_synchronized": true,
+  "world": "jarcrac_imu_clear"
+}

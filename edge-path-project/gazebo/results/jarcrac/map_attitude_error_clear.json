@@ -1,0 +1,2143 @@
+{
+  "callback_errors": [],
+  "cases": [
+    {
+      "forward_m": 0.0,
+      "name": "exact",
+      "pitch_deg": 0.0,
+      "roll_deg": 0.0,
+      "yaw_deg": 0.0,
+      "z_m": 0.0
+    },
+    {
+      "forward_m": 0.0,
+      "name": "z_+0.05m",
+      "pitch_deg": 0.0,
+      "roll_deg": 0.0,
+      "yaw_deg": 0.0,
+      "z_m": 0.05
+    },
+    {
+      "forward_m": 0.0,
+      "name": "z_-0.05m",
+      "pitch_deg": 0.0,
+      "roll_deg": 0.0,
+      "yaw_deg": 0.0,
+      "z_m": -0.05
+    },
+    {
+      "forward_m": 0.0,
+      "name": "z_+0.10m",
+      "pitch_deg": 0.0,
+      "roll_deg": 0.0,
+      "yaw_deg": 0.0,
+      "z_m": 0.1
+    },
+    {
+      "forward_m": 0.0,
+      "name": "z_-0.10m",
+      "pitch_deg": 0.0,
+      "roll_deg": 0.0,
+      "yaw_deg": 0.0,
+      "z_m": -0.1
+    },
+    {
+      "forward_m": 0.0,
+      "name": "z_+0.25m",
+      "pitch_deg": 0.0,
+      "roll_deg": 0.0,
+      "yaw_deg": 0.0,
+      "z_m": 0.25
+    },
+    {
+      "forward_m": 0.0,
+      "name": "z_-0.25m",
+      "pitch_deg": 0.0,
+      "roll_deg": 0.0,
+      "yaw_deg": 0.0,
+      "z_m": -0.25
+    },
+    {
+      "forward_m": 0.0,
+      "name": "pitch_+2deg",
+      "pitch_deg": 2.0,
+      "roll_deg": 0.0,
+      "yaw_deg": 0.0,
+      "z_m": 0.0
+    },
+    {
+      "forward_m": 0.0,
+      "name": "pitch_-2deg",
+      "pitch_deg": -2.0,
+      "roll_deg": 0.0,
+      "yaw_deg": 0.0,
+      "z_m": 0.0
+    },
+    {
+      "forward_m": 0.0,
+      "name": "pitch_+5deg",
+      "pitch_deg": 5.0,
+      "roll_deg": 0.0,
+      "yaw_deg": 0.0,
+      "z_m": 0.0
+    },
+    {
+      "forward_m": 0.0,
+      "name": "pitch_-5deg",
+      "pitch_deg": -5.0,
+      "roll_deg": 0.0,
+      "yaw_deg": 0.0,
+      "z_m": 0.0
+    },
+    {
+      "forward_m": 0.0,
+      "name": "roll_+2deg",
+      "pitch_deg": 0.0,
+      "roll_deg": 2.0,
+      "yaw_deg": 0.0,
+      "z_m": 0.0
+    },
+    {
+      "forward_m": 0.0,
+      "name": "roll_-2deg",
+      "pitch_deg": 0.0,
+      "roll_deg": -2.0,
+      "yaw_deg": 0.0,
+      "z_m": 0.0
+    },
+    {
+      "forward_m": 0.0,
+      "name": "roll_+5deg",
+      "pitch_deg": 0.0,
+      "roll_deg": 5.0,
+      "yaw_deg": 0.0,
+      "z_m": 0.0
+    },
+    {
+      "forward_m": 0.0,
+      "name": "roll_-5deg",
+      "pitch_deg": 0.0,
+      "roll_deg": -5.0,
+      "yaw_deg": 0.0,
+      "z_m": 0.0
+    },
+    {
+      "forward_m": 0.1,
+      "name": "mixed_positive",
+      "pitch_deg": 0.0,
+      "roll_deg": 0.0,
+      "yaw_deg": 2.0,
+      "z_m": 0.1
+    },
+    {
+      "forward_m": -0.1,
+      "name": "mixed_negative",
+      "pitch_deg": 0.0,
+      "roll_deg": 0.0,
+      "yaw_deg": -2.0,
+      "z_m": -0.1
+    }
+  ],
+  "discarded_queued_scans": 0,
+  "exact_pose_expectation_met": true,
+  "expectation": "clear",
+  "gazebo_ground_truth_pose_reference": true,
+  "interpretation": "Invalid is not clear. Detection/non-detection is compared with exact-pose interpretation of the same scan. Pose errors change map interpretation only. Not a localization or AEB acceptance test.",
+  "mesh": "/home/tniem/edge-path-project-git/edge-path-project/gazebo/models/ruskotunturi_map/meshes/ruskotunturi-map-collision.stl",
+  "processing_errors": [],
+  "read_only": true,
+  "real_world_localization_accuracy_verified": false,
+  "sampled_scans": 10,
+  "samples": [
+    {
+      "cases": {
+        "exact": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5672,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "mixed_negative": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.4775,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "mixed_positive": {
+          "ground_points": 1330,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok_with_unknowns",
+          "sensor_height_m": 0.6629,
+          "unknown_fraction": 0.00075,
+          "unknown_points": 1,
+          "valid": true
+        },
+        "pitch_+2deg": {
+          "ground_points": 447,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "map_mismatch_or_unmapped_returns",
+          "sensor_height_m": 0.5074,
+          "unknown_fraction": 0.66416,
+          "unknown_points": 884,
+          "valid": false
+        },
+        "pitch_+5deg": {
+          "ground_points": 0,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "insufficient_mapped_ground_support",
+          "sensor_height_m": 0.4181,
+          "unknown_fraction": 1.0,
+          "unknown_points": 1331,
+          "valid": false
+        },
+        "pitch_-2deg": {
+          "ground_points": 448,
+          "nearest_obstacle_m": 7.2594,
+          "obstacle_points": 283,
+          "reason": "map_mismatch_or_unmapped_returns",
+          "sensor_height_m": 0.627,
+          "unknown_fraction": 0.45079,
+          "unknown_points": 600,
+          "valid": false
+        },
+        "pitch_-5deg": {
+          "ground_points": 0,
+          "nearest_obstacle_m": 1.9744,
+          "obstacle_points": 1331,
+          "reason": "insufficient_mapped_ground_support",
+          "sensor_height_m": 0.7155,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": false
+        },
+        "roll_+2deg": {
+          "ground_points": 1324,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok_with_unknowns",
+          "sensor_height_m": 0.566,
+          "unknown_fraction": 0.00526,
+          "unknown_points": 7,
+          "valid": true
+        },
+        "roll_+5deg": {
+          "ground_points": 1244,
+          "nearest_obstacle_m": 18.8698,
+          "obstacle_points": 13,
+          "reason": "ok_with_unknowns",
+          "sensor_height_m": 0.5632,
+          "unknown_fraction": 0.0556,
+          "unknown_points": 74,
+          "valid": true
+        },
+        "roll_-2deg": {
+          "ground_points": 1315,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok_with_unknowns",
+          "sensor_height_m": 0.5676,
+          "unknown_fraction": 0.01202,
+          "unknown_points": 16,
+          "valid": true
+        },
+        "roll_-5deg": {
+          "ground_points": 1249,
+          "nearest_obstacle_m": 29.3015,
+          "obstacle_points": 1,
+          "reason": "ok_with_unknowns",
+          "sensor_height_m": 0.567,
+          "unknown_fraction": 0.06086,
+          "unknown_points": 81,
+          "valid": true
+        },
+        "z_+0.05m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.6172,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "z_+0.10m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.6672,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "z_+0.25m": {
+          "ground_points": 0,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "insufficient_mapped_ground_support",
+          "sensor_height_m": 0.8172,
+          "unknown_fraction": 1.0,
+          "unknown_points": 1331,
+          "valid": false
+        },
+        "z_-0.05m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5172,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "z_-0.10m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.4672,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "z_-0.25m": {
+          "ground_points": 0,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "insufficient_mapped_ground_support",
+          "sensor_height_m": 0.3172,
+          "unknown_fraction": 1.0,
+          "unknown_points": 1331,
+          "valid": false
+        }
+      },
+      "scan_number": 20
+    },
+    {
+      "cases": {
+        "exact": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5672,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "mixed_negative": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.4775,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "mixed_positive": {
+          "ground_points": 1330,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok_with_unknowns",
+          "sensor_height_m": 0.6629,
+          "unknown_fraction": 0.00075,
+          "unknown_points": 1,
+          "valid": true
+        },
+        "pitch_+2deg": {
+          "ground_points": 441,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "map_mismatch_or_unmapped_returns",
+          "sensor_height_m": 0.5074,
+          "unknown_fraction": 0.66867,
+          "unknown_points": 890,
+          "valid": false
+        },
+        "pitch_+5deg": {
+          "ground_points": 0,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "insufficient_mapped_ground_support",
+          "sensor_height_m": 0.4181,
+          "unknown_fraction": 1.0,
+          "unknown_points": 1331,
+          "valid": false
+        },
+        "pitch_-2deg": {
+          "ground_points": 437,
+          "nearest_obstacle_m": 7.249,
+          "obstacle_points": 283,
+          "reason": "map_mismatch_or_unmapped_returns",
+          "sensor_height_m": 0.627,
+          "unknown_fraction": 0.45905,
+          "unknown_points": 611,
+          "valid": false
+        },
+        "pitch_-5deg": {
+          "ground_points": 0,
+          "nearest_obstacle_m": 1.9523,
+          "obstacle_points": 1331,
+          "reason": "insufficient_mapped_ground_support",
+          "sensor_height_m": 0.7155,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": false
+        },
+        "roll_+2deg": {
+          "ground_points": 1324,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok_with_unknowns",
+          "sensor_height_m": 0.566,
+          "unknown_fraction": 0.00526,
+          "unknown_points": 7,
+          "valid": true
+        },
+        "roll_+5deg": {
+          "ground_points": 1243,
+          "nearest_obstacle_m": 18.863,
+          "obstacle_points": 13,
+          "reason": "ok_with_unknowns",
+          "sensor_height_m": 0.5632,
+          "unknown_fraction": 0.05635,
+          "unknown_points": 75,
+          "valid": true
+        },
+        "roll_-2deg": {
+          "ground_points": 1314,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok_with_unknowns",
+          "sensor_height_m": 0.5676,
+          "unknown_fraction": 0.01277,
+          "unknown_points": 17,
+          "valid": true
+        },
+        "roll_-5deg": {
+          "ground_points": 1246,
+          "nearest_obstacle_m": 29.278,
+          "obstacle_points": 1,
+          "reason": "ok_with_unknowns",
+          "sensor_height_m": 0.567,
+          "unknown_fraction": 0.06311,
+          "unknown_points": 84,
+          "valid": true
+        },
+        "z_+0.05m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.6172,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "z_+0.10m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.6672,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "z_+0.25m": {
+          "ground_points": 0,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "insufficient_mapped_ground_support",
+          "sensor_height_m": 0.8172,
+          "unknown_fraction": 1.0,
+          "unknown_points": 1331,
+          "valid": false
+        },
+        "z_-0.05m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5172,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "z_-0.10m": {
+          "ground_points": 1330,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok_with_unknowns",
+          "sensor_height_m": 0.4672,
+          "unknown_fraction": 0.00075,
+          "unknown_points": 1,
+          "valid": true
+        },
+        "z_-0.25m": {
+          "ground_points": 0,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "insufficient_mapped_ground_support",
+          "sensor_height_m": 0.3172,
+          "unknown_fraction": 1.0,
+          "unknown_points": 1331,
+          "valid": false
+        }
+      },
+      "scan_number": 40
+    },
+    {
+      "cases": {
+        "exact": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5672,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "mixed_negative": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.4775,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "mixed_positive": {
+          "ground_points": 1330,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok_with_unknowns",
+          "sensor_height_m": 0.6629,
+          "unknown_fraction": 0.00075,
+          "unknown_points": 1,
+          "valid": true
+        },
+        "pitch_+2deg": {
+          "ground_points": 436,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "map_mismatch_or_unmapped_returns",
+          "sensor_height_m": 0.5074,
+          "unknown_fraction": 0.67243,
+          "unknown_points": 895,
+          "valid": false
+        },
+        "pitch_+5deg": {
+          "ground_points": 0,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "insufficient_mapped_ground_support",
+          "sensor_height_m": 0.4181,
+          "unknown_fraction": 1.0,
+          "unknown_points": 1331,
+          "valid": false
+        },
+        "pitch_-2deg": {
+          "ground_points": 443,
+          "nearest_obstacle_m": 7.2736,
+          "obstacle_points": 283,
+          "reason": "map_mismatch_or_unmapped_returns",
+          "sensor_height_m": 0.627,
+          "unknown_fraction": 0.45455,
+          "unknown_points": 605,
+          "valid": false
+        },
+        "pitch_-5deg": {
+          "ground_points": 0,
+          "nearest_obstacle_m": 1.9446,
+          "obstacle_points": 1331,
+          "reason": "insufficient_mapped_ground_support",
+          "sensor_height_m": 0.7155,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": false
+        },
+        "roll_+2deg": {
+          "ground_points": 1324,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok_with_unknowns",
+          "sensor_height_m": 0.566,
+          "unknown_fraction": 0.00526,
+          "unknown_points": 7,
+          "valid": true
+        },
+        "roll_+5deg": {
+          "ground_points": 1243,
+          "nearest_obstacle_m": 18.8633,
+          "obstacle_points": 13,
+          "reason": "ok_with_unknowns",
+          "sensor_height_m": 0.5632,
+          "unknown_fraction": 0.05635,
+          "unknown_points": 75,
+          "valid": true
+        },
+        "roll_-2deg": {
+          "ground_points": 1314,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok_with_unknowns",
+          "sensor_height_m": 0.5676,
+          "unknown_fraction": 0.01277,
+          "unknown_points": 17,
+          "valid": true
+        },
+        "roll_-5deg": {
+          "ground_points": 1247,
+          "nearest_obstacle_m": 29.2865,
+          "obstacle_points": 1,
+          "reason": "ok_with_unknowns",
+          "sensor_height_m": 0.567,
+          "unknown_fraction": 0.06236,
+          "unknown_points": 83,
+          "valid": true
+        },
+        "z_+0.05m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.6172,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "z_+0.10m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.6672,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "z_+0.25m": {
+          "ground_points": 0,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "insufficient_mapped_ground_support",
+          "sensor_height_m": 0.8172,
+          "unknown_fraction": 1.0,
+          "unknown_points": 1331,
+          "valid": false
+        },
+        "z_-0.05m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5172,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "z_-0.10m": {
+          "ground_points": 1330,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok_with_unknowns",
+          "sensor_height_m": 0.4672,
+          "unknown_fraction": 0.00075,
+          "unknown_points": 1,
+          "valid": true
+        },
+        "z_-0.25m": {
+          "ground_points": 0,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "insufficient_mapped_ground_support",
+          "sensor_height_m": 0.3172,
+          "unknown_fraction": 1.0,
+          "unknown_points": 1331,
+          "valid": false
+        }
+      },
+      "scan_number": 60
+    },
+    {
+      "cases": {
+        "exact": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5672,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "mixed_negative": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.4775,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "mixed_positive": {
+          "ground_points": 1330,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok_with_unknowns",
+          "sensor_height_m": 0.6629,
+          "unknown_fraction": 0.00075,
+          "unknown_points": 1,
+          "valid": true
+        },
+        "pitch_+2deg": {
+          "ground_points": 434,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "map_mismatch_or_unmapped_returns",
+          "sensor_height_m": 0.5074,
+          "unknown_fraction": 0.67393,
+          "unknown_points": 897,
+          "valid": false
+        },
+        "pitch_+5deg": {
+          "ground_points": 0,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "insufficient_mapped_ground_support",
+          "sensor_height_m": 0.4181,
+          "unknown_fraction": 1.0,
+          "unknown_points": 1331,
+          "valid": false
+        },
+        "pitch_-2deg": {
+          "ground_points": 441,
+          "nearest_obstacle_m": 7.2808,
+          "obstacle_points": 283,
+          "reason": "map_mismatch_or_unmapped_returns",
+          "sensor_height_m": 0.627,
+          "unknown_fraction": 0.45605,
+          "unknown_points": 607,
+          "valid": false
+        },
+        "pitch_-5deg": {
+          "ground_points": 0,
+          "nearest_obstacle_m": 1.945,
+          "obstacle_points": 1331,
+          "reason": "insufficient_mapped_ground_support",
+          "sensor_height_m": 0.7155,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": false
+        },
+        "roll_+2deg": {
+          "ground_points": 1324,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok_with_unknowns",
+          "sensor_height_m": 0.566,
+          "unknown_fraction": 0.00526,
+          "unknown_points": 7,
+          "valid": true
+        },
+        "roll_+5deg": {
+          "ground_points": 1243,
+          "nearest_obstacle_m": 18.8662,
+          "obstacle_points": 13,
+          "reason": "ok_with_unknowns",
+          "sensor_height_m": 0.5632,
+          "unknown_fraction": 0.05635,
+          "unknown_points": 75,
+          "valid": true
+        },
+        "roll_-2deg": {
+          "ground_points": 1314,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok_with_unknowns",
+          "sensor_height_m": 0.5676,
+          "unknown_fraction": 0.01277,
+          "unknown_points": 17,
+          "valid": true
+        },
+        "roll_-5deg": {
+          "ground_points": 1247,
+          "nearest_obstacle_m": 29.29,
+          "obstacle_points": 1,
+          "reason": "ok_with_unknowns",
+          "sensor_height_m": 0.567,
+          "unknown_fraction": 0.06236,
+          "unknown_points": 83,
+          "valid": true
+        },
+        "z_+0.05m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.6172,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "z_+0.10m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.6672,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "z_+0.25m": {
+          "ground_points": 0,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "insufficient_mapped_ground_support",
+          "sensor_height_m": 0.8172,
+          "unknown_fraction": 1.0,
+          "unknown_points": 1331,
+          "valid": false
+        },
+        "z_-0.05m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5172,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "z_-0.10m": {
+          "ground_points": 1330,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok_with_unknowns",
+          "sensor_height_m": 0.4672,
+          "unknown_fraction": 0.00075,
+          "unknown_points": 1,
+          "valid": true
+        },
+        "z_-0.25m": {
+          "ground_points": 0,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "insufficient_mapped_ground_support",
+          "sensor_height_m": 0.3172,
+          "unknown_fraction": 1.0,
+          "unknown_points": 1331,
+          "valid": false
+        }
+      },
+      "scan_number": 80
+    },
+    {
+      "cases": {
+        "exact": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5672,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "mixed_negative": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.4775,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "mixed_positive": {
+          "ground_points": 1330,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok_with_unknowns",
+          "sensor_height_m": 0.6629,
+          "unknown_fraction": 0.00075,
+          "unknown_points": 1,
+          "valid": true
+        },
+        "pitch_+2deg": {
+          "ground_points": 441,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "map_mismatch_or_unmapped_returns",
+          "sensor_height_m": 0.5074,
+          "unknown_fraction": 0.66867,
+          "unknown_points": 890,
+          "valid": false
+        },
+        "pitch_+5deg": {
+          "ground_points": 0,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "insufficient_mapped_ground_support",
+          "sensor_height_m": 0.4181,
+          "unknown_fraction": 1.0,
+          "unknown_points": 1331,
+          "valid": false
+        },
+        "pitch_-2deg": {
+          "ground_points": 434,
+          "nearest_obstacle_m": 7.2503,
+          "obstacle_points": 283,
+          "reason": "map_mismatch_or_unmapped_returns",
+          "sensor_height_m": 0.627,
+          "unknown_fraction": 0.46131,
+          "unknown_points": 614,
+          "valid": false
+        },
+        "pitch_-5deg": {
+          "ground_points": 0,
+          "nearest_obstacle_m": 1.9624,
+          "obstacle_points": 1331,
+          "reason": "insufficient_mapped_ground_support",
+          "sensor_height_m": 0.7155,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": false
+        },
+        "roll_+2deg": {
+          "ground_points": 1324,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok_with_unknowns",
+          "sensor_height_m": 0.566,
+          "unknown_fraction": 0.00526,
+          "unknown_points": 7,
+          "valid": true
+        },
+        "roll_+5deg": {
+          "ground_points": 1243,
+          "nearest_obstacle_m": 18.872,
+          "obstacle_points": 13,
+          "reason": "ok_with_unknowns",
+          "sensor_height_m": 0.5632,
+          "unknown_fraction": 0.05635,
+          "unknown_points": 75,
+          "valid": true
+        },
+        "roll_-2deg": {
+          "ground_points": 1315,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok_with_unknowns",
+          "sensor_height_m": 0.5676,
+          "unknown_fraction": 0.01202,
+          "unknown_points": 16,
+          "valid": true
+        },
+        "roll_-5deg": {
+          "ground_points": 1247,
+          "nearest_obstacle_m": 29.3066,
+          "obstacle_points": 1,
+          "reason": "ok_with_unknowns",
+          "sensor_height_m": 0.567,
+          "unknown_fraction": 0.06236,
+          "unknown_points": 83,
+          "valid": true
+        },
+        "z_+0.05m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.6172,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "z_+0.10m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.6672,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "z_+0.25m": {
+          "ground_points": 0,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "insufficient_mapped_ground_support",
+          "sensor_height_m": 0.8172,
+          "unknown_fraction": 1.0,
+          "unknown_points": 1331,
+          "valid": false
+        },
+        "z_-0.05m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5172,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "z_-0.10m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.4672,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "z_-0.25m": {
+          "ground_points": 0,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "insufficient_mapped_ground_support",
+          "sensor_height_m": 0.3172,
+          "unknown_fraction": 1.0,
+          "unknown_points": 1331,
+          "valid": false
+        }
+      },
+      "scan_number": 100
+    },
+    {
+      "cases": {
+        "exact": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5672,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "mixed_negative": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.4775,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "mixed_positive": {
+          "ground_points": 1330,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok_with_unknowns",
+          "sensor_height_m": 0.6629,
+          "unknown_fraction": 0.00075,
+          "unknown_points": 1,
+          "valid": true
+        },
+        "pitch_+2deg": {
+          "ground_points": 442,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "map_mismatch_or_unmapped_returns",
+          "sensor_height_m": 0.5074,
+          "unknown_fraction": 0.66792,
+          "unknown_points": 889,
+          "valid": false
+        },
+        "pitch_+5deg": {
+          "ground_points": 0,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "insufficient_mapped_ground_support",
+          "sensor_height_m": 0.4181,
+          "unknown_fraction": 1.0,
+          "unknown_points": 1331,
+          "valid": false
+        },
+        "pitch_-2deg": {
+          "ground_points": 440,
+          "nearest_obstacle_m": 7.2482,
+          "obstacle_points": 283,
+          "reason": "map_mismatch_or_unmapped_returns",
+          "sensor_height_m": 0.627,
+          "unknown_fraction": 0.4568,
+          "unknown_points": 608,
+          "valid": false
+        },
+        "pitch_-5deg": {
+          "ground_points": 0,
+          "nearest_obstacle_m": 1.9504,
+          "obstacle_points": 1331,
+          "reason": "insufficient_mapped_ground_support",
+          "sensor_height_m": 0.7155,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": false
+        },
+        "roll_+2deg": {
+          "ground_points": 1324,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok_with_unknowns",
+          "sensor_height_m": 0.566,
+          "unknown_fraction": 0.00526,
+          "unknown_points": 7,
+          "valid": true
+        },
+        "roll_+5deg": {
+          "ground_points": 1243,
+          "nearest_obstacle_m": 18.8806,
+          "obstacle_points": 13,
+          "reason": "ok_with_unknowns",
+          "sensor_height_m": 0.5632,
+          "unknown_fraction": 0.05635,
+          "unknown_points": 75,
+          "valid": true
+        },
+        "roll_-2deg": {
+          "ground_points": 1315,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok_with_unknowns",
+          "sensor_height_m": 0.5676,
+          "unknown_fraction": 0.01202,
+          "unknown_points": 16,
+          "valid": true
+        },
+        "roll_-5deg": {
+          "ground_points": 1247,
+          "nearest_obstacle_m": 29.2905,
+          "obstacle_points": 1,
+          "reason": "ok_with_unknowns",
+          "sensor_height_m": 0.567,
+          "unknown_fraction": 0.06236,
+          "unknown_points": 83,
+          "valid": true
+        },
+        "z_+0.05m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.6172,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "z_+0.10m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.6672,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "z_+0.25m": {
+          "ground_points": 0,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "insufficient_mapped_ground_support",
+          "sensor_height_m": 0.8172,
+          "unknown_fraction": 1.0,
+          "unknown_points": 1331,
+          "valid": false
+        },
+        "z_-0.05m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5172,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "z_-0.10m": {
+          "ground_points": 1330,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok_with_unknowns",
+          "sensor_height_m": 0.4672,
+          "unknown_fraction": 0.00075,
+          "unknown_points": 1,
+          "valid": true
+        },
+        "z_-0.25m": {
+          "ground_points": 0,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "insufficient_mapped_ground_support",
+          "sensor_height_m": 0.3172,
+          "unknown_fraction": 1.0,
+          "unknown_points": 1331,
+          "valid": false
+        }
+      },
+      "scan_number": 120
+    },
+    {
+      "cases": {
+        "exact": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5672,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "mixed_negative": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.4775,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "mixed_positive": {
+          "ground_points": 1330,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok_with_unknowns",
+          "sensor_height_m": 0.6629,
+          "unknown_fraction": 0.00075,
+          "unknown_points": 1,
+          "valid": true
+        },
+        "pitch_+2deg": {
+          "ground_points": 428,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "map_mismatch_or_unmapped_returns",
+          "sensor_height_m": 0.5074,
+          "unknown_fraction": 0.67844,
+          "unknown_points": 903,
+          "valid": false
+        },
+        "pitch_+5deg": {
+          "ground_points": 0,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "insufficient_mapped_ground_support",
+          "sensor_height_m": 0.4181,
+          "unknown_fraction": 1.0,
+          "unknown_points": 1331,
+          "valid": false
+        },
+        "pitch_-2deg": {
+          "ground_points": 451,
+          "nearest_obstacle_m": 7.2796,
+          "obstacle_points": 283,
+          "reason": "ok_with_unknowns",
+          "sensor_height_m": 0.627,
+          "unknown_fraction": 0.44853,
+          "unknown_points": 597,
+          "valid": true
+        },
+        "pitch_-5deg": {
+          "ground_points": 0,
+          "nearest_obstacle_m": 1.9446,
+          "obstacle_points": 1331,
+          "reason": "insufficient_mapped_ground_support",
+          "sensor_height_m": 0.7155,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": false
+        },
+        "roll_+2deg": {
+          "ground_points": 1324,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok_with_unknowns",
+          "sensor_height_m": 0.566,
+          "unknown_fraction": 0.00526,
+          "unknown_points": 7,
+          "valid": true
+        },
+        "roll_+5deg": {
+          "ground_points": 1245,
+          "nearest_obstacle_m": 18.8474,
+          "obstacle_points": 14,
+          "reason": "ok_with_unknowns",
+          "sensor_height_m": 0.5632,
+          "unknown_fraction": 0.05409,
+          "unknown_points": 72,
+          "valid": true
+        },
+        "roll_-2deg": {
+          "ground_points": 1314,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok_with_unknowns",
+          "sensor_height_m": 0.5676,
+          "unknown_fraction": 0.01277,
+          "unknown_points": 17,
+          "valid": true
+        },
+        "roll_-5deg": {
+          "ground_points": 1249,
+          "nearest_obstacle_m": 29.2722,
+          "obstacle_points": 1,
+          "reason": "ok_with_unknowns",
+          "sensor_height_m": 0.567,
+          "unknown_fraction": 0.06086,
+          "unknown_points": 81,
+          "valid": true
+        },
+        "z_+0.05m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.6172,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "z_+0.10m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.6672,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "z_+0.25m": {
+          "ground_points": 0,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "insufficient_mapped_ground_support",
+          "sensor_height_m": 0.8172,
+          "unknown_fraction": 1.0,
+          "unknown_points": 1331,
+          "valid": false
+        },
+        "z_-0.05m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5172,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "z_-0.10m": {
+          "ground_points": 1329,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok_with_unknowns",
+          "sensor_height_m": 0.4672,
+          "unknown_fraction": 0.0015,
+          "unknown_points": 2,
+          "valid": true
+        },
+        "z_-0.25m": {
+          "ground_points": 0,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "insufficient_mapped_ground_support",
+          "sensor_height_m": 0.3172,
+          "unknown_fraction": 1.0,
+          "unknown_points": 1331,
+          "valid": false
+        }
+      },
+      "scan_number": 140
+    },
+    {
+      "cases": {
+        "exact": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5672,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "mixed_negative": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.4775,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "mixed_positive": {
+          "ground_points": 1330,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok_with_unknowns",
+          "sensor_height_m": 0.6629,
+          "unknown_fraction": 0.00075,
+          "unknown_points": 1,
+          "valid": true
+        },
+        "pitch_+2deg": {
+          "ground_points": 446,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "map_mismatch_or_unmapped_returns",
+          "sensor_height_m": 0.5074,
+          "unknown_fraction": 0.66491,
+          "unknown_points": 885,
+          "valid": false
+        },
+        "pitch_+5deg": {
+          "ground_points": 0,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "insufficient_mapped_ground_support",
+          "sensor_height_m": 0.4181,
+          "unknown_fraction": 1.0,
+          "unknown_points": 1331,
+          "valid": false
+        },
+        "pitch_-2deg": {
+          "ground_points": 429,
+          "nearest_obstacle_m": 7.2567,
+          "obstacle_points": 283,
+          "reason": "map_mismatch_or_unmapped_returns",
+          "sensor_height_m": 0.627,
+          "unknown_fraction": 0.46506,
+          "unknown_points": 619,
+          "valid": false
+        },
+        "pitch_-5deg": {
+          "ground_points": 0,
+          "nearest_obstacle_m": 1.9407,
+          "obstacle_points": 1331,
+          "reason": "insufficient_mapped_ground_support",
+          "sensor_height_m": 0.7155,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": false
+        },
+        "roll_+2deg": {
+          "ground_points": 1324,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok_with_unknowns",
+          "sensor_height_m": 0.566,
+          "unknown_fraction": 0.00526,
+          "unknown_points": 7,
+          "valid": true
+        },
+        "roll_+5deg": {
+          "ground_points": 1243,
+          "nearest_obstacle_m": 18.8513,
+          "obstacle_points": 13,
+          "reason": "ok_with_unknowns",
+          "sensor_height_m": 0.5632,
+          "unknown_fraction": 0.05635,
+          "unknown_points": 75,
+          "valid": true
+        },
+        "roll_-2deg": {
+          "ground_points": 1315,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok_with_unknowns",
+          "sensor_height_m": 0.5676,
+          "unknown_fraction": 0.01202,
+          "unknown_points": 16,
+          "valid": true
+        },
+        "roll_-5deg": {
+          "ground_points": 1247,
+          "nearest_obstacle_m": 29.3038,
+          "obstacle_points": 1,
+          "reason": "ok_with_unknowns",
+          "sensor_height_m": 0.567,
+          "unknown_fraction": 0.06236,
+          "unknown_points": 83,
+          "valid": true
+        },
+        "z_+0.05m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.6172,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "z_+0.10m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.6672,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "z_+0.25m": {
+          "ground_points": 0,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "insufficient_mapped_ground_support",
+          "sensor_height_m": 0.8172,
+          "unknown_fraction": 1.0,
+          "unknown_points": 1331,
+          "valid": false
+        },
+        "z_-0.05m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5172,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "z_-0.10m": {
+          "ground_points": 1330,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok_with_unknowns",
+          "sensor_height_m": 0.4672,
+          "unknown_fraction": 0.00075,
+          "unknown_points": 1,
+          "valid": true
+        },
+        "z_-0.25m": {
+          "ground_points": 0,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "insufficient_mapped_ground_support",
+          "sensor_height_m": 0.3172,
+          "unknown_fraction": 1.0,
+          "unknown_points": 1331,
+          "valid": false
+        }
+      },
+      "scan_number": 160
+    },
+    {
+      "cases": {
+        "exact": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5672,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "mixed_negative": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.4775,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "mixed_positive": {
+          "ground_points": 1330,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok_with_unknowns",
+          "sensor_height_m": 0.6629,
+          "unknown_fraction": 0.00075,
+          "unknown_points": 1,
+          "valid": true
+        },
+        "pitch_+2deg": {
+          "ground_points": 427,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "map_mismatch_or_unmapped_returns",
+          "sensor_height_m": 0.5074,
+          "unknown_fraction": 0.67919,
+          "unknown_points": 904,
+          "valid": false
+        },
+        "pitch_+5deg": {
+          "ground_points": 0,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "insufficient_mapped_ground_support",
+          "sensor_height_m": 0.4181,
+          "unknown_fraction": 1.0,
+          "unknown_points": 1331,
+          "valid": false
+        },
+        "pitch_-2deg": {
+          "ground_points": 438,
+          "nearest_obstacle_m": 7.2485,
+          "obstacle_points": 283,
+          "reason": "map_mismatch_or_unmapped_returns",
+          "sensor_height_m": 0.627,
+          "unknown_fraction": 0.4583,
+          "unknown_points": 610,
+          "valid": false
+        },
+        "pitch_-5deg": {
+          "ground_points": 0,
+          "nearest_obstacle_m": 1.9623,
+          "obstacle_points": 1331,
+          "reason": "insufficient_mapped_ground_support",
+          "sensor_height_m": 0.7155,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": false
+        },
+        "roll_+2deg": {
+          "ground_points": 1324,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok_with_unknowns",
+          "sensor_height_m": 0.566,
+          "unknown_fraction": 0.00526,
+          "unknown_points": 7,
+          "valid": true
+        },
+        "roll_+5deg": {
+          "ground_points": 1243,
+          "nearest_obstacle_m": 18.8816,
+          "obstacle_points": 14,
+          "reason": "ok_with_unknowns",
+          "sensor_height_m": 0.5632,
+          "unknown_fraction": 0.0556,
+          "unknown_points": 74,
+          "valid": true
+        },
+        "roll_-2deg": {
+          "ground_points": 1314,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok_with_unknowns",
+          "sensor_height_m": 0.5676,
+          "unknown_fraction": 0.01277,
+          "unknown_points": 17,
+          "valid": true
+        },
+        "roll_-5deg": {
+          "ground_points": 1247,
+          "nearest_obstacle_m": 29.3128,
+          "obstacle_points": 1,
+          "reason": "ok_with_unknowns",
+          "sensor_height_m": 0.567,
+          "unknown_fraction": 0.06236,
+          "unknown_points": 83,
+          "valid": true
+        },
+        "z_+0.05m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.6172,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "z_+0.10m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.6672,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "z_+0.25m": {
+          "ground_points": 0,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "insufficient_mapped_ground_support",
+          "sensor_height_m": 0.8172,
+          "unknown_fraction": 1.0,
+          "unknown_points": 1331,
+          "valid": false
+        },
+        "z_-0.05m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5172,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "z_-0.10m": {
+          "ground_points": 1329,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok_with_unknowns",
+          "sensor_height_m": 0.4672,
+          "unknown_fraction": 0.0015,
+          "unknown_points": 2,
+          "valid": true
+        },
+        "z_-0.25m": {
+          "ground_points": 0,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "insufficient_mapped_ground_support",
+          "sensor_height_m": 0.3172,
+          "unknown_fraction": 1.0,
+          "unknown_points": 1331,
+          "valid": false
+        }
+      },
+      "scan_number": 180
+    },
+    {
+      "cases": {
+        "exact": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5672,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "mixed_negative": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.4775,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "mixed_positive": {
+          "ground_points": 1330,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok_with_unknowns",
+          "sensor_height_m": 0.6629,
+          "unknown_fraction": 0.00075,
+          "unknown_points": 1,
+          "valid": true
+        },
+        "pitch_+2deg": {
+          "ground_points": 432,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "map_mismatch_or_unmapped_returns",
+          "sensor_height_m": 0.5074,
+          "unknown_fraction": 0.67543,
+          "unknown_points": 899,
+          "valid": false
+        },
+        "pitch_+5deg": {
+          "ground_points": 0,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "insufficient_mapped_ground_support",
+          "sensor_height_m": 0.4181,
+          "unknown_fraction": 1.0,
+          "unknown_points": 1331,
+          "valid": false
+        },
+        "pitch_-2deg": {
+          "ground_points": 442,
+          "nearest_obstacle_m": 7.2556,
+          "obstacle_points": 283,
+          "reason": "map_mismatch_or_unmapped_returns",
+          "sensor_height_m": 0.627,
+          "unknown_fraction": 0.4553,
+          "unknown_points": 606,
+          "valid": false
+        },
+        "pitch_-5deg": {
+          "ground_points": 0,
+          "nearest_obstacle_m": 1.9638,
+          "obstacle_points": 1331,
+          "reason": "insufficient_mapped_ground_support",
+          "sensor_height_m": 0.7155,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": false
+        },
+        "roll_+2deg": {
+          "ground_points": 1324,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok_with_unknowns",
+          "sensor_height_m": 0.566,
+          "unknown_fraction": 0.00526,
+          "unknown_points": 7,
+          "valid": true
+        },
+        "roll_+5deg": {
+          "ground_points": 1243,
+          "nearest_obstacle_m": 18.8411,
+          "obstacle_points": 14,
+          "reason": "ok_with_unknowns",
+          "sensor_height_m": 0.5632,
+          "unknown_fraction": 0.0556,
+          "unknown_points": 74,
+          "valid": true
+        },
+        "roll_-2deg": {
+          "ground_points": 1315,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok_with_unknowns",
+          "sensor_height_m": 0.5676,
+          "unknown_fraction": 0.01202,
+          "unknown_points": 16,
+          "valid": true
+        },
+        "roll_-5deg": {
+          "ground_points": 1247,
+          "nearest_obstacle_m": 29.3091,
+          "obstacle_points": 1,
+          "reason": "ok_with_unknowns",
+          "sensor_height_m": 0.567,
+          "unknown_fraction": 0.06236,
+          "unknown_points": 83,
+          "valid": true
+        },
+        "z_+0.05m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.6172,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "z_+0.10m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.6672,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "z_+0.25m": {
+          "ground_points": 0,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "insufficient_mapped_ground_support",
+          "sensor_height_m": 0.8172,
+          "unknown_fraction": 1.0,
+          "unknown_points": 1331,
+          "valid": false
+        },
+        "z_-0.05m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5172,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "z_-0.10m": {
+          "ground_points": 1330,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok_with_unknowns",
+          "sensor_height_m": 0.4672,
+          "unknown_fraction": 0.00075,
+          "unknown_points": 1,
+          "valid": true
+        },
+        "z_-0.25m": {
+          "ground_points": 0,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "insufficient_mapped_ground_support",
+          "sensor_height_m": 0.3172,
+          "unknown_fraction": 1.0,
+          "unknown_points": 1331,
+          "valid": false
+        }
+      },
+      "scan_number": 200
+    }
+  ],
+  "scan_count": 214,
+  "statistics": {
+    "exact": {
+      "false_obstacle_vs_exact_samples": 0,
+      "invalid_reasons": {},
+      "invalid_samples": 0,
+      "maximum_unknown_fraction": 0.0,
+      "median_delta_obstacle_points_vs_exact": 0.0,
+      "median_nearest_distance_delta_m_vs_exact": null,
+      "median_sensor_height_m": 0.5672,
+      "median_unknown_fraction": 0.0,
+      "missed_obstacle_vs_exact_samples": 0,
+      "obstacle_detecting_valid_samples": 0,
+      "valid_samples": 10
+    },
+    "mixed_negative": {
+      "false_obstacle_vs_exact_samples": 0,
+      "invalid_reasons": {},
+      "invalid_samples": 0,
+      "maximum_unknown_fraction": 0.0,
+      "median_delta_obstacle_points_vs_exact": 0.0,
+      "median_nearest_distance_delta_m_vs_exact": null,
+      "median_sensor_height_m": 0.4775,
+      "median_unknown_fraction": 0.0,
+      "missed_obstacle_vs_exact_samples": 0,
+      "obstacle_detecting_valid_samples": 0,
+      "valid_samples": 10
+    },
+    "mixed_positive": {
+      "false_obstacle_vs_exact_samples": 0,
+      "invalid_reasons": {},
+      "invalid_samples": 0,
+      "maximum_unknown_fraction": 0.00075,
+      "median_delta_obstacle_points_vs_exact": 0.0,
+      "median_nearest_distance_delta_m_vs_exact": null,
+      "median_sensor_height_m": 0.6629,
+      "median_unknown_fraction": 0.00075,
+      "missed_obstacle_vs_exact_samples": 0,
+      "obstacle_detecting_valid_samples": 0,
+      "valid_samples": 10
+    },
+    "pitch_+2deg": {
+      "false_obstacle_vs_exact_samples": 0,
+      "invalid_reasons": {
+        "map_mismatch_or_unmapped_returns": 10
+      },
+      "invalid_samples": 10,
+      "maximum_unknown_fraction": 0.67919,
+      "median_delta_obstacle_points_vs_exact": null,
+      "median_nearest_distance_delta_m_vs_exact": null,
+      "median_sensor_height_m": 0.5074,
+      "median_unknown_fraction": 0.67055,
+      "missed_obstacle_vs_exact_samples": 0,
+      "obstacle_detecting_valid_samples": 0,
+      "valid_samples": 0
+    },
+    "pitch_+5deg": {
+      "false_obstacle_vs_exact_samples": 0,
+      "invalid_reasons": {
+        "insufficient_mapped_ground_support": 10
+      },
+      "invalid_samples": 10,
+      "maximum_unknown_fraction": 1.0,
+      "median_delta_obstacle_points_vs_exact": null,
+      "median_nearest_distance_delta_m_vs_exact": null,
+      "median_sensor_height_m": 0.4181,
+      "median_unknown_fraction": 1.0,
+      "missed_obstacle_vs_exact_samples": 0,
+      "obstacle_detecting_valid_samples": 0,
+      "valid_samples": 0
+    },
+    "pitch_-2deg": {
+      "false_obstacle_vs_exact_samples": 1,
+      "invalid_reasons": {
+        "map_mismatch_or_unmapped_returns": 9
+      },
+      "invalid_samples": 9,
+      "maximum_unknown_fraction": 0.46506,
+      "median_delta_obstacle_points_vs_exact": 283,
+      "median_nearest_distance_delta_m_vs_exact": null,
+      "median_sensor_height_m": 0.627,
+      "median_unknown_fraction": 0.45642499999999997,
+      "missed_obstacle_vs_exact_samples": 0,
+      "obstacle_detecting_valid_samples": 1,
+      "valid_samples": 1
+    },
+    "pitch_-5deg": {
+      "false_obstacle_vs_exact_samples": 0,
+      "invalid_reasons": {
+        "insufficient_mapped_ground_support": 10
+      },
+      "invalid_samples": 10,
+      "maximum_unknown_fraction": 0.0,
+      "median_delta_obstacle_points_vs_exact": null,
+      "median_nearest_distance_delta_m_vs_exact": null,
+      "median_sensor_height_m": 0.7155,
+      "median_unknown_fraction": 0.0,
+      "missed_obstacle_vs_exact_samples": 0,
+      "obstacle_detecting_valid_samples": 0,
+      "valid_samples": 0
+    },
+    "roll_+2deg": {
+      "false_obstacle_vs_exact_samples": 0,
+      "invalid_reasons": {},
+      "invalid_samples": 0,
+      "maximum_unknown_fraction": 0.00526,
+      "median_delta_obstacle_points_vs_exact": 0.0,
+      "median_nearest_distance_delta_m_vs_exact": null,
+      "median_sensor_height_m": 0.566,
+      "median_unknown_fraction": 0.00526,
+      "missed_obstacle_vs_exact_samples": 0,
+      "obstacle_detecting_valid_samples": 0,
+      "valid_samples": 10
+    },
+    "roll_+5deg": {
+      "false_obstacle_vs_exact_samples": 10,
+      "invalid_reasons": {},
+      "invalid_samples": 0,
+      "maximum_unknown_fraction": 0.05635,
+      "median_delta_obstacle_points_vs_exact": 13.0,
+      "median_nearest_distance_delta_m_vs_exact": null,
+      "median_sensor_height_m": 0.5632,
+      "median_unknown_fraction": 0.05635,
+      "missed_obstacle_vs_exact_samples": 0,
+      "obstacle_detecting_valid_samples": 10,
+      "valid_samples": 10
+    },
+    "roll_-2deg": {
+      "false_obstacle_vs_exact_samples": 0,
+      "invalid_reasons": {},
+      "invalid_samples": 0,
+      "maximum_unknown_fraction": 0.01277,
+      "median_delta_obstacle_points_vs_exact": 0.0,
+      "median_nearest_distance_delta_m_vs_exact": null,
+      "median_sensor_height_m": 0.5676,
+      "median_unknown_fraction": 0.012395,
+      "missed_obstacle_vs_exact_samples": 0,
+      "obstacle_detecting_valid_samples": 0,
+      "valid_samples": 10
+    },
+    "roll_-5deg": {
+      "false_obstacle_vs_exact_samples": 10,
+      "invalid_reasons": {},
+      "invalid_samples": 0,
+      "maximum_unknown_fraction": 0.06311,
+      "median_delta_obstacle_points_vs_exact": 1.0,
+      "median_nearest_distance_delta_m_vs_exact": null,
+      "median_sensor_height_m": 0.567,
+      "median_unknown_fraction": 0.06236,
+      "missed_obstacle_vs_exact_samples": 0,
+      "obstacle_detecting_valid_samples": 10,
+      "valid_samples": 10
+    },
+    "z_+0.05m": {
+      "false_obstacle_vs_exact_samples": 0,
+      "invalid_reasons": {},
+      "invalid_samples": 0,
+      "maximum_unknown_fraction": 0.0,
+      "median_delta_obstacle_points_vs_exact": 0.0,
+      "median_nearest_distance_delta_m_vs_exact": null,
+      "median_sensor_height_m": 0.6172,
+      "median_unknown_fraction": 0.0,
+      "missed_obstacle_vs_exact_samples": 0,
+      "obstacle_detecting_valid_samples": 0,
+      "valid_samples": 10
+    },
+    "z_+0.10m": {
+      "false_obstacle_vs_exact_samples": 0,
+      "invalid_reasons": {},
+      "invalid_samples": 0,
+      "maximum_unknown_fraction": 0.0,
+      "median_delta_obstacle_points_vs_exact": 0.0,
+      "median_nearest_distance_delta_m_vs_exact": null,
+      "median_sensor_height_m": 0.6672,
+      "median_unknown_fraction": 0.0,
+      "missed_obstacle_vs_exact_samples": 0,
+      "obstacle_detecting_valid_samples": 0,
+      "valid_samples": 10
+    },
+    "z_+0.25m": {
+      "false_obstacle_vs_exact_samples": 0,
+      "invalid_reasons": {
+        "insufficient_mapped_ground_support": 10
+      },
+      "invalid_samples": 10,
+      "maximum_unknown_fraction": 1.0,
+      "median_delta_obstacle_points_vs_exact": null,
+      "median_nearest_distance_delta_m_vs_exact": null,
+      "median_sensor_height_m": 0.8172,
+      "median_unknown_fraction": 1.0,
+      "missed_obstacle_vs_exact_samples": 0,
+      "obstacle_detecting_valid_samples": 0,
+      "valid_samples": 0
+    },
+    "z_-0.05m": {
+      "false_obstacle_vs_exact_samples": 0,
+      "invalid_reasons": {},
+      "invalid_samples": 0,
+      "maximum_unknown_fraction": 0.0,
+      "median_delta_obstacle_points_vs_exact": 0.0,
+      "median_nearest_distance_delta_m_vs_exact": null,
+      "median_sensor_height_m": 0.5172,
+      "median_unknown_fraction": 0.0,
+      "missed_obstacle_vs_exact_samples": 0,
+      "obstacle_detecting_valid_samples": 0,
+      "valid_samples": 10
+    },
+    "z_-0.10m": {
+      "false_obstacle_vs_exact_samples": 0,
+      "invalid_reasons": {},
+      "invalid_samples": 0,
+      "maximum_unknown_fraction": 0.0015,
+      "median_delta_obstacle_points_vs_exact": 0.0,
+      "median_nearest_distance_delta_m_vs_exact": null,
+      "median_sensor_height_m": 0.4672,
+      "median_unknown_fraction": 0.00075,
+      "missed_obstacle_vs_exact_samples": 0,
+      "obstacle_detecting_valid_samples": 0,
+      "valid_samples": 10
+    },
+    "z_-0.25m": {
+      "false_obstacle_vs_exact_samples": 0,
+      "invalid_reasons": {
+        "insufficient_mapped_ground_support": 10
+      },
+      "invalid_samples": 10,
+      "maximum_unknown_fraction": 1.0,
+      "median_delta_obstacle_points_vs_exact": null,
+      "median_nearest_distance_delta_m_vs_exact": null,
+      "median_sensor_height_m": 0.3172,
+      "median_unknown_fraction": 1.0,
+      "missed_obstacle_vs_exact_samples": 0,
+      "obstacle_detecting_valid_samples": 0,
+      "valid_samples": 0
+    }
+  },
+  "terrain_aeb_verified": false,
+  "test": "jarcrac_map_height_attitude_sensitivity",
+  "vehicle_stationary": true,
+  "world": "jarcrac_terrain_probe"
+}

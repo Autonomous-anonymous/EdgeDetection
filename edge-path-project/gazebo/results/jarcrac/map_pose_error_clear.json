@@ -1,0 +1,1380 @@
+{
+  "callback_errors": [],
+  "cases": [
+    {
+      "forward_m": 0.0,
+      "left_m": 0.0,
+      "name": "exact",
+      "yaw_deg": 0.0
+    },
+    {
+      "forward_m": 0.1,
+      "left_m": 0.0,
+      "name": "forward_+0.10m",
+      "yaw_deg": 0.0
+    },
+    {
+      "forward_m": -0.1,
+      "left_m": 0.0,
+      "name": "forward_-0.10m",
+      "yaw_deg": 0.0
+    },
+    {
+      "forward_m": 0.25,
+      "left_m": 0.0,
+      "name": "forward_+0.25m",
+      "yaw_deg": 0.0
+    },
+    {
+      "forward_m": -0.25,
+      "left_m": 0.0,
+      "name": "forward_-0.25m",
+      "yaw_deg": 0.0
+    },
+    {
+      "forward_m": 0.0,
+      "left_m": 0.1,
+      "name": "left_+0.10m",
+      "yaw_deg": 0.0
+    },
+    {
+      "forward_m": 0.0,
+      "left_m": -0.1,
+      "name": "left_-0.10m",
+      "yaw_deg": 0.0
+    },
+    {
+      "forward_m": 0.0,
+      "left_m": 0.25,
+      "name": "left_+0.25m",
+      "yaw_deg": 0.0
+    },
+    {
+      "forward_m": 0.0,
+      "left_m": -0.25,
+      "name": "left_-0.25m",
+      "yaw_deg": 0.0
+    },
+    {
+      "forward_m": 0.0,
+      "left_m": 0.0,
+      "name": "yaw_+2deg",
+      "yaw_deg": 2.0
+    },
+    {
+      "forward_m": 0.0,
+      "left_m": 0.0,
+      "name": "yaw_-2deg",
+      "yaw_deg": -2.0
+    },
+    {
+      "forward_m": 0.0,
+      "left_m": 0.0,
+      "name": "yaw_+5deg",
+      "yaw_deg": 5.0
+    },
+    {
+      "forward_m": 0.0,
+      "left_m": 0.0,
+      "name": "yaw_-5deg",
+      "yaw_deg": -5.0
+    }
+  ],
+  "discarded_queued_scans": 0,
+  "exact_pose_expectation_met": true,
+  "expectation": "clear",
+  "expected_real_world_localization_accuracy_verified": false,
+  "gazebo_exact_pose_used_as_reference": true,
+  "mesh": "/home/tniem/edge-path-project-git/edge-path-project/gazebo/models/ruskotunturi_map/meshes/ruskotunturi-map-collision.stl",
+  "note": "Paired reclassification of identical LiDAR scans with erroneous map poses. Invalid/unknown is NOT interpreted as obstacle-free. No vehicle motion and no autonomous braking commands.",
+  "pose_topic": "/world/jarcrac_terrain_probe/pose/info",
+  "processing_errors": [],
+  "purpose": "Controlled sensitivity to biased localization, not real pose-estimation error",
+  "read_only": true,
+  "sampled_scans": 8,
+  "samples": [
+    {
+      "cases": {
+        "exact": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5672,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "forward_+0.10m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5649,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "forward_+0.25m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5632,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "forward_-0.10m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.577,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "forward_-0.25m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5918,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "left_+0.10m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5666,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "left_+0.25m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5657,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "left_-0.10m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5695,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "left_-0.25m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5747,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "yaw_+2deg": {
+          "ground_points": 1324,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok_with_unknowns",
+          "sensor_height_m": 0.5668,
+          "unknown_fraction": 0.00526,
+          "unknown_points": 7,
+          "valid": true
+        },
+        "yaw_+5deg": {
+          "ground_points": 1307,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok_with_unknowns",
+          "sensor_height_m": 0.5667,
+          "unknown_fraction": 0.01803,
+          "unknown_points": 24,
+          "valid": true
+        },
+        "yaw_-2deg": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5681,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "yaw_-5deg": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5712,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        }
+      },
+      "lidar_scan_number": 20
+    },
+    {
+      "cases": {
+        "exact": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5672,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "forward_+0.10m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5649,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "forward_+0.25m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5632,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "forward_-0.10m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.577,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "forward_-0.25m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5918,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "left_+0.10m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5666,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "left_+0.25m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5657,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "left_-0.10m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5695,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "left_-0.25m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5747,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "yaw_+2deg": {
+          "ground_points": 1324,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok_with_unknowns",
+          "sensor_height_m": 0.5668,
+          "unknown_fraction": 0.00526,
+          "unknown_points": 7,
+          "valid": true
+        },
+        "yaw_+5deg": {
+          "ground_points": 1307,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok_with_unknowns",
+          "sensor_height_m": 0.5667,
+          "unknown_fraction": 0.01803,
+          "unknown_points": 24,
+          "valid": true
+        },
+        "yaw_-2deg": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5681,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "yaw_-5deg": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5712,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        }
+      },
+      "lidar_scan_number": 40
+    },
+    {
+      "cases": {
+        "exact": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5672,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "forward_+0.10m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5649,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "forward_+0.25m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5632,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "forward_-0.10m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.577,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "forward_-0.25m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5918,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "left_+0.10m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5666,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "left_+0.25m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5657,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "left_-0.10m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5695,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "left_-0.25m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5747,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "yaw_+2deg": {
+          "ground_points": 1324,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok_with_unknowns",
+          "sensor_height_m": 0.5668,
+          "unknown_fraction": 0.00526,
+          "unknown_points": 7,
+          "valid": true
+        },
+        "yaw_+5deg": {
+          "ground_points": 1307,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok_with_unknowns",
+          "sensor_height_m": 0.5667,
+          "unknown_fraction": 0.01803,
+          "unknown_points": 24,
+          "valid": true
+        },
+        "yaw_-2deg": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5681,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "yaw_-5deg": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5712,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        }
+      },
+      "lidar_scan_number": 60
+    },
+    {
+      "cases": {
+        "exact": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5672,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "forward_+0.10m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5649,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "forward_+0.25m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5632,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "forward_-0.10m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.577,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "forward_-0.25m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5918,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "left_+0.10m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5666,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "left_+0.25m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5657,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "left_-0.10m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5695,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "left_-0.25m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5747,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "yaw_+2deg": {
+          "ground_points": 1324,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok_with_unknowns",
+          "sensor_height_m": 0.5668,
+          "unknown_fraction": 0.00526,
+          "unknown_points": 7,
+          "valid": true
+        },
+        "yaw_+5deg": {
+          "ground_points": 1307,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok_with_unknowns",
+          "sensor_height_m": 0.5667,
+          "unknown_fraction": 0.01803,
+          "unknown_points": 24,
+          "valid": true
+        },
+        "yaw_-2deg": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5681,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "yaw_-5deg": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5712,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        }
+      },
+      "lidar_scan_number": 80
+    },
+    {
+      "cases": {
+        "exact": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5672,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "forward_+0.10m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5649,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "forward_+0.25m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5632,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "forward_-0.10m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.577,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "forward_-0.25m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5918,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "left_+0.10m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5666,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "left_+0.25m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5657,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "left_-0.10m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5695,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "left_-0.25m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5747,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "yaw_+2deg": {
+          "ground_points": 1324,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok_with_unknowns",
+          "sensor_height_m": 0.5668,
+          "unknown_fraction": 0.00526,
+          "unknown_points": 7,
+          "valid": true
+        },
+        "yaw_+5deg": {
+          "ground_points": 1306,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok_with_unknowns",
+          "sensor_height_m": 0.5667,
+          "unknown_fraction": 0.01878,
+          "unknown_points": 25,
+          "valid": true
+        },
+        "yaw_-2deg": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5681,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "yaw_-5deg": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5712,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        }
+      },
+      "lidar_scan_number": 100
+    },
+    {
+      "cases": {
+        "exact": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5672,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "forward_+0.10m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5649,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "forward_+0.25m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5632,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "forward_-0.10m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.577,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "forward_-0.25m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5918,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "left_+0.10m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5666,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "left_+0.25m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5657,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "left_-0.10m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5695,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "left_-0.25m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5747,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "yaw_+2deg": {
+          "ground_points": 1324,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok_with_unknowns",
+          "sensor_height_m": 0.5668,
+          "unknown_fraction": 0.00526,
+          "unknown_points": 7,
+          "valid": true
+        },
+        "yaw_+5deg": {
+          "ground_points": 1307,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok_with_unknowns",
+          "sensor_height_m": 0.5667,
+          "unknown_fraction": 0.01803,
+          "unknown_points": 24,
+          "valid": true
+        },
+        "yaw_-2deg": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5681,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "yaw_-5deg": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5712,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        }
+      },
+      "lidar_scan_number": 120
+    },
+    {
+      "cases": {
+        "exact": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5672,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "forward_+0.10m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5649,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "forward_+0.25m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5632,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "forward_-0.10m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.577,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "forward_-0.25m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5918,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "left_+0.10m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5666,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "left_+0.25m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5657,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "left_-0.10m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5695,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "left_-0.25m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5747,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "yaw_+2deg": {
+          "ground_points": 1324,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok_with_unknowns",
+          "sensor_height_m": 0.5668,
+          "unknown_fraction": 0.00526,
+          "unknown_points": 7,
+          "valid": true
+        },
+        "yaw_+5deg": {
+          "ground_points": 1307,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok_with_unknowns",
+          "sensor_height_m": 0.5667,
+          "unknown_fraction": 0.01803,
+          "unknown_points": 24,
+          "valid": true
+        },
+        "yaw_-2deg": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5681,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "yaw_-5deg": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5712,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        }
+      },
+      "lidar_scan_number": 140
+    },
+    {
+      "cases": {
+        "exact": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5672,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "forward_+0.10m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5649,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "forward_+0.25m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5632,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "forward_-0.10m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.577,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "forward_-0.25m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5918,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "left_+0.10m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5666,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "left_+0.25m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5657,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "left_-0.10m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5695,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "left_-0.25m": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5747,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "yaw_+2deg": {
+          "ground_points": 1324,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok_with_unknowns",
+          "sensor_height_m": 0.5668,
+          "unknown_fraction": 0.00526,
+          "unknown_points": 7,
+          "valid": true
+        },
+        "yaw_+5deg": {
+          "ground_points": 1307,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok_with_unknowns",
+          "sensor_height_m": 0.5667,
+          "unknown_fraction": 0.01803,
+          "unknown_points": 24,
+          "valid": true
+        },
+        "yaw_-2deg": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5681,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        },
+        "yaw_-5deg": {
+          "ground_points": 1331,
+          "nearest_obstacle_m": null,
+          "obstacle_points": 0,
+          "reason": "ok",
+          "sensor_height_m": 0.5712,
+          "unknown_fraction": 0.0,
+          "unknown_points": 0,
+          "valid": true
+        }
+      },
+      "lidar_scan_number": 160
+    }
+  ],
+  "scan_count": 173,
+  "scan_topic": "/jarcrac/lidar",
+  "stationary_vehicle": true,
+  "statistics": {
+    "exact": {
+      "false_obstacle_vs_exact_samples": 0,
+      "invalid_reasons": {},
+      "invalid_samples": 0,
+      "max_unknown_fraction": 0.0,
+      "median_obstacle_count_delta_vs_exact": 0.0,
+      "median_obstacle_points_valid": 0.0,
+      "median_unknown_fraction": 0.0,
+      "missed_obstacle_vs_exact_samples": 0,
+      "nearest_obstacle_m_max": null,
+      "nearest_obstacle_m_min": null,
+      "obstacle_detecting_valid_samples": 0,
+      "valid_samples": 8,
+      "valid_scans_with_no_obstacle": 8
+    },
+    "forward_+0.10m": {
+      "false_obstacle_vs_exact_samples": 0,
+      "invalid_reasons": {},
+      "invalid_samples": 0,
+      "max_unknown_fraction": 0.0,
+      "median_obstacle_count_delta_vs_exact": 0.0,
+      "median_obstacle_points_valid": 0.0,
+      "median_unknown_fraction": 0.0,
+      "missed_obstacle_vs_exact_samples": 0,
+      "nearest_obstacle_m_max": null,
+      "nearest_obstacle_m_min": null,
+      "obstacle_detecting_valid_samples": 0,
+      "valid_samples": 8,
+      "valid_scans_with_no_obstacle": 8
+    },
+    "forward_+0.25m": {
+      "false_obstacle_vs_exact_samples": 0,
+      "invalid_reasons": {},
+      "invalid_samples": 0,
+      "max_unknown_fraction": 0.0,
+      "median_obstacle_count_delta_vs_exact": 0.0,
+      "median_obstacle_points_valid": 0.0,
+      "median_unknown_fraction": 0.0,
+      "missed_obstacle_vs_exact_samples": 0,
+      "nearest_obstacle_m_max": null,
+      "nearest_obstacle_m_min": null,
+      "obstacle_detecting_valid_samples": 0,
+      "valid_samples": 8,
+      "valid_scans_with_no_obstacle": 8
+    },
+    "forward_-0.10m": {
+      "false_obstacle_vs_exact_samples": 0,
+      "invalid_reasons": {},
+      "invalid_samples": 0,
+      "max_unknown_fraction": 0.0,
+      "median_obstacle_count_delta_vs_exact": 0.0,
+      "median_obstacle_points_valid": 0.0,
+      "median_unknown_fraction": 0.0,
+      "missed_obstacle_vs_exact_samples": 0,
+      "nearest_obstacle_m_max": null,
+      "nearest_obstacle_m_min": null,
+      "obstacle_detecting_valid_samples": 0,
+      "valid_samples": 8,
+      "valid_scans_with_no_obstacle": 8
+    },
+    "forward_-0.25m": {
+      "false_obstacle_vs_exact_samples": 0,
+      "invalid_reasons": {},
+      "invalid_samples": 0,
+      "max_unknown_fraction": 0.0,
+      "median_obstacle_count_delta_vs_exact": 0.0,
+      "median_obstacle_points_valid": 0.0,
+      "median_unknown_fraction": 0.0,
+      "missed_obstacle_vs_exact_samples": 0,
+      "nearest_obstacle_m_max": null,
+      "nearest_obstacle_m_min": null,
+      "obstacle_detecting_valid_samples": 0,
+      "valid_samples": 8,
+      "valid_scans_with_no_obstacle": 8
+    },
+    "left_+0.10m": {
+      "false_obstacle_vs_exact_samples": 0,
+      "invalid_reasons": {},
+      "invalid_samples": 0,
+      "max_unknown_fraction": 0.0,
+      "median_obstacle_count_delta_vs_exact": 0.0,
+      "median_obstacle_points_valid": 0.0,
+      "median_unknown_fraction": 0.0,
+      "missed_obstacle_vs_exact_samples": 0,
+      "nearest_obstacle_m_max": null,
+      "nearest_obstacle_m_min": null,
+      "obstacle_detecting_valid_samples": 0,
+      "valid_samples": 8,
+      "valid_scans_with_no_obstacle": 8
+    },
+    "left_+0.25m": {
+      "false_obstacle_vs_exact_samples": 0,
+      "invalid_reasons": {},
+      "invalid_samples": 0,
+      "max_unknown_fraction": 0.0,
+      "median_obstacle_count_delta_vs_exact": 0.0,
+      "median_obstacle_points_valid": 0.0,
+      "median_unknown_fraction": 0.0,
+      "missed_obstacle_vs_exact_samples": 0,
+      "nearest_obstacle_m_max": null,
+      "nearest_obstacle_m_min": null,
+      "obstacle_detecting_valid_samples": 0,
+      "valid_samples": 8,
+      "valid_scans_with_no_obstacle": 8
+    },
+    "left_-0.10m": {
+      "false_obstacle_vs_exact_samples": 0,
+      "invalid_reasons": {},
+      "invalid_samples": 0,
+      "max_unknown_fraction": 0.0,
+      "median_obstacle_count_delta_vs_exact": 0.0,
+      "median_obstacle_points_valid": 0.0,
+      "median_unknown_fraction": 0.0,
+      "missed_obstacle_vs_exact_samples": 0,
+      "nearest_obstacle_m_max": null,
+      "nearest_obstacle_m_min": null,
+      "obstacle_detecting_valid_samples": 0,
+      "valid_samples": 8,
+      "valid_scans_with_no_obstacle": 8
+    },
+    "left_-0.25m": {
+      "false_obstacle_vs_exact_samples": 0,
+      "invalid_reasons": {},
+      "invalid_samples": 0,
+      "max_unknown_fraction": 0.0,
+      "median_obstacle_count_delta_vs_exact": 0.0,
+      "median_obstacle_points_valid": 0.0,
+      "median_unknown_fraction": 0.0,
+      "missed_obstacle_vs_exact_samples": 0,
+      "nearest_obstacle_m_max": null,
+      "nearest_obstacle_m_min": null,
+      "obstacle_detecting_valid_samples": 0,
+      "valid_samples": 8,
+      "valid_scans_with_no_obstacle": 8
+    },
+    "yaw_+2deg": {
+      "false_obstacle_vs_exact_samples": 0,
+      "invalid_reasons": {},
+      "invalid_samples": 0,
+      "max_unknown_fraction": 0.00526,
+      "median_obstacle_count_delta_vs_exact": 0.0,
+      "median_obstacle_points_valid": 0.0,
+      "median_unknown_fraction": 0.0053,
+      "missed_obstacle_vs_exact_samples": 0,
+      "nearest_obstacle_m_max": null,
+      "nearest_obstacle_m_min": null,
+      "obstacle_detecting_valid_samples": 0,
+      "valid_samples": 8,
+      "valid_scans_with_no_obstacle": 8
+    },
+    "yaw_+5deg": {
+      "false_obstacle_vs_exact_samples": 0,
+      "invalid_reasons": {},
+      "invalid_samples": 0,
+      "max_unknown_fraction": 0.01878,
+      "median_obstacle_count_delta_vs_exact": 0.0,
+      "median_obstacle_points_valid": 0.0,
+      "median_unknown_fraction": 0.018,
+      "missed_obstacle_vs_exact_samples": 0,
+      "nearest_obstacle_m_max": null,
+      "nearest_obstacle_m_min": null,
+      "obstacle_detecting_valid_samples": 0,
+      "valid_samples": 8,
+      "valid_scans_with_no_obstacle": 8
+    },
+    "yaw_-2deg": {
+      "false_obstacle_vs_exact_samples": 0,
+      "invalid_reasons": {},
+      "invalid_samples": 0,
+      "max_unknown_fraction": 0.0,
+      "median_obstacle_count_delta_vs_exact": 0.0,
+      "median_obstacle_points_valid": 0.0,
+      "median_unknown_fraction": 0.0,
+      "missed_obstacle_vs_exact_samples": 0,
+      "nearest_obstacle_m_max": null,
+      "nearest_obstacle_m_min": null,
+      "obstacle_detecting_valid_samples": 0,
+      "valid_samples": 8,
+      "valid_scans_with_no_obstacle": 8
+    },
+    "yaw_-5deg": {
+      "false_obstacle_vs_exact_samples": 0,
+      "invalid_reasons": {},
+      "invalid_samples": 0,
+      "max_unknown_fraction": 0.0,
+      "median_obstacle_count_delta_vs_exact": 0.0,
+      "median_obstacle_points_valid": 0.0,
+      "median_unknown_fraction": 0.0,
+      "missed_obstacle_vs_exact_samples": 0,
+      "nearest_obstacle_m_max": null,
+      "nearest_obstacle_m_min": null,
+      "obstacle_detecting_valid_samples": 0,
+      "valid_samples": 8,
+      "valid_scans_with_no_obstacle": 8
+    }
+  },
+  "terrain_aeb_safety_verified": false,
+  "test": "jarcrac_map_pose_sensitivity",
+  "world": "jarcrac_terrain_probe"
+}
