@@ -1,0 +1,65 @@
+{
+  "aeb_controller_active": false,
+  "contact_events_received": 474,
+  "contact_messages_received": 474,
+  "drive_speed_command_mps": 0.15,
+  "elapsed_wall_s": 15.34,
+  "first_contact_at_x_m": 1.2986250000002189,
+  "intentional_contact": true,
+  "matching_chassis_obstacle_contact_events": 474,
+  "matching_collision_pair": [
+    "jarcrac_v2_aeb_obstacle::body::collision",
+    "jarcrac::chassis::body_collision"
+  ],
+  "maximum_measured_speed_mps": 0.1500000000021276,
+  "movement_observed": true,
+  "note": "Positive contact-sensor plumbing test only. Deliberate Gazebo collision, not AEB acceptance or a safety demonstration.",
+  "observed_collision_pairs_first_10": [
+    [
+      "jarcrac_v2_aeb_obstacle::body::collision",
+      "jarcrac::chassis::body_collision"
+    ],
+    [
+      "jarcrac_v2_aeb_obstacle::body::collision",
+      "jarcrac::chassis::body_collision"
+    ],
+    [
+      "jarcrac_v2_aeb_obstacle::body::collision",
+      "jarcrac::chassis::body_collision"
+    ],
+    [
+      "jarcrac_v2_aeb_obstacle::body::collision",
+      "jarcrac::chassis::body_collision"
+    ],
+    [
+      "jarcrac_v2_aeb_obstacle::body::collision",
+      "jarcrac::chassis::body_collision"
+    ],
+    [
+      "jarcrac_v2_aeb_obstacle::body::collision",
+      "jarcrac::chassis::body_collision"
+    ],
+    [
+      "jarcrac_v2_aeb_obstacle::body::collision",
+      "jarcrac::chassis::body_collision"
+    ],
+    [
+      "jarcrac_v2_aeb_obstacle::body::collision",
+      "jarcrac::chassis::body_collision"
+    ],
+    [
+      "jarcrac_v2_aeb_obstacle::body::collision",
+      "jarcrac::chassis::body_collision"
+    ],
+    [
+      "jarcrac_v2_aeb_obstacle::body::collision",
+      "jarcrac::chassis::body_collision"
+    ]
+  ],
+  "observed_final_speed_mps": 0.0,
+  "passed": true,
+  "reason": "matching_chassis_obstacle_contact_observed",
+  "same_contact_topic_as_original_aeb_world": true,
+  "scenario": "jarcrac_v2_contact_sensor_positive_control",
+  "stop_verified": true
+}
