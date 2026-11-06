@@ -1,0 +1,23 @@
+{
+  "source_xml_filename": "Jarcrac_Rusko_rev_2026_01_05_11-free_roll_test2.xml",
+  "source_xml_sha256": "ac4d4511e390337aeefda573dcd6926f6292f9f3484110b8a37258b200e9c3c7",
+  "source_stl_sha256": {
+    "Jarcrac_body.STL": "66feda0248a956d8767d39e9d9596a3e07256ace79f19f29c3fb0583930625d4",
+    "Large_pulley.STL": "fd56087ba5f4afc7cc11db0f4f6d0272b79c217e8a078a7c4369a676316aa35c",
+    "Small_pulley.STL": "8169c96e8f1729942882d4917cf28a27c3c2413cb79b4ecef0948bace2b920fa"
+  },
+  "representation": "tracked_vehicle_approximation_not_mevea_rope_tracks",
+  "body_mass_kg": 2000.0,
+  "body_com_gazebo_m": [
+    -0.2,
+    -0.0,
+    0.1
+  ],
+  "tracks_separation_m": 1.27,
+  "track_length_m": 2.517,
+  "pulley_count": 14,
+  "body_contact_bottom_relative_m": -0.738,
+  "collision_bottom_contact_m": -0.738,
+  "track_width_m_assumed": 0.27,
+  "track_mass_kg_each_assumed": 15.0
+}

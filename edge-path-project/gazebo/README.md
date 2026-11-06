@@ -1,8 +1,8 @@
 # CAMINO Gazebo SIL baseline: v6.4
 
 This guide describes the v6.4 SIL baseline preserved in the **CAMINO Gazebo SIL/HIL branch**. Earlier scripts,
-worlds and CSV results remain available as development evidence. Mevea is outside
-this project's scope. The later HIL stage uses a real reComputer Industrial R2100
+worlds and CSV results remain available as development evidence. The preserved v6.4 reference implementation remains independent of the newer
+experimental Mevea-derived JARCRAC v2 model. The later HIL stage uses a real reComputer Industrial R2100
 with physical CAN while Gazebo remains the virtual world and vehicle-dynamics source.
 
 ## Running the integrated demo
@@ -296,3 +296,11 @@ This guide and the root README supersede temporary `FINAL_SIL*.md` patch notes.
 Those notes and their `:Zone.Identifier` download metadata may be removed from
 the local checkout. They are excluded from Git, along with Python bytecode.
 Keep the main READMEs, scripts, worlds, regression tests and result CSVs/traces.
+
+## Experimental JARCRAC v2 (separate SIL trial)
+
+A Mevea-derived JARCRAC v2 vehicle with 12 normalized wheels, detailed body
+visual, simplified box collision and front-mounted 32-layer LiDAR has an
+independent flat-world AEB test. Follow the root
+[JARCRAC v2 SIL guide](../../JARCRAC_V2_SIL.md). This experiment has
+**not** been integrated into the physical R2100 HIL acceptance path.

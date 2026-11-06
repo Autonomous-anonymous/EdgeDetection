@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "name": "jarcrac_v2_front_3d_aeb",
+  "description": "Experimental Gazebo SIL AEB for the front-mounted 32-layer JARCRAC v2; flat ground only, not calibrated Mevea or R2100 HIL.",
+  "world": "edge-path-project/gazebo/worlds/jarcrac_v2_front_aeb_world.sdf",
+  "vehicle": "jarcrac",
+  "start": {"x": 0.0, "y": 0.0, "yaw": 0.0},
+  "obstacle": {"name": "jarcrac_v2_aeb_obstacle", "x": 8.0, "y": 0.0, "half_x": 0.25, "half_y": 1.0},
+  "topics": {
+    "cmd_vel": "/model/jarcrac/cmd_vel",
+    "odometry": "/model/jarcrac/odometry",
+    "lidar": "/jarcrac/lidar",
+    "world_poses": "/world/jarcrac_v2_front_aeb/pose/info",
+    "obstacle_contacts": "/world/jarcrac_v2_front_aeb/model/jarcrac_v2_aeb_obstacle/link/body/sensor/obstacle_contact/contact"
+  },
+  "sensor": {
+    "height_above_flat_ground_m": 0.60,
+    "front_sector_half_angle_deg": 12.0,
+    "ground_z_m": 0.0,
+    "min_obstacle_height_m": 0.30,
+    "max_obstacle_height_m": 3.0,
+    "near_field_warning_radius_m": 1.6,
+    "minimum_obstacle_returns": 4
+  },
+  "safety": {
+    "cruise_speed_mps": 0.35,
+    "estimated_front_reach_m": 1.50,
+    "emergency_distance_m": 0.8,
+    "ttc_threshold_s": 2.0,
+    "assumed_deceleration_mps2": 0.25,
+    "reaction_allowance_s": 0.5,
+    "sensor_timeout_s": 1.25
+  },
+  "acceptance": {
+    "trial_timeout_s": 70.0,
+    "readiness_timeout_s": 20.0,
+    "minimum_travel_before_braking_m": 0.5,
+    "minimum_speed_to_count_motion_mps": 0.10,
+    "maximum_lateral_deviation_m": 0.5,
+    "maximum_yaw_error_rad": 0.25,
+    "required_clearance_m": 1.0,
+    "stop_speed_mps": 0.04,
+    "stop_confirm_samples": 4,
+    "stop_hold_sim_s": 0.8
+  }
+}
