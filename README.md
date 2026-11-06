@@ -19,6 +19,12 @@ This branch intentionally excludes the earlier CARLA prototype, its standalone s
 
 The final SIL demo's moving obstacle is managed by **path-clearance-based LiDAR hold/resume**; it does not use the shared scenario's TTC-based AEB policy for that moving obstacle. The TTC-based emergency brake is demonstrated by the separate shared `emergency_braking` scenario.
 
+## JARCRAC v2 — experimental terrain perception (2026-11-06)
+
+The independent Mevea-derived JARCRAC Gazebo model has operator-reported **flat-ground AEB PASS** results at **0.35, 0.70 and 1.00 m/s**, plus a **positive chassis–obstacle contact-sensor control**. Subsequent *read-only* Ruskotunturi diagnostics demonstrated LiDAR-only and terrain-map-assisted classification, sensitivity to localization and attitude errors, and four simulated **32-layer LiDAR + IMU** calibration controls. The map-assisted method uses Gazebo ground-truth position; the IMU tests used ideal simulated sensing.
+
+The experiments are **not JARCRAC-specific R2100 HIL**, validated localization, dynamic forest-terrain braking or a safety case. See the [JARCRAC v2 SIL guide](JARCRAC_V2_SIL.md) for measurements, source-file locations and limitations. Experimental source files and additional JSON evidence produced in the local WSL checkout must be committed separately from this documentation update.
+
 ## Repository layout
 
 ```text

@@ -85,9 +85,16 @@ Verified offline (`tests/test_jarcrac_model.py`, 28 tests): well-formed SDF,
 joint and plugin consistency, symmetry, level ground contact, mass and inertia
 (composite, parallel-axis), belt geometry, mesh placement, regeneration
 reproducibility including the `--keep-source-radii` mode.
-**Not yet verified: any Gazebo runtime behaviour.** First-run checklist: wheels
-settle without jitter or tilt; commanded 0.5 m/s gives about 0.5 m/s odometry;
-in-place turn rate vs command; lidar does not see the vehicle's own body.
+**Subsequent Gazebo SIL evidence (2026-11-06):** The revised front-mounted
+32-layer LiDAR detected the flat-world obstacle and the experimental AEB
+reported PASS at 0.35, 0.70 and 1.00 m/s. A separate deliberate collision
+verified the contact sensor. Map-assisted perception and simulated IMU controls
+were also exercised on Ruskotunturi; these are stationary diagnostics, not
+terrain AEB or real-vehicle calibration. See the repository-root
+`JARCRAC_V2_SIL.md` for measured results, scripts and limits.
+
+Still to verify against real dynamics: wheel/track response, turning behaviour,
+hydraulic braking, uneven-terrain driving, and JARCRAC-specific R2100 HIL.
 
 Current LiDAR: front-centre at chassis (1.68, 0, -0.111) m, nominally 0.60 m
 above flat ground, 0.23 m ahead of the front collision-box face; 180-degree
@@ -111,8 +118,8 @@ is 0.60 m above level ground and 0.23 m ahead of the front collision-box face.
 The box collision and `Runko_part.STL` visual remain unchanged. This sensor
 position requires a real mounting bracket and is an uncalibrated simulation
 choice. The flat-world obstacle is expected near **6.07 m** in the forward
-scan (7.75 m obstacle face minus 1.68 m scanner X). See the package-root
-`README_JARCRAC_FRONT_LIDAR.md` for commands, checks, and limitations.
+scan (7.75 m obstacle face minus 1.68 m scanner X). See the repository-root
+`JARCRAC_V2_SIL.md` for commands, checks, and limitations.
 
 **Do not connect the older single-plane AEB policy to these multi-layer rays.**
-This model has not yet completed a live front-mounted LiDAR trial.
+A separate front-3D-LiDAR AEB controller has completed the documented flat-world SIL trials.

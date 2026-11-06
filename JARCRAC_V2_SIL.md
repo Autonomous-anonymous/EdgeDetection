@@ -1,6 +1,6 @@
 # CAMINO — JARCRAC v2 front 3D LiDAR AEB (SIL)
 
-This experiment is a new, independent Gazebo Harmonic **software-in-the-loop** demonstration on the `camino` branch. It does **not** execute the current AEB algorithm on the R2100. For physical CAN HIL use the existing shared scenario and `R2100_INSTRUCTOR_DEMO.md`.
+This experiment is a new, independent Gazebo Harmonic **software-in-the-loop** demonstration on the `camino` branch. It does **not** execute the current AEB algorithm on the R2100. For the separately validated physical CAN HIL reference, use the [R2100 HIL guide](edge-path-project/hil/README.md). JARCRAC v2 itself has **not** been validated on the R2100.
 
 ## Implementation
 
@@ -64,19 +64,75 @@ The local WSL/Gazebo test output supplied by the operator reported:
 | Final *estimated* body gap | 1.6067 m |
 | Final speed | 0.0 m/s |
 | Contact transport subscribed | true |
-| Positive collision-monitor test | **false / not validated** |
+| Positive collision-monitor test | Not performed in this original AEB trial; later positive-control test **PASS** |
 | Obstacle contact observed | false |
 
 The prior no-motion LiDAR probe received 100 scans, `layers=32`, `horizontal=721`, `possible_self_pts=0`, with `nearest_forward` approximately 6.02 m. These are operator-provided console observations, not a simulation rerun in the environment used to prepare this integration.
 
 **Preserve the original generated evidence from WSL**, `edge-path-project/gazebo/results/jarcrac/v2_front_3d_aeb_first_trial.json` and matching `.csv`, when committing to Git. Do not substitute this summary for raw measurements.
 
+## Additional operator-reported validation (2026-11-06)
+
+The following results were obtained in the operator's WSL / Gazebo Harmonic environment. The raw measurements originate from the recorded trials, not a fresh simulation performed by this documentation update. The newer experimental Python sources, test worlds, regression tests and diagnostics must be committed from the WSL checkout separately from this Markdown update.
+
+### Flat-world AEB at three speeds
+
+| Commanded speed | AEB trigger progress | Travel after trigger | Final estimated body gap | Outcome |
+| --- | ---: | ---: | ---: | --- |
+| 0.35 m/s | 4.6121 m | 0.0312 m | 1.6067 m | PASS |
+| 0.70 m/s | 3.7124 m | 0.1243 m | 2.4133 m | PASS |
+| 1.00 m/s | 2.5835 m | 0.2555 m | 3.4110 m | PASS |
+
+All three trials ended at zero measured speed, with `predicted_stopping_distance` as the AEB reason and no reported obstacle-contact event. Body clearance is an *estimate*, not measured mesh separation. DiffDrive's assumed deceleration is not a calibrated JARCRAC hydraulic brake response. Versioned evidence: `v2_front_3d_aeb_first_trial.{json,csv}`, `v2_front_3d_aeb_0p7mps_trial.{json,csv}`, and `v2_front_3d_aeb_1p0mps_trial.{json,csv}` under `edge-path-project/gazebo/results/jarcrac/`.
+
+A separate **deliberate-contact positive control** reported PASS at 0.15 m/s: 474 contact updates explicitly identified `jarcrac::chassis::body_collision` and `jarcrac_v2_aeb_obstacle::body::collision`; final measured speed was zero. Repeated updates are not 474 independent collisions. Evidence: `v2_contact_positive_trial.json`. This verifies the obstacle contact topic can observe this collision pair, not that all possible collisions are covered.
+
+### Ruskotunturi perception and localization diagnostics (stationary, read-only)
+
+| Experiment | Operator-observed result |
+| --- | --- |
+| LiDAR-only, no added obstacle | 13/13 sampled ground fits valid; no detected objects; 231–286 uncertain returns per sample |
+| LiDAR-only, known tall box | 13/13 sampled fits valid; approximately 1,469–1,488 obstacle returns, nearest ≈3.84–3.85 m |
+| Map-assisted, clear scene | 12/12 valid samples; 0 obstacle returns and 0 unknown returns |
+| Map-assisted, known tall box | 12/12 valid and obstacle-detecting samples; ≈1,521–1,523 obstacle returns, nearest ≈3.84 m; ≈203–206 uncertain returns |
+| Map pose errors (±0.10/0.25 m horizontal, ±2/5° yaw) | 8 clear + 7 obstacle scans × 13 pose cases = 195 valid evaluations; no false obstacle-presence results or missed obstacle-presence results in tested conditions |
+| Map height/pitch/roll sensitivity | Height ±0.25 m and pitch errors frequently invalidated classification. Roll ±5° created false obstacle flags in all 10 clear-scene samples for both signs; invalid samples are **not** counted as safe/clear |
+| IMU + map-LiDAR on clear / obstacle scenes | 12/12 and 14/14 samples agreed with simulator reference classification; no invalid samples |
+| IMU mounting-offset / body-tilt controls | 13/13 mounting-offset samples consistent; 40/40 body-tilt orientation samples consistent (simulated ideal sensors, reported 0.000° maximum error) |
+
+Map-assisted LiDAR uses the existing `ruskotunturi-map-collision.stl` as a height-map prior and **Gazebo's exact XYZ localization**. The IMU stage substitutes IMU-derived orientation while retaining exact simulated position. The body-tilt orientation control uses zero gravity, not slope driving. The pose-perturbation tests process largely stationary scenes; they do not establish real-world localization tolerance. All new classification and IMU experiments are separate from the original flat-ground AEB controller.
+
+### Experimental files and reproduction
+
+Reusable source files produced locally in this stage (to be versioned separately):
+
+- `gazebo/scripts/jarcrac_lidar_terrain.py`, `jarcrac_terrain_probe.py` — LiDAR-only sloping-ground classifier and read-only probe.
+- `gazebo/scripts/jarcrac_lidar_map_assisted.py`, `jarcrac_map_assisted_probe.py` — mesh-assisted ground classifier and read-only comparison.
+- `gazebo/scripts/jarcrac_map_pose_sensitivity.py`, `jarcrac_map_attitude_sensitivity.py` — position, yaw, height, pitch and roll perturbation studies.
+- `gazebo/scripts/jarcrac_imu_stage.py` — experimental IMU-equipped worlds (generated outside Git) and IMU/LiDAR diagnostic.
+- `gazebo/scripts/jarcrac_contact_positive.py` — independent positive-contact control; its generated world is kept outside Git.
+- `gazebo/worlds/jarcrac_terrain_probe_world.sdf` and `jarcrac_terrain_obstacle_probe_world.sdf` — terrain reference and known-obstacle worlds.
+- `tests/test_jarcrac_lidar_terrain.py`, `test_jarcrac_lidar_map_assisted.py`, `test_jarcrac_map_pose_sensitivity.py`, `test_jarcrac_map_attitude_sensitivity.py`, `test_jarcrac_imu_stage.py` — offline regressions.
+
+Paths above are relative to `edge-path-project/` for Gazebo files and to the repository root for `tests/`. Operator-generated reports include `terrain_*.json`, `map_*.json`, `imu_*.json` in `edge-path-project/gazebo/results/jarcrac/`; these are **diagnostic**, not AEB PASS evidence.
+
+From the project root, after the new source files have been committed / installed:
+
+```bash
+python3 -m unittest discover -s tests -p 'test_jarcrac*.py' -v
+python3 edge-path-project/gazebo/scripts/jarcrac_imu_stage.py prepare
+```
+
+The second command generates IMU experiment worlds under `~/jarcrac_imu_experiment/`. Do not run multiple JARCRAC worlds or velocity command publishers at once.
+
+**Next milestone:** instrument *dynamic* low-speed movement and LiDAR/IMU time alignment on Ruskotunturi before considering terrain AEB. Neither terrain-driving AEB nor JARCRAC-specific physical HIL has been validated.
+
 ## Validation boundaries
 
-The result demonstrates automatic braking in **flat-world SIL**, not R2100 HIL, VIL, or real-world vehicle safety. The fixed-height ground filter is not usable without modification on uneven forestry ground. Estimated clearance is not true mesh-to-mesh separation. An advertised/subscribed contact topic is not a positive collision-detection test. DiffDrive's configured deceleration approximately explains the short stopping distance; the true 2-ton-plus vehicle's hydraulic braking remains unvalidated. Confirm Mevea-derived mesh rights before pushing to a public GitHub repository.
+The result demonstrates automatic braking in **flat-world SIL**, not R2100 HIL, VIL, or real-world vehicle safety. The fixed-height ground filter is not usable without modification on uneven forestry ground. Estimated clearance is not true mesh-to-mesh separation. The original flat-world trials subscribed to the contact topic but did not intentionally induce collision; a later separate deliberate-contact control verified this exact collision pair and topic. DiffDrive's configured deceleration approximately explains the short stopping distance; the true 2-ton-plus vehicle's hydraulic braking remains unvalidated. The model includes Mevea-derived mesh data; see `edge-path-project/gazebo/models/jarcrac/NOTICE.md` for attribution and third-party redistribution scope.
 
 ## Reference docs
 
 - `edge-path-project/gazebo/models/jarcrac/README.md` — SDF generator parameters and design decisions
 - `edge-path-project/gazebo/models/jarcrac/NOTICE.md` — source and redistribution warning
-- `R2100_INSTRUCTOR_DEMO.md` — existing native R2100 physical-CAN HIL workflow
+- `edge-path-project/hil/README.md` — the separately validated native R2100 physical-CAN HIL workflow
