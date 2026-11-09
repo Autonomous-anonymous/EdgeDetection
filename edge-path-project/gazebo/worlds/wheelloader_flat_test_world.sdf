@@ -1,0 +1,98 @@
+<?xml version="1.0"?>
+<sdf version="1.10">
+
+  <!--
+    WHEEL LOADER FLAT TEST WORLD
+
+    Purpose: first bring-up and calibration of the generated `wheelloader`
+    model on flat ground.
+
+      - wheel loader at the origin (rear axle at x = 0), facing +X
+      - a static 2.2 m tall box obstacle 14 m ahead
+      - a low 0.6 m box obstacle 14 m ahead and 4 m to the left
+
+    Run (from edge-path-project/gazebo):
+      export GZ_SIM_RESOURCE_PATH=$PWD/models
+      gz sim -r worlds/wheelloader_flat_test_world.sdf
+      python3 scripts/wheelloader_cmd_bridge.py  (see its docstring for the params file argument)
+
+    Drive (the bridge converts this to wheel speeds and articulation):
+      gz topic -t /model/wheelloader/cmd_vel -m gz.msgs.Twist \
+        -p 'linear: {x: 1.0}, angular: {z: 0.0}'
+
+    Lift arm / bucket (rad, relative to the Mevea start pose):
+      gz topic -t /wheelloader/lift/cmd_pos -m gz.msgs.Double -p 'data: 0.0'
+  -->
+
+  <world name="wheelloader_flat_test_world">
+
+    <physics name="1ms" type="ignored">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+    </physics>
+
+    <plugin filename="gz-sim-physics-system" name="gz::sim::systems::Physics"/>
+    <plugin filename="gz-sim-user-commands-system" name="gz::sim::systems::UserCommands"/>
+    <plugin filename="gz-sim-scene-broadcaster-system" name="gz::sim::systems::SceneBroadcaster"/>
+    <plugin filename="gz-sim-sensors-system" name="gz::sim::systems::Sensors">
+      <render_engine>ogre2</render_engine>
+    </plugin>
+
+    <scene>
+      <ambient>0.4 0.4 0.4 1</ambient>
+      <background>0.7 0.8 0.9 1</background>
+    </scene>
+
+    <light type="directional" name="sun">
+      <cast_shadows>true</cast_shadows>
+      <pose>0 0 10 0 0 0</pose>
+      <diffuse>0.9 0.9 0.9 1</diffuse>
+      <direction>-0.5 0.1 -0.9</direction>
+    </light>
+
+    <model name="ground_plane">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry><plane><normal>0 0 1</normal><size>400 400</size></plane></geometry>
+          <surface><friction><ode><mu>0.9</mu><mu2>0.9</mu2></ode></friction></surface>
+        </collision>
+        <visual name="visual">
+          <geometry><plane><normal>0 0 1</normal><size>400 400</size></plane></geometry>
+          <material><diffuse>0.45 0.50 0.45 1</diffuse><ambient>0.45 0.50 0.45 1</ambient></material>
+        </visual>
+      </link>
+    </model>
+
+    <include>
+      <uri>model://wheelloader</uri>
+      <name>wheelloader</name>
+      <pose>0 0 0 0 0 0</pose>
+    </include>
+
+    <model name="obstacle_tall">
+      <static>true</static>
+      <pose>14 0 1.1 0 0 0</pose>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>0.5 2.0 2.2</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>0.5 2.0 2.2</size></box></geometry>
+          <material><diffuse>0.9 0.7 0.1 1</diffuse><ambient>0.9 0.7 0.1 1</ambient></material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="obstacle_low">
+      <static>true</static>
+      <pose>14 4 0.3 0 0 0</pose>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>0.5 2.0 0.6</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>0.5 2.0 0.6</size></box></geometry>
+          <material><diffuse>0.8 0.3 0.1 1</diffuse><ambient>0.8 0.3 0.1 1</ambient></material>
+        </visual>
+      </link>
+    </model>
+
+  </world>
+</sdf>

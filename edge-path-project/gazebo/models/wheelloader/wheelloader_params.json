@@ -1,0 +1,425 @@
+{
+  "source": {
+    "mevea_xml": "WheelLoader/Model/WheelLoader.xml",
+    "mevea_xml_sha256": "815861242026e03f3d82adb2ed1d2d5bca4ebcc769678a22c9bf94b03c602e1e",
+    "axis_mapping": "Mevea (x,y,z) -> Gazebo (x,-z,y)",
+    "cs_euler_convention": "R = Rx*Ry*Rz; revolute joint axis = CS z"
+  },
+  "model": {
+    "name": "wheelloader",
+    "wheel_cmd_topics": {
+      "wheel_rl": "/wheelloader/wheel_rl/cmd_vel",
+      "wheel_rr": "/wheelloader/wheel_rr/cmd_vel",
+      "wheel_fl": "/wheelloader/wheel_fl/cmd_vel",
+      "wheel_fr": "/wheelloader/wheel_fr/cmd_vel"
+    },
+    "position_cmd_topics": {
+      "articulation": "/wheelloader/articulation/cmd_pos",
+      "lift": "/wheelloader/lift/cmd_pos",
+      "bucket_tilt": "/wheelloader/bucket_tilt/cmd_pos"
+    },
+    "odometry_topic": "/model/wheelloader/odometry",
+    "camera_topics": {
+      "Camera_Seat": "/wheelloader/camera_seat/image",
+      "Camera_Rear": "/wheelloader/camera_rear/image"
+    }
+  },
+  "kinematics": {
+    "d_r": 1.45,
+    "d_f": 1.455,
+    "half_track": 0.856,
+    "wheel_radius": 0.729,
+    "wheelbase": 2.905,
+    "max_speed_mps": 2.8433,
+    "articulation_limit_rad": 0.3315,
+    "reference_point": "rear axle centre; yaw positive = left; articulation positive = front frame left"
+  },
+  "joint_ranges_rad": {
+    "lift": {
+      "lower": -0.4345,
+      "upper": 1.1045
+    },
+    "articulation": {
+      "lower": -0.3315,
+      "upper": 0.3315
+    },
+    "bucket_tilt": {
+      "lower": -2.19911,
+      "upper": 0.64764
+    },
+    "axle_oscillation": {
+      "lower": -0.20944,
+      "upper": 0.20944
+    }
+  },
+  "joint_range_checks": [
+    {
+      "cylinder": "ForceT_BucketLiftL",
+      "length_at_initial_pose": 1.6044,
+      "L0_in_mevea": 1.3419,
+      "joint_angle_where_length_equals_L0": -0.4
+    },
+    {
+      "cylinder": "ForceT_BucketLiftR",
+      "length_at_initial_pose": 1.6044,
+      "L0_in_mevea": 1.3419,
+      "joint_angle_where_length_equals_L0": -0.4
+    },
+    {
+      "cylinder": "ForceT_SteeringL",
+      "length_at_initial_pose": 0.622,
+      "L0_in_mevea": 0.622,
+      "joint_angle_where_length_equals_L0": 0.0
+    },
+    {
+      "cylinder": "ForceT_SteeringR",
+      "length_at_initial_pose": 0.622,
+      "L0_in_mevea": 0.622,
+      "joint_angle_where_length_equals_L0": 0.0
+    }
+  ],
+  "speed_derivation": {
+    "total_ratio_top_gear": 69.73915199999999,
+    "engine_max_radps": 272.0,
+    "speed_mps": 2.8432809162921857,
+    "note": "engine max speed / (gearbox x differential x planet) x tyre radius; torque converter slip and efficiencies ignored"
+  },
+  "initial_pose": {
+    "z_offset_m": 0.007,
+    "note": "Mevea starts with the tyres at static-deflection heights (front 4 mm into the ground, rear 9 mm above); rigid wheels settle ~13 mm on spawn"
+  },
+  "mass": {
+    "links_kg": {
+      "rear_axle": 218.4,
+      "rear_frame": 5777.892,
+      "front_frame": 4027.885,
+      "lift_arm": 1000.0,
+      "bucket_clamp": 465.0,
+      "bucket": 1105.0
+    },
+    "wheel_each_kg_assumed": 30.0,
+    "mevea_total_kg": 12594.177,
+    "gazebo_total_kg": 12714.177,
+    "lumped": {
+      "lift_arm": [
+        "LiftArm",
+        "BucketLever"
+      ],
+      "bucket_clamp": [
+        "BucketClamp",
+        "BucketLink"
+      ]
+    }
+  },
+  "validation": {
+    "true_joints_checked": [
+      "Ground_RearAxle",
+      "RearAxle_RearFrame",
+      "RearFrame_FrontFrame",
+      "FrontFrame_LiftArm",
+      "LiftArm_BucketLever",
+      "BucketLever_BucketLink",
+      "LiftArm_BucketClamp",
+      "BucketClamp_Tool"
+    ],
+    "joint_coincidence_max_position_error_m": 0.0,
+    "joint_coincidence_max_rotation_error_rad": 0.0,
+    "loop_closure_joint": {
+      "BucketLink_BucketClamp": {
+        "position_gap_m": 0.00222,
+        "note": "spherical cut joint closing the Z-bar loop; rotation is unconstrained"
+      }
+    },
+    "all_inertia_tensors_positive_definite": true,
+    "lift_cylinder_L0": "Mevea L0 equals the cylinder length with the arm lowered and the bucket on the ground (see joint_range_checks), not the length at the initial pose where the bucket is ~1.09 m up"
+  },
+  "assumptions": {
+    "mu": 0.8,
+    "mu2": 0.6,
+    "wheel_effort_nm": 30000.0,
+    "tyre_collision_width_m": 0.38,
+    "controller_gains": {
+      "articulation_p": 5000000.0,
+      "articulation_d": 2000000.0,
+      "lift_p": 2000000.0,
+      "lift_d": 800000.0,
+      "tilt_p": 1000000.0,
+      "tilt_d": 100000.0
+    },
+    "inertia_notes": [
+      "Mevea inertia is treated as defined about the CM with axes parallel to the body frame; LiftArm and BucketClamp also have a separate CmiCS (CS_CMI) whose meaning is not documented (effect: at most ~36 kg m^2 on the lift arm, ~8 kg m^2 on the clamp).",
+      "Off-diagonal terms are taken as tensor components (the sign convention is not documented)."
+    ]
+  },
+  "not_modelled": [
+    "Z-bar tilt linkage (BucketLever/BucketLink kinematics) - mass lumped, meshes omitted",
+    "hydraulic cylinders and valves",
+    "diesel engine, torque converter, gearbox, differentials",
+    "LuGre tyre model and tyre compliance (K=2.636e6 N/m, C=3.25e4 N s/m)",
+    "brakes",
+    "sand/particle bucket interaction",
+    "textures"
+  ],
+  "meshes": {
+    "visual": {
+      "bucket_clamp": {
+        "source": "BucketClamp.osgt",
+        "triangles": 15068,
+        "bounds_gz": [
+          [
+            -0.162,
+            -0.658,
+            -0.108
+          ],
+          [
+            0.306,
+            0.658,
+            0.712
+          ]
+        ]
+      },
+      "bucket": {
+        "source": "Bucket.osgt",
+        "triangles": 6806,
+        "bounds_gz": [
+          [
+            -0.136,
+            -1.331,
+            -0.101
+          ],
+          [
+            1.341,
+            1.331,
+            1.169
+          ]
+        ]
+      },
+      "cabin": {
+        "source": "Cabin.osgt",
+        "triangles": 26278,
+        "bounds_gz": [
+          [
+            -1.168,
+            -1.013,
+            0.717
+          ],
+          [
+            0.565,
+            1.013,
+            3.079
+          ]
+        ]
+      },
+      "axle": {
+        "source": "Axle.osgt",
+        "triangles": 1126,
+        "bounds_gz": [
+          [
+            -0.198,
+            -0.878,
+            -0.455
+          ],
+          [
+            0.219,
+            0.878,
+            -0.049
+          ]
+        ]
+      },
+      "front_frame": {
+        "source": "FrontFrame.osgt",
+        "triangles": 12558,
+        "bounds_gz": [
+          [
+            -0.101,
+            -1.261,
+            -0.065
+          ],
+          [
+            1.677,
+            1.261,
+            1.578
+          ]
+        ]
+      },
+      "inner_glass": {
+        "source": "InnerGlass.osgt",
+        "triangles": 148,
+        "bounds_gz": [
+          [
+            -1.078,
+            -0.603,
+            1.537
+          ],
+          [
+            0.48,
+            0.603,
+            2.504
+          ]
+        ]
+      },
+      "lift_arm": {
+        "source": "LiftArm.osgt",
+        "triangles": 9072,
+        "bounds_gz": [
+          [
+            -0.093,
+            -0.589,
+            -0.215
+          ],
+          [
+            2.914,
+            0.589,
+            0.609
+          ]
+        ]
+      },
+      "rear_frame": {
+        "source": "RearFrame.osgt",
+        "triangles": 28779,
+        "bounds_gz": [
+          [
+            -3.216,
+            -1.218,
+            -0.087
+          ],
+          [
+            0.112,
+            1.218,
+            2.251
+          ]
+        ]
+      },
+      "tyre": {
+        "source": "Tyre.osgt",
+        "triangles": 2280,
+        "bounds_gz": [
+          [
+            -0.724,
+            -0.349,
+            -0.725
+          ],
+          [
+            0.725,
+            0.185,
+            0.725
+          ]
+        ]
+      }
+    },
+    "collision": {
+      "coll_bucket_clamp": {
+        "source": "Coll_BucketClamp.3ds",
+        "triangles": 68,
+        "bounds_gz": [
+          [
+            -0.011,
+            -0.617,
+            -0.103
+          ],
+          [
+            0.26,
+            0.608,
+            0.722
+          ]
+        ]
+      },
+      "coll_bucket": {
+        "source": "Coll_Bucket.3ds",
+        "triangles": 124,
+        "bounds_gz": [
+          [
+            -0.132,
+            -1.331,
+            -0.104
+          ],
+          [
+            1.338,
+            1.327,
+            1.161
+          ]
+        ]
+      },
+      "coll_front_frame": {
+        "source": "Coll_FrontFrame.3ds",
+        "triangles": 60,
+        "bounds_gz": [
+          [
+            0.046,
+            -1.208,
+            -0.465
+          ],
+          [
+            2.131,
+            1.215,
+            1.314
+          ]
+        ]
+      },
+      "coll_lift_arm": {
+        "source": "Coll_LiftArm.3ds",
+        "triangles": 10,
+        "bounds_gz": [
+          [
+            2.067,
+            -0.67,
+            -0.149
+          ],
+          [
+            2.523,
+            0.649,
+            0.102
+          ]
+        ]
+      },
+      "coll_lift_arm_full": {
+        "source": "Coll_LiftArm_full.3ds",
+        "triangles": 36,
+        "bounds_gz": [
+          [
+            0.009,
+            -0.562,
+            -0.316
+          ],
+          [
+            2.874,
+            0.559,
+            0.413
+          ]
+        ]
+      },
+      "coll_rear_frame": {
+        "source": "Coll_RearFrame.3ds",
+        "triangles": 72,
+        "bounds_gz": [
+          [
+            -3.158,
+            -1.208,
+            -0.432
+          ],
+          [
+            0.575,
+            1.215,
+            2.301
+          ]
+        ]
+      },
+      "coll_rear_frame_ground": {
+        "source": "Coll_RearFrame_Ground.3ds",
+        "triangles": 20,
+        "bounds_gz": [
+          [
+            -3.158,
+            -1.183,
+            -0.093
+          ],
+          [
+            0.86,
+            1.193,
+            2.301
+          ]
+        ]
+      }
+    }
+  }
+}

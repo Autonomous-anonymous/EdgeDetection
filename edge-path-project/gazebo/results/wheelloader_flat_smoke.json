@@ -1,0 +1,23 @@
+{
+  "command_duration_wall_s": 3.0,
+  "commanded_speed_mps": 0.2,
+  "commands_sent": 30,
+  "final_forward_speed_mps": 0.0,
+  "final_xy_m": [
+    0.53587,
+    -3e-05
+  ],
+  "issue": null,
+  "note": "Controlled flat-world SIL smoke test based on Gazebo odometry. Not independently measured ground-truth displacement, AEB acceptance, real braking calibration or terrain validation.",
+  "odometry_displacement_m": 0.5375,
+  "odometry_messages": 83,
+  "passed": true,
+  "start_xy_m": [
+    -0.00163,
+    -2e-05
+  ],
+  "status": "PASS",
+  "test": "wheelloader_flat_world_motion_smoke",
+  "timestamp_utc": "2026-11-09T07:08:38.968274+00:00",
+  "world": "wheelloader_flat_test_world"
+}
