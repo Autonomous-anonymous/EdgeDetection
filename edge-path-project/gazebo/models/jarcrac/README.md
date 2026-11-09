@@ -4,17 +4,125 @@ First-pass digital-twin approximation of the JARCRAC tracked vehicle for Gazebo
 SIL testing. **Generated** - edit `scripts/generate_jarcrac_model.py`, not
 `model.sdf`.
 
-## Regenerate
+## Run the existing model (no Mevea source files required)
+
+The generated `models/jarcrac/model.sdf`, meshes and Gazebo worlds are already
+in this repository. **Do not run the model generator just to launch Gazebo.**
+Use the commands in a **WSL bash terminal**, not Windows Command Prompt. They
+start from the clone location used by the project (`~/edge-path-project-git`);
+change that prefix if you cloned the repository elsewhere. This absolute-from-
+home path also works when WSL initially opens in `/mnt/c/Users/...`.
+
+### Flat test world — visual inspection and optional manual motion
+
+Terminal 1 (keep it open while Gazebo runs):
 
 ```bash
-cd edge-path-project/gazebo
-python3 scripts/generate_jarcrac_model.py \
-  --mevea-xml /path/to/ruskotunturi/Jarcrac-freeroll/Jarcrac_Rusko_rev_2026_01_05_11-free_roll_test2.xml \
-  --out-dir models/jarcrac
-# a second instance with its own topics:
-python3 scripts/generate_jarcrac_model.py --mevea-xml ... --out-dir models/jarcrac_b \
-  --name jarcrac_b --topic-prefix /jarcrac_b
+cd ~/edge-path-project-git/edge-path-project/gazebo
+export GZ_SIM_RESOURCE_PATH="$PWD/models${GZ_SIM_RESOURCE_PATH:+:$GZ_SIM_RESOURCE_PATH}"
+gz sim -r worlds/jarcrac_flat_test_world.sdf
 ```
+
+Terminal 2 (a separate WSL terminal, after Gazebo has loaded):
+
+```bash
+cd ~/edge-path-project-git/edge-path-project/gazebo
+gz topic -l | grep jarcrac
+```
+
+You should see JARCRAC transport topics. The flat test world includes a static
+box obstacle about 8 m ahead. For an **optional flat-world-only** brief manual
+movement check, use Terminal 2 with no other velocity publisher active:
+
+```bash
+gz topic -t /model/jarcrac/cmd_vel -m gz.msgs.Twist -p 'linear: {x: 0.1}, angular: {z: 0.0}'
+sleep 1
+gz topic -t /model/jarcrac/cmd_vel -m gz.msgs.Twist -p 'linear: {x: 0.0}, angular: {z: 0.0}'
+```
+
+These are individual topic publications, **not a safety-rated bounded
+controller**; do not assume that one velocity command will time out on its own.
+Keep Gazebo attended and send zero velocity if movement persists. For the
+controlled flat-world 3D-LiDAR AEB experiment, follow the repository-root
+[`JARCRAC_V2_SIL.md`](../../../../JARCRAC_V2_SIL.md) instead.
+
+### Ruskotunturi — stationary terrain perception
+
+Close any other running Gazebo world first. In Terminal 1:
+
+```bash
+cd ~/edge-path-project-git/edge-path-project/gazebo
+export GZ_SIM_RESOURCE_PATH="$PWD/models${GZ_SIM_RESOURCE_PATH:+:$GZ_SIM_RESOURCE_PATH}"
+gz sim -r worlds/jarcrac_terrain_probe_world.sdf
+```
+
+To inspect the **known-obstacle** terrain scene instead, close that world and
+launch `gz sim -r worlds/jarcrac_terrain_obstacle_probe_world.sdf` from the
+same directory. These worlds are for stationary perception diagnostics; **do
+not run the flat-world AEB controller or manually drive on this terrain.**
+
+### Ruskotunturi — previously validated short, clear-terrain motion
+
+This is a distinct low-speed LiDAR/IMU experiment, **not terrain AEB**. Its
+world is generated outside Git under `~/jarcrac_imu_experiment/` and is not
+the same as the stationary probe worlds. First, from a WSL terminal:
+
+```bash
+cd ~/edge-path-project-git
+python3 edge-path-project/gazebo/scripts/jarcrac_imu_dynamic.py prepare
+```
+
+Terminal 1 (close other JARCRAC worlds first):
+
+```bash
+cd ~/edge-path-project-git
+export GZ_SIM_RESOURCE_PATH="$PWD/edge-path-project/gazebo/models${GZ_SIM_RESOURCE_PATH:+:$GZ_SIM_RESOURCE_PATH}"
+gz sim -r ~/jarcrac_imu_experiment/jarcrac_imu_dynamic_clear.sdf
+```
+
+Terminal 2 (after the correct world has loaded):
+
+```bash
+cd ~/edge-path-project-git
+python3 -u edge-path-project/gazebo/scripts/jarcrac_imu_dynamic.py drive \
+  --report /tmp/jarcrac_imu_dynamic_recheck.json
+```
+
+Use the WSL **system `python3` with Gazebo `gz` bindings**, not the project's
+`.venv-requirements` packaging environment. Do not run another JARCRAC world
+or `cmd_vel` publisher concurrently. The dynamic controller sends zero on
+exit and restricts motion, but it does not establish collision avoidance or
+safe terrain braking. See [`JARCRAC_V2_SIL.md`](../../../../JARCRAC_V2_SIL.md)
+for limitations and recorded evidence.
+
+Topics on the standard model: `/model/jarcrac/cmd_vel`,
+`/model/jarcrac/odometry`, `/jarcrac/lidar`, `/jarcrac/camera/image`.
+The dynamic world deliberately uses `/model/jarcrac/dynamic_cmd_vel` instead.
+
+## Regenerate the model (optional, external Mevea files required)
+
+This is a **developer operation**, not part of running the existing Gazebo
+worlds. The `--mevea-xml` argument must refer to a *real* Mevea XML file on
+your filesystem; `/path/to/...` and `...` in older examples were placeholders.
+The corresponding mesh files must also be available relative to that XML.
+The following example writes to `/tmp`, preserving the committed model:
+
+```bash
+cd ~/edge-path-project-git/edge-path-project/gazebo
+MEVEA_XML="/replace/with/real/path/to/Jarcrac_Rusko_rev_2026_01_05_11-free_roll_test2.xml"
+if [ ! -f "$MEVEA_XML" ]; then
+  echo "Mevea XML not found: $MEVEA_XML"
+else
+  python3 scripts/generate_jarcrac_model.py \
+    --mevea-xml "$MEVEA_XML" \
+    --out-dir /tmp/jarcrac_regenerated
+fi
+```
+
+An additional model can be generated using `--name jarcrac_b` and
+`--topic-prefix /jarcrac_b`, but **generating a model does not spawn a second
+vehicle**; you must separately configure a world with the second model and
+its resource path.
 
 Defaults follow the Mevea model (see "Decisions" below). Overrides:
 `--keep-source-radii` (keep the 0.2 m Pulley3_Left), `--body-mass-kg N`
@@ -23,18 +131,6 @@ Defaults follow the Mevea model (see "Decisions" below). Overrides:
 Tunable assumptions (all recorded in `jarcrac_params.json`): `--max-speed-mps`,
 `--max-accel-mps2`, `--max-yaw-rate-radps`, `--turn-factor`, `--mu`, `--mu2`,
 `--side-torque-nm`, `--lidar-x-m`, `--lidar-y-m`, `--lidar-z-m`.
-
-## Run
-
-```bash
-cd edge-path-project/gazebo
-export GZ_SIM_RESOURCE_PATH=$PWD/models
-gz sim -r worlds/jarcrac_flat_test_world.sdf
-gz topic -t /model/jarcrac/cmd_vel -m gz.msgs.Twist -p 'linear: {x: 0.5}, angular: {z: 0.0}'
-```
-
-Topics: `/model/jarcrac/cmd_vel`, `/model/jarcrac/odometry`, `/jarcrac/lidar`,
-`/jarcrac/camera/image`.
 
 ## What it is
 
@@ -90,7 +186,10 @@ reproducibility including the `--keep-source-radii` mode.
 reported PASS at 0.35, 0.70 and 1.00 m/s. A separate deliberate collision
 verified the contact sensor. Map-assisted perception and simulated IMU controls
 were also exercised on Ruskotunturi; these are stationary diagnostics, not
-terrain AEB or real-vehicle calibration. See the repository-root
+terrain AEB or real-vehicle calibration. A separate 2026-11-09 low-speed
+**clear-terrain dynamic LiDAR/IMU perception** trial passed (0.3605 m travel,
+eight moving paired samples, final speed zero). It did not include an obstacle
+while moving and does not validate terrain AEB. See the repository-root
 `JARCRAC_V2_SIL.md` for measured results, scripts and limits.
 
 Still to verify against real dynamics: wheel/track response, turning behaviour,
