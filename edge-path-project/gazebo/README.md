@@ -304,3 +304,16 @@ visual, simplified box collision and front-mounted 32-layer LiDAR has an
 independent flat-world AEB test. Follow the root
 [JARCRAC v2 SIL guide](../../JARCRAC_V2_SIL.md). This experiment has
 **not** been integrated into the physical R2100 HIL acceptance path.
+A short read-only IMU/map-LiDAR comparison during controlled terrain motion
+also passed; it still relies on simulator-exact XYZ localization and does not
+establish terrain AEB.
+
+## Optional wheel loader
+
+The separately committed [articulated wheel-loader model](models/wheelloader/README.md)
+has a Gazebo flat-world motion smoke-test PASS recorded in
+[`results/wheelloader_flat_smoke.json`](results/wheelloader_flat_smoke.json).
+Use its standalone world and command bridge, not the JARCRAC controllers.
+The model is for teammate reuse and is **not** a validated AEB/HIL platform.
+Consult the [model attribution notice](models/wheelloader/NOTICE.md) before
+sharing any third-party-derived geometry.

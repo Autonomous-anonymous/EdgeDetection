@@ -19,11 +19,17 @@ This branch intentionally excludes the earlier CARLA prototype, its standalone s
 
 The final SIL demo's moving obstacle is managed by **path-clearance-based LiDAR hold/resume**; it does not use the shared scenario's TTC-based AEB policy for that moving obstacle. The TTC-based emergency brake is demonstrated by the separate shared `emergency_braking` scenario.
 
-## JARCRAC v2 — experimental terrain perception (2026-11-06)
+## JARCRAC v2 — experimental terrain perception (2026-11-09)
 
-The independent Mevea-derived JARCRAC Gazebo model has operator-reported **flat-ground AEB PASS** results at **0.35, 0.70 and 1.00 m/s**, plus a **positive chassis–obstacle contact-sensor control**. Subsequent *read-only* Ruskotunturi diagnostics demonstrated LiDAR-only and terrain-map-assisted classification, sensitivity to localization and attitude errors, and four simulated **32-layer LiDAR + IMU** calibration controls. The map-assisted method uses Gazebo ground-truth position; the IMU tests used ideal simulated sensing.
+The Mevea-derived JARCRAC remains the **primary experimental forestry vehicle**. Operator-reported flat-world AEB tests passed at **0.35, 0.70 and 1.00 m/s**, with a separate positive chassis-contact control. Ruskotunturi tests include stationary LiDAR-only/map-assisted perception, sensitivity to pose errors, four simulated IMU calibration controls, and a **low-speed dynamic terrain perception PASS**: 0.3605 m travel at a 0.10 m/s command, eight moving LiDAR/IMU comparisons, 0.0059° maximum orientation error and a final speed of zero.
 
-The experiments are **not JARCRAC-specific R2100 HIL**, validated localization, dynamic forest-terrain braking or a safety case. See the [JARCRAC v2 SIL guide](JARCRAC_V2_SIL.md) for measurements, source-file locations and limitations. Experimental source files and additional JSON evidence produced in the local WSL checkout must be committed separately from this documentation update.
+The committed [dynamic diagnostic](edge-path-project/gazebo/results/jarcrac/imu_dynamic_clear_diagnostic.json) and [JARCRAC v2 SIL guide](JARCRAC_V2_SIL.md) describe the evidence and limitations. Map-assisted classification still uses Gazebo's exact XYZ position, and receive-time pairing is not full sensor timestamp synchronization. **Terrain-aware AEB, independent localization and JARCRAC-specific R2100 HIL have not been validated.**
+
+## Optional wheel loader for teammate use
+
+A separate Mevea-derived articulated [wheel-loader Gazebo model](edge-path-project/gazebo/models/wheelloader/README.md) is included for reuse, not as a replacement for JARCRAC. Its **flat-world odometry-based motion smoke test passed**: 0.5375 m displacement and 0.0 m/s final forward speed ([committed result](edge-path-project/gazebo/results/wheelloader_flat_smoke.json)). This is not calibrated vehicle dynamics, articulation or bucket validation.
+
+From `edge-path-project/gazebo/`, run the world with `GZ_SIM_RESOURCE_PATH="$PWD/models"` and `gz sim -r worlds/wheelloader_flat_test_world.sdf`; start `python3 scripts/wheelloader_cmd_bridge.py --params models/wheelloader/wheelloader_params.json` in another terminal. See the model README for joint topics, reproduction steps, caveats and its [attribution notice](edge-path-project/gazebo/models/wheelloader/NOTICE.md). **Verify third-party mesh redistribution rights before public sharing.**
 
 ## Repository layout
 

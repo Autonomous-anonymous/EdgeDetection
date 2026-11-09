@@ -94,13 +94,35 @@ Verified offline (`tests/test_wheelloader_model.py` and
 `tests/test_wheelloader_kinematics_and_meshes.py`): well-formed files, kinematic tree,
 joint axes and limits, masses and inertia, hand-calculated pose chain, tyre geometry,
 cameras, mesh URIs, converters, steering kinematics, bridge mapping, regeneration.
-**Not yet verified: any Gazebo runtime behaviour.** First-run checklist: spawns and
-settles without jitter; the PID gains hold the lift arm and bucket without oscillating;
-1 m/s straight line matches odometry; articulated turn radius matches
-`kinematics` in the params file; axle oscillation settles; cameras show the scene.
+
+**Gazebo Harmonic flat-world motion smoke test: PASS (2026-11-09).**
+With `scripts/wheelloader_cmd_bridge.py` running, the operator's
+`scripts/wheelloader_runtime_smoke.py` issued 0.20 m/s for 3 seconds
+and reported **0.5375 m odometry displacement**, 83 odometry messages,
+and **0.0 m/s final forward speed**. See
+[`results/wheelloader_flat_smoke.json`](../../results/wheelloader_flat_smoke.json).
+
+Reproduce from `edge-path-project/gazebo/`, using a fresh world:
+
+```bash
+export GZ_SIM_RESOURCE_PATH="$PWD/models${GZ_SIM_RESOURCE_PATH:+:$GZ_SIM_RESOURCE_PATH}"
+# Terminal 1
+gz sim -r worlds/wheelloader_flat_test_world.sdf
+# Terminal 2
+python3 -u scripts/wheelloader_cmd_bridge.py --params models/wheelloader/wheelloader_params.json
+# Terminal 3
+python3 -u scripts/wheelloader_runtime_smoke.py
+```
+
+This records *Gazebo odometry*, not independent ground-truth displacement.
+Still unverified: stability across repeated runs, PID lift/bucket behaviour,
+articulated turn radius, axle oscillation, realistic tyre response, terrain
+driving, and calibrated hydraulic braking. The model has no LiDAR and is
+not part of the JARCRAC AEB/HIL validation pathway.
 
 ## Licence
 
 Geometry, masses and meshes derive from the NUVE-LAB / Mevea models, which are
-GPL-3.0-or-later (Copyright Mevea Ltd 2018-2021, NUVE-LAB 2026). Check the
-implications before publishing this repository.
+GPL-3.0-or-later (Copyright Mevea Ltd 2018-2021, NUVE-LAB 2026). Review the
+model-specific `NOTICE.md` and independently verify the redistribution rights
+of third-party converted meshes before publicly sharing them.
