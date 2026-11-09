@@ -108,9 +108,7 @@ Reproduce from `edge-path-project/gazebo/`, using a fresh world:
 export GZ_SIM_RESOURCE_PATH="$PWD/models${GZ_SIM_RESOURCE_PATH:+:$GZ_SIM_RESOURCE_PATH}"
 # Terminal 1
 gz sim -r worlds/wheelloader_flat_test_world.sdf
-# Terminal 2
-python3 -u scripts/wheelloader_cmd_bridge.py --params models/wheelloader/wheelloader_params.json
-# Terminal 3
+# Terminal 2: integrated controller and movement test
 python3 -u scripts/wheelloader_runtime_smoke.py
 ```
 

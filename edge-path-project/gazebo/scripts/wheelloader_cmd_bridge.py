@@ -22,6 +22,8 @@ Run:
 from __future__ import annotations
 
 import argparse
+import fcntl
+import os
 import json
 import sys
 import threading
@@ -32,6 +34,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import wheelloader_kinematics as kin  # noqa: E402
 
 WHEELS = ("wheel_rl", "wheel_rr", "wheel_fl", "wheel_fr")
+BRIDGE_LOCK = Path("/tmp") / f"camino_wheelloader_bridge_{os.getuid()}.lock"
 
 
 def build_commands(params: dict, v: float, omega: float) -> dict:
@@ -46,20 +49,40 @@ def build_commands(params: dict, v: float, omega: float) -> dict:
 
 class Bridge:
     def __init__(self, params: dict, cmd_topic: str, timeout_s: float):
-        from gz.msgs10.double_pb2 import Double
-        from gz.msgs10.twist_pb2 import Twist
-        from gz.transport13 import Node
+        # Shared by the standalone bridge and the smoke-test's embedded bridge.
+        # flock releases automatically if the process crashes.
+        self._lockfile = BRIDGE_LOCK.open("a+")
+        try:
+            fcntl.flock(self._lockfile.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            self._lockfile.close()
+            self._lockfile = None
+            raise SystemExit("Another wheel-loader bridge is already running; stop it before testing")
 
-        self.params = params
-        self.Double = Double
-        self.timeout_s = timeout_s
-        self.node = Node()
-        topics = list(build_commands(params, 0.0, 0.0))
-        self.pubs = {t: self.node.advertise(t, Double) for t in topics}
-        if not self.node.subscribe(Twist, cmd_topic, self.on_cmd):
-            raise SystemExit(f"could not subscribe to {cmd_topic}")
-        self.last = time.monotonic()
-        self.lock = threading.Lock()
+        try:
+            from gz.msgs10.double_pb2 import Double
+            from gz.msgs10.twist_pb2 import Twist
+            from gz.transport13 import Node
+
+            self.params = params
+            self.Double = Double
+            self.timeout_s = timeout_s
+            self.last = time.monotonic()
+            self.lock = threading.Lock()
+            self.node = Node()
+            topics = list(build_commands(params, 0.0, 0.0))
+            self.pubs = {t: self.node.advertise(t, Double) for t in topics}
+            if not self.node.subscribe(Twist, cmd_topic, self.on_cmd):
+                raise SystemExit(f"could not subscribe to {cmd_topic}")
+        except BaseException:
+            self.close()
+            raise
+
+    def close(self):
+        if self._lockfile is not None:
+            fcntl.flock(self._lockfile.fileno(), fcntl.LOCK_UN)
+            self._lockfile.close()
+            self._lockfile = None
 
     def send(self, v: float, omega: float):
         for topic, value in build_commands(self.params, v, omega).items():
@@ -72,15 +95,18 @@ class Bridge:
             self.last = time.monotonic()
         self.send(msg.linear.x, msg.angular.z)
 
-    def run(self):
-        while True:  # watchdog: stop the wheels if commands cease
-            time.sleep(0.1)
-            with self.lock:
-                stale = time.monotonic() - self.last > self.timeout_s
-            if stale:
-                self.send(0.0, 0.0)
+    def run(self, stop_event: threading.Event | None = None):
+        stop_event = stop_event or threading.Event()
+        try:
+            while not stop_event.wait(0.1):  # watchdog: stop if commands cease
                 with self.lock:
-                    self.last = time.monotonic()
+                    stale = time.monotonic() - self.last > self.timeout_s
+                if stale:
+                    self.send(0.0, 0.0)
+                    with self.lock:
+                        self.last = time.monotonic()
+        finally:
+            self.send(0.0, 0.0)
 
 
 def main(argv=None) -> int:
@@ -89,7 +115,11 @@ def main(argv=None) -> int:
     ap.add_argument("--cmd-topic", default="/model/wheelloader/cmd_vel")
     ap.add_argument("--timeout", type=float, default=0.5, help="seconds without a command before stopping")
     args = ap.parse_args(argv)
-    Bridge(json.loads(args.params.read_text()), args.cmd_topic, args.timeout).run()
+    bridge = Bridge(json.loads(args.params.read_text()), args.cmd_topic, args.timeout)
+    try:
+        bridge.run()
+    finally:
+        bridge.close()
     return 0
 
 

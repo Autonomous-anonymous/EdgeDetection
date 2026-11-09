@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 """Controlled wheel-loader flat-world motion smoke test (Gazebo Harmonic SIL).
 
-Requires the wheelloader_flat_test_world and wheelloader_cmd_bridge.py running.
+Requires the wheelloader_flat_test_world; starts its own controller bridge.
 Publishes a 0.20 m/s straight-line command for 3 seconds, then repeatedly
 publishes zero. Records odometry displacement and post-stop velocity. This is
 not an AEB, dynamics calibration or safety-rated braking test.
 """
 from __future__ import annotations
 
+import argparse
 from datetime import datetime, timezone
 import json
 import math
@@ -19,13 +20,15 @@ from gz.msgs10.odometry_pb2 import Odometry
 from gz.msgs10.twist_pb2 import Twist
 from gz.transport13 import Node
 
+from wheelloader_cmd_bridge import Bridge
+
 ODOM_TOPIC = "/model/wheelloader/odometry"
 CMD_TOPIC = "/model/wheelloader/cmd_vel"
-REPORT = (Path(__file__).resolve().parents[3] / "edge-path-project" /
-          "gazebo" / "results" / "wheelloader_flat_smoke.json")
+PARAMS = Path(__file__).resolve().parents[1] / "models" / "wheelloader" / "wheelloader_params.json"
+DEFAULT_REPORT = Path("/tmp/wheelloader_flat_smoke_recheck.json")
 
 
-def main() -> int:
+def run_smoke(report: Path) -> int:
     node = Node()
     lock = threading.Lock()
     latest = [None]
@@ -68,7 +71,7 @@ def main() -> int:
         publisher.publish(cmd)
 
     print("Wheel-loader flat-world odometry smoke test: 0.20 m/s for 3 seconds")
-    print("Ensure Gazebo, the flat test world and wheelloader_cmd_bridge.py are running.")
+    print("The wheel-loader controller bridge was started automatically.")
     try:
         for _ in range(30):
             current = snapshot()
@@ -115,11 +118,42 @@ def main() -> int:
                 "Not independently measured ground-truth displacement, AEB "
                 "acceptance, real braking calibration or terrain validation.",
     }
-    REPORT.parent.mkdir(parents=True, exist_ok=True)
-    REPORT.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n")
+    report.parent.mkdir(parents=True, exist_ok=True)
+    report.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n")
     print(json.dumps(result, indent=2, sort_keys=True))
-    print(f"Saved: {REPORT}")
+    print(f"Saved: {report}")
     return 0 if passed else 1
+
+
+def main(argv=None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--report", type=Path, default=DEFAULT_REPORT,
+                        help="result JSON path (defaults to /tmp, preserving committed evidence)")
+    args = parser.parse_args(argv)
+
+    bridge = Bridge(json.loads(PARAMS.read_text()), CMD_TOPIC, timeout_s=0.5)
+    stop_event = threading.Event()
+    bridge_errors = []
+
+    def bridge_loop():
+        try:
+            bridge.run(stop_event)
+        except Exception as exc:
+            bridge_errors.append(exc)
+
+    worker = threading.Thread(target=bridge_loop, name="wheel-loader-bridge", daemon=True)
+    worker.start()
+    try:
+        result = run_smoke(args.report)
+    finally:
+        stop_event.set()
+        worker.join(timeout=2.0)
+        if worker.is_alive():
+            raise RuntimeError("Wheel-loader bridge did not stop cleanly")
+        bridge.close()
+    if bridge_errors:
+        raise RuntimeError(f"Wheel-loader bridge failed: {bridge_errors[0]}")
+    return result
 
 
 if __name__ == "__main__":

@@ -29,7 +29,7 @@ The committed [dynamic diagnostic](edge-path-project/gazebo/results/jarcrac/imu_
 
 A separate Mevea-derived articulated [wheel-loader Gazebo model](edge-path-project/gazebo/models/wheelloader/README.md) is included for reuse, not as a replacement for JARCRAC. Its **flat-world odometry-based motion smoke test passed**: 0.5375 m displacement and 0.0 m/s final forward speed ([committed result](edge-path-project/gazebo/results/wheelloader_flat_smoke.json)). This is not calibrated vehicle dynamics, articulation or bucket validation.
 
-From `edge-path-project/gazebo/`, run the world with `GZ_SIM_RESOURCE_PATH="$PWD/models"` and `gz sim -r worlds/wheelloader_flat_test_world.sdf`; start `python3 scripts/wheelloader_cmd_bridge.py --params models/wheelloader/wheelloader_params.json` in another terminal. See the model README for joint topics, reproduction steps, caveats and its [attribution notice](edge-path-project/gazebo/models/wheelloader/NOTICE.md). **Verify third-party mesh redistribution rights before public sharing.**
+From `edge-path-project/gazebo/`, run the world with `GZ_SIM_RESOURCE_PATH="$PWD/models"` and `gz sim -r worlds/wheelloader_flat_test_world.sdf`; run `python3 -u scripts/wheelloader_runtime_smoke.py` in another terminal; the script automatically manages its controller bridge. See the model README for joint topics, reproduction steps, caveats and its [attribution notice](edge-path-project/gazebo/models/wheelloader/NOTICE.md). **Third-party mesh redistribution permissions have not been independently verified; see the attribution notice for asset provenance.**
 
 ## Repository layout
 
