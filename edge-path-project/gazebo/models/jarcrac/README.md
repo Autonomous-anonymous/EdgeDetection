@@ -101,12 +101,6 @@ above flat ground, 0.23 m ahead of the front collision-box face; 180-degree
 horizontal, 32 layers from -15 to +15 degrees. This is a generic sensor.
 The existing single-plane AEB controller must not be used unchanged.
 
-## Licence
-
-Geometry, mass data and the mesh derive from the NUVE-LAB / Mevea model, which
-is GPL-3.0-or-later (Copyright Mevea Ltd 2018-2021, NUVE-LAB 2026). Check the
-implications before publishing this repository.
-
 ## Front-centre 3D LiDAR mount (2026-11-06)
 
 The previous roof-mount revision yielded repeated short possible self-returns
