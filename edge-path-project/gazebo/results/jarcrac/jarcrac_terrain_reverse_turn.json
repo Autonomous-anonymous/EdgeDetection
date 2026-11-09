@@ -1,0 +1,15 @@
+{
+  "passed": false,
+  "reason": "No 9-degree turn after 3 simulated seconds",
+  "max_drift_m": 0.0269,
+  "max_odom_w_rad_s": 0.12,
+  "final_pose": [
+    19.943462390909676,
+    39.99813708439709,
+    -156.643750603907
+  ],
+  "final_odom": [
+    0.0,
+    0.0
+  ]
+}

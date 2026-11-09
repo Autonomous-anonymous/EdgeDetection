@@ -1,0 +1,17 @@
+{
+  "test": "jarcrac_terrain_idle_drift",
+  "completed": true,
+  "max_drift_m": 0.0,
+  "max_yaw_deg": 0.0,
+  "start_pose": [
+    19.96131445367905,
+    40.00588619457901,
+    -156.64262741005948
+  ],
+  "final_pose": [
+    19.961313456729695,
+    40.005885766261464,
+    -156.64262661129524
+  ],
+  "no_commands_published": true
+}

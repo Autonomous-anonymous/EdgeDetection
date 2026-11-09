@@ -1,0 +1,64 @@
+{
+  "test": "jarcrac_terrain_contact_clearance_audit",
+  "read_only": true,
+  "model_world_position_m": [
+    19.96131848163616,
+    40.00588792789314,
+    -10.596963151061972
+  ],
+  "chassis_pose_source": "model pose plus nominal SDF offset",
+  "model_motion_during_audit_m": 0.0,
+  "sampled_body_positions": 63,
+  "unknown_body_positions": 0,
+  "minimum_body_bottom_clearance_m": 0.0436,
+  "body_samples_below_terrain": 0,
+  "worst_body_sample": {
+    "x": 21.063,
+    "y": 41.319,
+    "body_bottom_z": -10.5559,
+    "terrain_z": -10.5995
+  },
+  "wheels": [
+    {
+      "name": "wheel2_left",
+      "source": "nominal SDF wheel offset",
+      "wheel_bottom_minus_terrain_m": 0.001
+    },
+    {
+      "name": "wheel3_left",
+      "source": "nominal SDF wheel offset",
+      "wheel_bottom_minus_terrain_m": 0.0016
+    },
+    {
+      "name": "wheel4_left",
+      "source": "nominal SDF wheel offset",
+      "wheel_bottom_minus_terrain_m": 0.0036
+    },
+    {
+      "name": "wheel5_left",
+      "source": "nominal SDF wheel offset",
+      "wheel_bottom_minus_terrain_m": 0.0034
+    },
+    {
+      "name": "wheel2_right",
+      "source": "nominal SDF wheel offset",
+      "wheel_bottom_minus_terrain_m": 0.0073
+    },
+    {
+      "name": "wheel3_right",
+      "source": "nominal SDF wheel offset",
+      "wheel_bottom_minus_terrain_m": 0.0114
+    },
+    {
+      "name": "wheel4_right",
+      "source": "nominal SDF wheel offset",
+      "wheel_bottom_minus_terrain_m": 0.0156
+    },
+    {
+      "name": "wheel5_right",
+      "source": "nominal SDF wheel offset",
+      "wheel_bottom_minus_terrain_m": 0.0088
+    }
+  ],
+  "note": "Geometric comparison only; does not measure actual physics-engine contact forces. Negative clearance indicates potential overlap."
+}

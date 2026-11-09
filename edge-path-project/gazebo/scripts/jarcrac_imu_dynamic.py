@@ -112,9 +112,11 @@ def safe_to_command(*, age_pose, age_imu, age_odom, age_scan, analysis_age,
     return 'clear'
 
 
-def prepare_world(output=WORLD_PATH):
+def prepare_world(output=WORLD_PATH, *, source=SOURCES['clear'],
+                  world_name=WORLD_NAME, cmd_topic=CMD_TOPIC,
+                  contact_topic=CONTACT_TOPIC):
     """Embed original model + IMU and add a collision sensor and isolated cmd."""
-    add_imu_world(SOURCES['clear'], MODEL, output, WORLD_NAME)
+    add_imu_world(source, MODEL, output, world_name)
     tree = ET.parse(output)
     world = tree.getroot().find('world')
     model = world.find("./model[@name='jarcrac']")
@@ -124,7 +126,7 @@ def prepare_world(output=WORLD_PATH):
         raise ValueError('JARCRAC chassis or DiffDrive plugin missing')
     if diff.findtext('topic') != '/model/jarcrac/cmd_vel':
         raise ValueError('Unexpected original cmd topic; refusing to patch')
-    diff.find('topic').text = CMD_TOPIC
+    diff.find('topic').text = cmd_topic
     if world.find("./plugin[@name='gz::sim::systems::Contact']") is not None:
         raise ValueError('Unexpected existing Contact plugin')
     ET.SubElement(world, 'plugin', filename='gz-sim-contact-system',
@@ -133,7 +135,7 @@ def prepare_world(output=WORLD_PATH):
                            type='contact')
     ET.SubElement(sensor, 'always_on').text = 'true'
     ET.SubElement(sensor, 'update_rate').text = '20'
-    ET.SubElement(sensor, 'topic').text = CONTACT_TOPIC
+    ET.SubElement(sensor, 'topic').text = contact_topic
     ET.SubElement(ET.SubElement(sensor, 'contact'), 'collision').text = 'body_collision'
     ET.indent(tree, space='  ')
     tree.write(output, encoding='utf-8', xml_declaration=True)
@@ -150,7 +152,9 @@ def short_summary(s):
 
 
 class Monitor:
-    def __init__(self, node, msgs, *, every_scans=4):
+    def __init__(self, node, msgs, *, every_scans=4,
+                 pose_topic=POSE_TOPIC, cmd_topic=CMD_TOPIC,
+                 contact_topic=CONTACT_TOPIC):
         self.node = node
         self.lock = threading.RLock()
         self.q = Queue(maxsize=2)
@@ -169,16 +173,16 @@ class Monitor:
         self.last_result = None
         self.last_result_at = 0.0
         self.worker_errors = []
-        self.publisher = node.advertise(CMD_TOPIC, msgs['Twist'])
+        self.publisher = node.advertise(cmd_topic, msgs['Twist'])
         if self.publisher is None:
             raise RuntimeError('Cannot advertise isolated command topic')
         self.twist_type = msgs['Twist']
         for typ, topic, cb in (
-            (msgs['Pose_V'], POSE_TOPIC, self.on_pose),
+            (msgs['Pose_V'], pose_topic, self.on_pose),
             (msgs['IMU'], IMU_TOPIC, self.on_imu),
             (msgs['Odometry'], ODOM_TOPIC, self.on_odom),
             (msgs['LaserScan'], LIDAR_TOPIC, self.on_scan),
-            (msgs['Contacts'], CONTACT_TOPIC, self.on_contact),
+            (msgs['Contacts'], contact_topic, self.on_contact),
         ):
             if not node.subscribe(typ, topic, cb):
                 raise RuntimeError(f'Failed to subscribe to {topic}')

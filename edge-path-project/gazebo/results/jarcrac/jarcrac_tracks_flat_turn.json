@@ -1,0 +1,15 @@
+{
+  "passed": true,
+  "reason": "reached_9_degrees",
+  "max_drift_m": 0.0,
+  "max_odom_w_rad_s": 0.24,
+  "final_pose": [
+    9.148370322186222e-06,
+    -5.5141180492847034e-05,
+    9.163549681849553
+  ],
+  "final_odom": [
+    0.0,
+    0.0
+  ]
+}

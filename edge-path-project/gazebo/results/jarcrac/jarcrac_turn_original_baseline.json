@@ -1,0 +1,15 @@
+{
+  "passed": false,
+  "reason": "Translation or yaw safety limit",
+  "max_drift_m": 0.1404,
+  "max_odom_w_rad_s": 0.12,
+  "final_pose": [
+    20.091942300780964,
+    40.0625954331389,
+    -156.6375102079065
+  ],
+  "final_odom": [
+    0.0,
+    0.0
+  ]
+}
