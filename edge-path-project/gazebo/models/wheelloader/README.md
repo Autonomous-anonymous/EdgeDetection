@@ -119,10 +119,3 @@ Still unverified: stability across repeated runs, PID lift/bucket behaviour,
 articulated turn radius, axle oscillation, realistic tyre response, terrain
 driving, and calibrated hydraulic braking. The model has no LiDAR and is
 not part of the JARCRAC AEB/HIL validation pathway.
-
-## Licence
-
-Geometry, masses and meshes derive from the NUVE-LAB / Mevea models, which are
-GPL-3.0-or-later (Copyright Mevea Ltd 2018-2021, NUVE-LAB 2026). Review the
-model-specific `NOTICE.md` and independently verify the redistribution rights
-of third-party converted meshes before publicly sharing them.
