@@ -1,0 +1,24 @@
+{
+  "test": "jarcrac_detailed_forward_stop",
+  "world": "jarcrac_detailed_flat",
+  "requested_speed_m_s": 0.1,
+  "target_forward_m": 0.12,
+  "passed": true,
+  "reason": "forward_and_stop_confirmed",
+  "independent_watchdog": false,
+  "final_displacement_forward_lateral_yaw": [
+    0.12399900000669524,
+    -1.0635298047952556e-13,
+    2.702904566831421e-11
+  ],
+  "measured_average_forward_speed_m_s": 0.09592806302164295,
+  "max_forward_m": 0.12399900000669524,
+  "max_lateral_m": 1.3842597367559642e-13,
+  "max_yaw_deg": 2.958699951705057e-11,
+  "post_zero_forward_distance_m": 0.0026500002843168613,
+  "late_settling_motion_m": 0.0,
+  "stop_odometry_samples": 30,
+  "lidar_scans_seen": 42,
+  "chassis_contact_observed": false,
+  "contact_messages": 0
+}

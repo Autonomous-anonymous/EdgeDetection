@@ -1,0 +1,119 @@
+{
+  "test": "jarcrac_detailed_wide_visibility",
+  "mode": "READ_ONLY",
+  "world": "jarcrac_detailed_terrain",
+  "scans": [
+    {
+      "scan_seq": 1,
+      "yaw_deg": 150.43104238568847,
+      "cumulative_yaw_deg": -56.13400861431154,
+      "obstacle_bearing_from_sensor_deg": 71.55689419789553,
+      "sectors": {
+        "front_plus_minus_30": {
+          "finite_returns": 3837,
+          "terrain_returns": 3772,
+          "elevated_returns": 0,
+          "unknown_returns": 65,
+          "nearest_elevated_range_m": null
+        },
+        "right_minus_75_to_minus_45": {
+          "finite_returns": 2167,
+          "terrain_returns": 2160,
+          "elevated_returns": 0,
+          "unknown_returns": 7,
+          "nearest_elevated_range_m": null
+        },
+        "left_plus_45_to_plus_75": {
+          "finite_returns": 2703,
+          "terrain_returns": 1496,
+          "elevated_returns": 1110,
+          "unknown_returns": 97,
+          "nearest_elevated_range_m": 0.374
+        },
+        "known_obstacle_bearing_plus_minus_8": {
+          "finite_returns": 2048,
+          "terrain_returns": 735,
+          "elevated_returns": 1216,
+          "unknown_returns": 97,
+          "nearest_elevated_range_m": 4.664
+        }
+      }
+    },
+    {
+      "scan_seq": 3,
+      "yaw_deg": 150.43104238568847,
+      "cumulative_yaw_deg": -56.13400861431154,
+      "obstacle_bearing_from_sensor_deg": 71.55689419789553,
+      "sectors": {
+        "front_plus_minus_30": {
+          "finite_returns": 3836,
+          "terrain_returns": 3771,
+          "elevated_returns": 0,
+          "unknown_returns": 65,
+          "nearest_elevated_range_m": null
+        },
+        "right_minus_75_to_minus_45": {
+          "finite_returns": 2168,
+          "terrain_returns": 2160,
+          "elevated_returns": 0,
+          "unknown_returns": 8,
+          "nearest_elevated_range_m": null
+        },
+        "left_plus_45_to_plus_75": {
+          "finite_returns": 2703,
+          "terrain_returns": 1498,
+          "elevated_returns": 1112,
+          "unknown_returns": 93,
+          "nearest_elevated_range_m": 0.387
+        },
+        "known_obstacle_bearing_plus_minus_8": {
+          "finite_returns": 2048,
+          "terrain_returns": 737,
+          "elevated_returns": 1216,
+          "unknown_returns": 95,
+          "nearest_elevated_range_m": 4.642
+        }
+      }
+    },
+    {
+      "scan_seq": 4,
+      "yaw_deg": 150.43104238568847,
+      "cumulative_yaw_deg": -56.13400861431154,
+      "obstacle_bearing_from_sensor_deg": 71.55689419789553,
+      "sectors": {
+        "front_plus_minus_30": {
+          "finite_returns": 3837,
+          "terrain_returns": 3772,
+          "elevated_returns": 0,
+          "unknown_returns": 65,
+          "nearest_elevated_range_m": null
+        },
+        "right_minus_75_to_minus_45": {
+          "finite_returns": 2168,
+          "terrain_returns": 2160,
+          "elevated_returns": 0,
+          "unknown_returns": 8,
+          "nearest_elevated_range_m": null
+        },
+        "left_plus_45_to_plus_75": {
+          "finite_returns": 2703,
+          "terrain_returns": 1497,
+          "elevated_returns": 1110,
+          "unknown_returns": 96,
+          "nearest_elevated_range_m": 0.397
+        },
+        "known_obstacle_bearing_plus_minus_8": {
+          "finite_returns": 2048,
+          "terrain_returns": 736,
+          "elevated_returns": 1216,
+          "unknown_returns": 96,
+          "nearest_elevated_range_m": 4.665
+        }
+      }
+    }
+  ],
+  "command_published": false,
+  "corridor_verified": false,
+  "drive_authorized": false,
+  "note": "Map-height residuals are provisional. Elevated returns are not obstacle identities; occluded rays and unseen corridors remain unknown."
+}

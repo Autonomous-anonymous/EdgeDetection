@@ -1,0 +1,104 @@
+{
+  "body_radius_m": 1.728,
+  "candidates": {
+    "left": {
+      "drive_authorized": false,
+      "geometry_screen_pass": true,
+      "issues": [],
+      "local_waypoints_m": [
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.8,
+          4.5
+        ],
+        [
+          8.0,
+          4.5
+        ],
+        [
+          11.5,
+          0.0
+        ]
+      ],
+      "max_local_terrain_grade": 0.127,
+      "min_known_obstacle_clearance_proxy_m": 1.732,
+      "sampled_positions": 72,
+      "world_waypoints_m": [
+        [
+          19.722,
+          39.857
+        ],
+        [
+          20.988,
+          35.465
+        ],
+        [
+          14.525,
+          32.291
+        ],
+        [
+          9.4,
+          34.788
+        ]
+      ]
+    },
+    "right": {
+      "drive_authorized": false,
+      "geometry_screen_pass": true,
+      "issues": [],
+      "local_waypoints_m": [
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.8,
+          -4.5
+        ],
+        [
+          8.0,
+          -4.5
+        ],
+        [
+          11.5,
+          0.0
+        ]
+      ],
+      "max_local_terrain_grade": 0.089,
+      "min_known_obstacle_clearance_proxy_m": 1.806,
+      "sampled_positions": 72,
+      "world_waypoints_m": [
+        [
+          19.722,
+          39.857
+        ],
+        [
+          17.021,
+          43.543
+        ],
+        [
+          10.558,
+          40.37
+        ],
+        [
+          9.4,
+          34.788
+        ]
+      ]
+    }
+  },
+  "command_published": false,
+  "exact_gazebo_pose_used": true,
+  "lidar_nearest_m": 3.594561953909541,
+  "lidar_obstacle_returns": 1984,
+  "minimum_static_margin_m": 1.0,
+  "mode": "READ_ONLY",
+  "note": "Only known static obstacle + terrain mesh screened. No lateral LiDAR coverage, dynamic feasibility, independent localization or drive authorization.",
+  "planning_authorized": false,
+  "test": "jarcrac_detour_preview",
+  "valid_distinct_scans": 3,
+  "world": "jarcrac_detailed_ttc_stop_hold"
+}

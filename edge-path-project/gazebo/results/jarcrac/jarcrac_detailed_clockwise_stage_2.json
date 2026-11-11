@@ -1,0 +1,17 @@
+{
+  "test": "jarcrac_detailed_yaw_calibration",
+  "world": "jarcrac_detailed_terrain",
+  "requested_yaw_rate_rad_s": -0.12,
+  "steering_efficiency": 0.5,
+  "passed": true,
+  "reason": "reached_9_degrees",
+  "independent_watchdog": false,
+  "final_yaw_deg": -9.394832196557957,
+  "measured_physical_yaw_rate_rad_s": -0.134755183059877,
+  "physical_vs_command_ratio": 1.1229598588323084,
+  "max_translation_m": 0.005243458234164077,
+  "stop_confirmation_samples": 3,
+  "chassis_contact_observed": false,
+  "contact_messages": 0,
+  "note": "Yaw rate from Gazebo pose and simulation time"
+}

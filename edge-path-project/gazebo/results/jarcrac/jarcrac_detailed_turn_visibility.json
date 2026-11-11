@@ -1,0 +1,122 @@
+{
+  "test": "jarcrac_detailed_turn_visibility",
+  "world": "jarcrac_detailed_terrain",
+  "mode": "READ_ONLY",
+  "samples": [
+    {
+      "scan_number": 1,
+      "world_xy_m": [
+        19.969244071344097,
+        39.95158341820112
+      ],
+      "world_heading_deg": 150.43104238568847,
+      "odometry_speed_m_s": 0.0,
+      "sectors": {
+        "forward_plus_minus_12deg": {
+          "valid": true,
+          "reason": "ok_with_unknowns",
+          "scan_returns": 1528,
+          "mapped_returns": 1512,
+          "ground_points": 1512,
+          "obstacle_points": 0,
+          "unknown_points": 16,
+          "nearest_forward_obstacle_m": null,
+          "unknown_fraction": 0.010471204188481676,
+          "lidar_height_above_mapped_ground_m": 0.5864213631365818,
+          "terrain_mesh_triangles": 1829
+        },
+        "forward_plus_minus_30deg": {
+          "valid": true,
+          "reason": "ok_with_unknowns",
+          "scan_returns": 3837,
+          "mapped_returns": 3772,
+          "ground_points": 3772,
+          "obstacle_points": 0,
+          "unknown_points": 65,
+          "nearest_forward_obstacle_m": null,
+          "unknown_fraction": 0.016940317956737033,
+          "lidar_height_above_mapped_ground_m": 0.5864213631365818,
+          "terrain_mesh_triangles": 1829
+        }
+      }
+    },
+    {
+      "scan_number": 2,
+      "world_xy_m": [
+        19.969244071344097,
+        39.95158341820112
+      ],
+      "world_heading_deg": 150.43104238568847,
+      "odometry_speed_m_s": 0.0,
+      "sectors": {
+        "forward_plus_minus_12deg": {
+          "valid": true,
+          "reason": "ok_with_unknowns",
+          "scan_returns": 1528,
+          "mapped_returns": 1512,
+          "ground_points": 1512,
+          "obstacle_points": 0,
+          "unknown_points": 16,
+          "nearest_forward_obstacle_m": null,
+          "unknown_fraction": 0.010471204188481676,
+          "lidar_height_above_mapped_ground_m": 0.5864213631365818,
+          "terrain_mesh_triangles": 1829
+        },
+        "forward_plus_minus_30deg": {
+          "valid": true,
+          "reason": "ok_with_unknowns",
+          "scan_returns": 3837,
+          "mapped_returns": 3772,
+          "ground_points": 3772,
+          "obstacle_points": 0,
+          "unknown_points": 65,
+          "nearest_forward_obstacle_m": null,
+          "unknown_fraction": 0.016940317956737033,
+          "lidar_height_above_mapped_ground_m": 0.5864213631365818,
+          "terrain_mesh_triangles": 1829
+        }
+      }
+    },
+    {
+      "scan_number": 3,
+      "world_xy_m": [
+        19.969244071344097,
+        39.95158341820112
+      ],
+      "world_heading_deg": 150.43104238568847,
+      "odometry_speed_m_s": 0.0,
+      "sectors": {
+        "forward_plus_minus_12deg": {
+          "valid": true,
+          "reason": "ok_with_unknowns",
+          "scan_returns": 1528,
+          "mapped_returns": 1512,
+          "ground_points": 1512,
+          "obstacle_points": 0,
+          "unknown_points": 16,
+          "nearest_forward_obstacle_m": null,
+          "unknown_fraction": 0.010471204188481676,
+          "lidar_height_above_mapped_ground_m": 0.5864213631365818,
+          "terrain_mesh_triangles": 1829
+        },
+        "forward_plus_minus_30deg": {
+          "valid": true,
+          "reason": "ok_with_unknowns",
+          "scan_returns": 3837,
+          "mapped_returns": 3772,
+          "ground_points": 3772,
+          "obstacle_points": 0,
+          "unknown_points": 65,
+          "nearest_forward_obstacle_m": null,
+          "unknown_fraction": 0.016940317956737033,
+          "lidar_height_above_mapped_ground_m": 0.5864213631365818,
+          "terrain_mesh_triangles": 1829
+        }
+      }
+    }
+  ],
+  "command_published": false,
+  "side_corridor_verified": false,
+  "detour_drive_authorized": false,
+  "note": "Forward-sector terrain-map classification at the current heading only. Unknown space remains unknown; no swept-path or full side-corridor verification."
+}
