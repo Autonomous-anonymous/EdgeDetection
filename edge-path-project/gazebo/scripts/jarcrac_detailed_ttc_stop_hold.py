@@ -45,6 +45,11 @@ class OdometryAdapterNode:
     def subscribe(self, message_type, topic, callback):
         if topic == '/model/jarcrac/odometry':
             topic = ODOM
+        if topic == CONTACT:
+            topic = (
+                f'/world/{NAME}/model/jarcrac/link/chassis/'
+                'sensor/detailed_chassis_contact/contact'
+            )
         return self.inner.subscribe(message_type, topic, callback)
 
     def advertise(self, topic, message_type):

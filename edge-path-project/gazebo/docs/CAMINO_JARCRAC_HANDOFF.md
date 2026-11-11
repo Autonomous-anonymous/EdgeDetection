@@ -178,3 +178,83 @@ Original map classification:
 
 Continue with the +0.125-degree LiDAR sampling-grid experiment.
 Do not jump straight to autonomous detour driving.
+
+## Update — 2026-11-11: Half-step LiDAR validation PASSED
+
+This section supersedes the earlier pending half-step experiment.
+
+Experimental change:
+- Horizontal LiDAR angular sampling shifted by +0.125 degrees.
+- Physical sensor pose unchanged.
+- 721 horizontal samples, 32 vertical layers, 180-degree span.
+- Original detailed model remains unchanged.
+
+Results:
+- Flat world: 0 short-range (<1 m) returns in 3/3 scans.
+- Ruskotunturi: 0 short-range (<1 m) returns in 3/3 scans.
+- Known obstacle detected in 3/3 map-assisted scans.
+- Obstacle bearing: +0.7 degrees.
+- Nearest elevated obstacle ranges: 3.909, 3.881, 3.889 m.
+- Elevated returns within obstacle bearing +/-8 degrees:
+  1184, 1184, 1185.
+- GPU cubemap seam remains a hypothesis, not proven root cause.
+
+Detailed-track half-step TTC stop/hold:
+- Result: PASS.
+- Initial obstacle gap: 3.8925 m.
+- TTC brake reason: ttc_threshold.
+- Trigger TTC: 32.401 s (instrumentation-only threshold).
+- Progress at brake trigger: 0.314595 m.
+- Final progress: 0.317339 m.
+- Post-trigger travel: 0.002744 m.
+- Final speed: 0 m/s.
+- Stationary hold: 5.035 simulated seconds.
+- Fresh hold scans: 14.
+- Processing/callback errors: 0.
+- Dropped analysis samples: 0.
+- Contact messages: 0 (positive contact sensing unverified).
+
+Report:
+  edge-path-project/gazebo/results/jarcrac/
+  jarcrac_detailed_ttc_stop_hold_halfstep.json
+
+Next priorities:
+1. Positively validate chassis contact sensing in an isolated test.
+2. Review half-step sensor behavior under additional orientations.
+3. Validate swept-path clearance and side perception.
+4. Implement an independent command/sensor watchdog.
+5. Only then consider a bounded right-hand detour trial.
+
+No autonomous detour or route rejoining has been validated.
+No half-step modification has been integrated into the original model.
+
+## Update — 2026-11-11: Physical collision contacts verified
+
+Both STL track collisions positively verified in Gazebo DART.
+
+Stationary flat-world test:
+- Left track-ground contacts: 46
+- Right track-ground contacts: 46
+- Collision pair names matched both STL track collision shapes
+- Vehicle Z displacement: -0.003142 m
+- Test result: PASS
+- No drive plugins or velocity commands in this fixture
+- Detailed track meshes and original model unchanged
+
+Earlier chassis contact-positive test:
+- Falling sphere contacted chassis body_collision
+- Correct chassis-sphere collision pair observed
+- Test result: PASS
+
+DART's mesh initialization warnings did not prevent actual
+track-ground contact generation in this test.
+
+Remaining:
+- Verify world-qualified contact subscription in TTC adapters
+- Implement and validate independent watchdog
+- Verify swept-path and side-corridor clearance
+- Validate bounded detour and route rejoining
+
+Reports:
+- gazebo/results/jarcrac/jarcrac_detailed_track_contact.json
+- gazebo/results/jarcrac/jarcrac_detailed_contact_positive.json

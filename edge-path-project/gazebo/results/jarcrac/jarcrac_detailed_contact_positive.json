@@ -1,0 +1,16 @@
+{
+  "messages": 1,
+  "nonempty_messages": 1,
+  "contact_pairs": [
+    [
+      "jarcrac::chassis::body_collision",
+      "contact_test_ball::ball_link::ball_collision"
+    ]
+  ],
+  "matched_contacts": 1,
+  "world": "jarcrac_detailed_contact_positive",
+  "passed": true,
+  "mode": "stationary_fixture",
+  "vehicle_driven": false,
+  "actual_driving_contact_validated": false
+}

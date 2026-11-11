@@ -1,0 +1,55 @@
+{
+  "left": 46,
+  "right": 46,
+  "left_messages": 46,
+  "right_messages": 46,
+  "pairs": [
+    [
+      "right",
+      "jarcrac::track_right::track_right_collision",
+      "ground_plane::link::collision"
+    ],
+    [
+      "left",
+      "jarcrac::track_left::track_left_collision",
+      "ground_plane::link::collision"
+    ],
+    [
+      "right",
+      "jarcrac::track_right::track_right_collision",
+      "ground_plane::link::collision"
+    ],
+    [
+      "left",
+      "jarcrac::track_left::track_left_collision",
+      "ground_plane::link::collision"
+    ],
+    [
+      "right",
+      "jarcrac::track_right::track_right_collision",
+      "ground_plane::link::collision"
+    ],
+    [
+      "left",
+      "jarcrac::track_left::track_left_collision",
+      "ground_plane::link::collision"
+    ],
+    [
+      "right",
+      "jarcrac::track_right::track_right_collision",
+      "ground_plane::link::collision"
+    ],
+    [
+      "left",
+      "jarcrac::track_left::track_left_collision",
+      "ground_plane::link::collision"
+    ]
+  ],
+  "first_vehicle_z": 0.0,
+  "last_vehicle_z": -0.003142161776668706,
+  "sim_time_s": 0.07200000000000001,
+  "test": "detailed_track_ground_contact",
+  "passed": true,
+  "no_drive_commands": true,
+  "original_mesh_collisions_unchanged": true
+}
