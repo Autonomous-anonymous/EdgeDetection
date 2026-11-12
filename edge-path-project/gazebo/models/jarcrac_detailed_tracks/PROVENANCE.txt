@@ -1,0 +1,5 @@
+Detailed track geometry imported from user ZIP.
+ZIP SHA256: 9d0b547768f2d7520773a9828c0b4667cb7283fcc1eb29526811ce4edb2f5ef9
+ZIP documentation identifies Mevea / NUVE-LAB GPL-3.0-or-later provenance.
+Verify redistribution and attribution before Git push.
+Original JARCRAC model was not modified.
