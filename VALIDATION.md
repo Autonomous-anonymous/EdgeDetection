@@ -39,17 +39,15 @@ The standalone ARM64 deployment was physically accepted on the R2100 on 2026-11-
 edge-path-project/hil/NATIVE_DEPLOYMENT_ACCEPTANCE.md
 ```
 
-The current offline repository suite is:
+### Offline validation and packaging
 
-```text
-Ran 190 tests
-OK
-```
+The [2026-11-12 GitHub Actions run](https://github.com/Autonomous-anonymous/EdgeDetection/actions/runs/43185855454) tested `camino` at `51f6f139`. The offline suite reported **422 passed and 3 skipped out of 425**. The three skips require local Mevea inputs for model regeneration or generator options. Deployment-design tests and the Debian 12 ARM64 package build and smoke test also passed.
 
-The full offline suite includes `test_embedded_deployment.py`, which builds a standalone executable with PyInstaller. Install the pinned build dependency in a virtual environment **before** running the suite (this was necessary for the successful local 190-test run on 2026-11-03):
+These CI results cover software tests and packaging. The [2026-11-05 physical AEB acceptance](edge-path-project/hil/NATIVE_DEPLOYMENT_ACCEPTANCE.md#full-native-executable-hil-aeb-acceptance--2026-11-05) used release `46b51c5`.
+
+The full offline suite includes `test_embedded_deployment.py`, which builds a standalone executable with PyInstaller. From the repository root, install the pinned build dependency in a virtual environment before running the suite:
 
 ```bash
-cd ~/edge-path-project-git
 python3 -m venv .venv-requirements
 source .venv-requirements/bin/activate
 python -m pip install -r edge-path-project/hil/deployment/requirements-build.txt
@@ -153,9 +151,9 @@ The common target-selecting runner is:
 edge-path-project/gazebo/scripts/run_staged_scenario.py
 ```
 
-The SIL target uses `ruskotunturi_emergency_braking_sil.py`. The HIL target uses the existing `ruskotunturi_hil10_b_test.py --mode aeb`, preserving the validated embedded raw-LiDAR -> R2100 perception -> physical CAN -> R2100 AEB -> returned brake path.
+The SIL target starts `ruskotunturi_emergency_braking_sil_stage.py` with the generated mapping. The adapter applies it to `ruskotunturi_emergency_braking_sil.py`. The HIL target starts `ruskotunturi_hil10_b_test.py --mode aeb` and uses the already-running R2100 with its deployed CAN profile.
 
-Verified operator runs on 2026-11-02 produced:
+The 2026-11-02 operator record reports:
 
 ```text
 SIL target
@@ -175,7 +173,7 @@ raw LiDAR transport         active
 physical-CAN AEB path       exercised
 ```
 
-The successful HIL run is now retained as committed raw evidence:
+The SIL values above come from the operator record. The HIL run has a committed JSON summary and CSV trace:
 
 ```text
 edge-path-project/gazebo/results/hil10/hil10_aeb_20261102T102033_e21c05af.json
@@ -202,7 +200,7 @@ The first HIL attempt intentionally failed closed with `startup_brake_reply_miss
 
 The offline staged-scenario tests pass **6 / 6**.
 
-The common runner currently selects the target, validates the shared scenario and starts the target-specific backend. Gazebo world lifecycle and R2100 runtime lifecycle remain explicit operator steps, and target-specific result formats have not yet been replaced by one unified result schema.
+The common runner selects the target, generates its local mapping and starts the backend. The native build generates and packages the default HIL profile from the same interface. The operator starts Gazebo and, for HIL, the deployed R2100 runtime. Each backend produces its own result format.
 
 ## Independent HIL process-termination fail-safe — 2026-11-02
 
@@ -257,7 +255,7 @@ The test verifies that the actual post-kill Vehicle B zero command comes from th
 
 The watchdog state tests pass **5 / 5**.
 
-This closes the previously documented gap for forced HIL runner termination. It does not claim coverage of PC power loss, physical CAN cable disconnection, CAN bus-off or all distributed-node failure modes. The watchdog is independent of the HIL runner process but remains on the same WSL/PC host.
+This run covers loss of the HIL runner process while its WSL host and watchdog remain running. A separate [operator-reported CAN interruption and recovery trial](edge-path-project/hil/README.md#manual-physical-can-interruption-and-recovery-validation) covers one two-interface bench setup. PC power loss and broader CAN fault cases remain open.
 
 ## SIL/HIL AEB threshold consistency — 2026-11-02
 
@@ -284,7 +282,7 @@ Ran 5 tests
 OK
 ```
 
-This test was added in commit `acc8712`. At that stage, the complete repository offline suite passed **168 / 168**. After the native deployment and requirements-closure tests were added, the current development suite passes **190 / 190**.
+This test was added in commit `acc8712`, when the complete offline suite passed **168 / 168**. A local run on 2026-11-03 passed **190 / 190** after adding native deployment and requirements tests. See [offline validation and packaging](#offline-validation-and-packaging) for the dated `camino` CI result.
 
 ## Preflight terminology
 
@@ -302,10 +300,11 @@ Because the runtime has since gained signal mapping, codecs, deployment and diag
 
 ### Current R2100 runtime readiness
 
-On the deployed R2100 package:
+On the R2100, substitute the verified native release directory:
 
 ```bash
-~/r2100_hil/current/r2100_hil preflight
+cd "$HOME/r2100_hil/releases/<NATIVE_RELEASE>"
+./r2100_hil preflight
 ```
 
 This is the current target-side readiness check. It validates the selected mapping profile, configured CAN interfaces, live CAN state and bitrate, and the UDP ports needed by the HIL runtime. `start_hil.sh` runs this check automatically before launching the managed processes.
@@ -331,20 +330,20 @@ This complements the R2100 deployment preflight: the target preflight checks the
 | --- | --- | --- |
 | HIL-10 offline validation | 42 / 42 PASS | Historical focused HIL-10 suite at milestone completion. |
 | HIL-10 hardware scenarios | 6 / 6 PASS | Route, hybrid, AEB and three fault modes are documented in `edge-path-project/hil/README.md`. |
-| Signal regression | 30 / 30 PASS | Current mapping/codec regression documented in the HIL guide. |
+| Signal regression | 30 / 30 PASS | Mapping and codec milestone documented in the HIL guide. |
 | Deployment tests | 8 / 8 PASS | Embedded package build/check coverage documented in the HIL guide. |
 | R2100 deployment preflight unit tests | 4 / 4 PASS | Target-side preflight coverage. |
 | HIL startup diagnostics | 7 / 7 PASS | Dedicated diagnostics unit tests. |
 | HIL integration regression | 18 / 18 PASS | Integration tests after startup diagnostics. |
 | Common staged-scenario tests | 6 / 6 PASS | Scenario schema, target command construction, HIL host requirement and both dry-run paths. |
 | SIL/HIL AEB threshold consistency | 5 / 5 PASS | TTC, emergency distance, timeout, period and TTC minimum-speed copies match. |
-| Common emergency-braking SIL run | PASS | `aeb_stop_verified`, `ttc_threshold`, 1.253 m ground-truth stop clearance. |
+| Common emergency-braking SIL run | Operator-reported PASS on 2026-11-02 | `aeb_stop_verified`, `ttc_threshold`, 1.253 m ground-truth stop clearance. |
 | Common emergency-braking HIL run | PASS / committed raw evidence | `hil10_aeb_20261102T102033_e21c05af.json/.csv`; R2100 and physical-CAN AEB path exercised. |
 | Command-watchdog state tests | 5 / 5 PASS | Arming, freshness, timeout latch, invalid timeout and unarmed behaviour. |
 | HIL runner `SIGKILL` fail-safe | PASS / committed raw evidence | `hil_process_termination_20261102T115256Z.json`; watchdog zero at 0.261 s after SIGKILL, 17 stop samples, source clean. |
 | Standalone ARM64 deployment and native functional AEB | PASS / committed JSON/CSV on 2026-11-05 | Physical R2100: Debian 12 ARM64 CI executable, artifact SHA-256 matched on target, `check`/`preflight`/managed runtime PASS, full physical-CAN `emergency_braking` HIL-10 PASS, `aeb_stop_verified`, 1.236 m clearance, 4 stop samples, no fault. Committed evidence: `edge-path-project/gazebo/results/hil10/hil10_aeb_20261105T070006_b18e73a4.json/.csv`; see `edge-path-project/hil/NATIVE_DEPLOYMENT_ACCEPTANCE.md`. |
-| Full repository offline suite | 190 / 190 PASS | Current development suite after automatic stage mapping and native deployment work. |
-| GitHub Actions offline validation | PASS | Full offline suite plus standalone deployment build/configuration check and deployment regression tests. |
+| Manual CAN interruption and recovery | Operator-reported PASS | One two-interface bench trial. The [HIL guide](edge-path-project/hil/README.md#manual-physical-can-interruption-and-recovery-validation) records the sequence. The raw trace and exact release are unavailable in the branch. |
+| GitHub Actions offline validation | 422 passed, 3 skipped on 2026-11-12 | [CI for `51f6f139`](#offline-validation-and-packaging) also passed the native ARM64 build, smoke test and deployment-design checks. |
 | Fresh-checkout R2100 acceptance | PASS | Historical zipapp baseline: clean checkout -> build -> deploy -> preflight -> managed runtime -> physical-CAN route; `route_complete`. |
 | Verified baseline tag | complete | `r2100-hil-verified-2026-11-02`; closes the pre-common-scenario R2100 acceptance baseline. |
 
@@ -386,7 +385,7 @@ The 2026-11-02 fresh-checkout acceptance fixes that traceability gap by explicit
 
 ## Scope boundary
 
-The current deliverable validates the staged **SIL -> HIL** development and acceptance workflow. A Vehicle-in-the-Loop (VIL) stage is **not implemented and is explicitly out of scope** for this deliverable. No completed VIL stage is claimed by the repository.
+The current deliverable validates the staged **SIL → HIL** development and acceptance workflow. Vehicle-in-the-Loop (VIL) is out of scope.
 
 ## Documentation index
 
@@ -394,6 +393,7 @@ The current deliverable validates the staged **SIL -> HIL** development and acce
 - `REQUIREMENTS.md` — sanitised course/CAMINO requirements map with implementation, verification, evidence and remaining gaps.
 - `edge-path-project/gazebo/README.md` — detailed Gazebo SIL architecture, v6.4 evidence and run instructions.
 - `edge-path-project/gazebo/results/README.md` — result-file conventions and current SIL reporting baseline.
+- [JARCRAC SIL results](edge-path-project/gazebo/results/jarcrac/README.md) — experimental wheel-based and tracked-model results and their limits.
 - `edge-path-project/hil/README.md` — detailed R2100 HIL architecture, deployment, preflight, diagnostics, tests and hardware evidence.
 - `edge-path-project/hil/NATIVE_DEPLOYMENT_ACCEPTANCE.md` — physical R2100 acceptance record for the standalone ARM64 executable.
 - `.github/workflows/offline-validation.yml` — automated offline test and deployment-build validation.
@@ -419,4 +419,4 @@ Remaining work is optional refinement:
 1. optional unification of SIL/HIL result output into one comparable result schema,
 2. optional lifecycle automation for Gazebo and R2100 runtime startup/cleanup,
 3. optional second common SIL/HIL scenario to demonstrate runner generalisation,
-4. optional broader fault coverage such as physical CAN disconnection or PC power-loss behaviour.
+4. optional PC power-loss and repeatable CAN fault testing beyond the reported bench trial.

@@ -1,6 +1,6 @@
 # CAMINO — JARCRAC Development Handoff
 
-Updated: 2026-11-11
+Updated 2026-11-12.
 
 ## Repository and environment
 
@@ -13,7 +13,7 @@ Updated: 2026-11-11
 - Main vehicle: JARCRAC tracked forestry vehicle
 - Goal: obstacle detection, TTC braking, 5-second hold,
   safe detour around obstacle, then route rejoining
-- Scope: simulation-in-the-loop only, not safety certified
+- Scope: experimental Software-in-the-Loop (SIL)
 
 ## Important rules
 
@@ -26,35 +26,27 @@ Updated: 2026-11-11
 
 ## Detailed tracked JARCRAC
 
-Imported from the user's jarcrac_gazebo(2).zip using:
-
-  edge-path-project/gazebo/scripts/jarcrac_make_detailed_tracks.py
-
-Experimental model:
-
-  edge-path-project/gazebo/models/jarcrac_detailed_tracks/
-
-The original models/jarcrac/model.sdf remains unchanged.
+The [detailed model and track meshes](../models/jarcrac_detailed_tracks/) are
+committed. The original [wheel-based JARCRAC v2](../../../JARCRAC_V2_SIL.md)
+remains a separate model.
 
 Total simulated mass: 2312.236 kg.
 Uses native TrackedVehicle and two TrackController plugins.
 
-LiDAR restored to original 180-degree, 721 x 32 configuration.
-Topic: /jarcrac/lidar
-IMU: /jarcrac/imu
-Detailed odometry: /model/jarcrac/detailed_odometry
+The model publishes 180-degree, 721 × 32 LiDAR scans on `/jarcrac/lidar`
+and odometry on `/model/jarcrac/detailed_odometry`. The generated worlds add
+the IMU on `/jarcrac/imu` and a chassis contact sensor.
 
-Important: imported model and meshes may not yet be on GitHub.
-The source ZIP is stored on the user's PC.
-The ZIP README identifies Mevea/NUVE-LAB GPL-3.0-or-later
-provenance; review redistribution compliance before publishing.
+The [mesh provenance record](../models/jarcrac_detailed_tracks/PROVENANCE.txt)
+identifies the source ZIP and its stated Mevea/NUVE-LAB GPL-3.0-or-later
+provenance. Independent verification of redistribution rights remains open.
 
 ## Validated simulation experiments
 
 Detailed tracks:
-- Flat +9-degree physical turn: PASS.
-- Terrain +9-degree physical turn: PASS.
-- Terrain -9-degree physical turn: PASS.
+- Flat +9-degree simulated turn: PASS.
+- Terrain +9-degree simulated turn: PASS.
+- Terrain -9-degree simulated turn: PASS.
 - Six staged clockwise turns: PASS.
 - Actual cumulative clockwise rotation: -56.137 degrees.
 - Physical steering rates vary with terrain/orientation.
@@ -82,7 +74,7 @@ TTC braking and hold:
 - Final progress: 0.3161 m.
 - Additional travel after trigger: about 2.84 mm.
 - Hold duration: 5.058 simulated seconds.
-- NOT calibrated automatic emergency braking.
+- The TTC setting is for this instrumentation trial. Calibrated braking remains open.
 
 Detour preview:
 - Read-only static geometry screen: both sides PASS.
@@ -95,7 +87,7 @@ Detour preview:
 - Side coverage, swept path, dynamic feasibility and
   route rejoining are NOT validated.
 
-## Current unresolved LiDAR anomaly
+## Near returns with the original LiDAR sampling grid
 
 Detailed model with visuals:
 - Exactly 32 returns below 1 m at azimuth +45 degrees.
@@ -117,28 +109,13 @@ Current hypothesis:
 - Not yet confirmed as a Gazebo rendering defect.
 - Do NOT filter or ignore the +45-degree column yet.
 
-## Immediate next experiment
-
-Create a separate detailed flat-world A/B variant that shifts
-the LiDAR horizontal angular sampling grid by +0.125 degrees,
-without moving the sensor or changing its 721 x 32 resolution.
-
-Run three stationary LiDAR scans and check whether the
-single-column +45-degree near-return anomaly disappears.
-
-If successful:
-1. Repeat on Ruskotunturi.
-2. Verify detection of real obstacles in affected sectors.
-3. Revalidate TTC stopping and 5-second hold.
-4. Investigate contact-sensor positive detection.
-5. Evaluate swept trajectory and side corridor clearance.
-6. Only then consider bounded detour driving.
+The isolated half-step test below reduced the near returns in the tested
+scenes. The original model still uses the original sampling grid.
 
 ## Known limitations
 
-- No independent safety watchdog.
-- Chassis contact sensor has reported zero contact messages;
-  positive detection capability remains unvalidated.
+- Stationary fixtures verified contact detection. The world-qualified contact
+  subscription during driven TTC runs still needs verification.
 - Map-assisted classification uses Gazebo ground-truth XYZ.
 - Sensor pairing is based on receive time, not exact
   simulation-timestamp synchronization.
@@ -146,29 +123,32 @@ If successful:
 - No autonomous detour or route rejoining demonstrated.
 - All driving limits are experimental SIL limits.
 
-## Recreating test worlds on this PC
+## Recreate the experimental worlds
 
-From repository root:
+From the repository root, generate the flat and terrain worlds from the
+committed model and meshes:
 
-  python3 edge-path-project/gazebo/scripts/jarcrac_make_detailed_tracks.py --case both
+```bash
+python3 edge-path-project/gazebo/scripts/jarcrac_make_detailed_tracks.py --case both
+export GZ_SIM_RESOURCE_PATH="$PWD/edge-path-project/gazebo/models${GZ_SIM_RESOURCE_PATH:+:$GZ_SIM_RESOURCE_PATH}"
+```
 
-Requires the locally imported detailed model assets.
+The script writes `jarcrac_detailed_flat.sdf` and `jarcrac_detailed_terrain.sdf`
+under `~/jarcrac_imu_experiment/`. The source ZIP is needed only to reimport
+the track assets.
 
-Generated worlds are in:
+To generate the isolated half-step variant after creating the terrain world:
 
-  ~/jarcrac_imu_experiment/
-
-Set the Gazebo resource path:
-
-  export GZ_SIM_RESOURCE_PATH="$PWD/edge-path-project/gazebo/models"
+```bash
+python3 edge-path-project/gazebo/scripts/jarcrac_make_terrain_halfstep.py
+```
 
 ## Where to look
 
 Scripts:
   edge-path-project/gazebo/scripts/jarcrac_detailed_*.py
 
-Reports:
-  edge-path-project/gazebo/results/jarcrac/
+Reports are indexed in the [JARCRAC SIL results](../results/jarcrac/README.md).
 
 Original TTC logic:
   edge-path-project/gazebo/scripts/jarcrac_adas_ttc_stop_hold.py
@@ -176,12 +156,7 @@ Original TTC logic:
 Original map classification:
   edge-path-project/gazebo/scripts/jarcrac_lidar_map_assisted.py
 
-Continue with the +0.125-degree LiDAR sampling-grid experiment.
-Do not jump straight to autonomous detour driving.
-
-## Update — 2026-11-11: Half-step LiDAR validation PASSED
-
-This section supersedes the earlier pending half-step experiment.
+## 2026-11-11 half-step LiDAR validation
 
 Experimental change:
 - Horizontal LiDAR angular sampling shifted by +0.125 degrees.
@@ -212,23 +187,11 @@ Detailed-track half-step TTC stop/hold:
 - Fresh hold scans: 14.
 - Processing/callback errors: 0.
 - Dropped analysis samples: 0.
-- Contact messages: 0 (positive contact sensing unverified).
+- Contact messages: 0 in this run.
 
-Report:
-  edge-path-project/gazebo/results/jarcrac/
-  jarcrac_detailed_ttc_stop_hold_halfstep.json
+See the [committed half-step TTC result](../results/jarcrac/jarcrac_detailed_ttc_stop_hold_halfstep.json).
 
-Next priorities:
-1. Positively validate chassis contact sensing in an isolated test.
-2. Review half-step sensor behavior under additional orientations.
-3. Validate swept-path clearance and side perception.
-4. Implement an independent command/sensor watchdog.
-5. Only then consider a bounded right-hand detour trial.
-
-No autonomous detour or route rejoining has been validated.
-No half-step modification has been integrated into the original model.
-
-## Update — 2026-11-11: Physical collision contacts verified
+## 2026-11-11 simulated collision-contact checks
 
 Both STL track collisions positively verified in Gazebo DART.
 
@@ -249,12 +212,16 @@ Earlier chassis contact-positive test:
 DART's mesh initialization warnings did not prevent actual
 track-ground contact generation in this test.
 
-Remaining:
-- Verify world-qualified contact subscription in TTC adapters
-- Implement and validate independent watchdog
-- Verify swept-path and side-corridor clearance
-- Validate bounded detour and route rejoining
+- [Track-ground contact](../results/jarcrac/jarcrac_detailed_track_contact.json)
+- [Chassis contact positive control](../results/jarcrac/jarcrac_detailed_contact_positive.json)
 
-Reports:
-- gazebo/results/jarcrac/jarcrac_detailed_track_contact.json
-- gazebo/results/jarcrac/jarcrac_detailed_contact_positive.json
+## 2026-11-12 watchdog and bounded-motion scripts
+
+The [watchdog monitor](../scripts/jarcrac_detailed_watchdog_monitor.py) observes
+sensor freshness and contact status. The
+[bounded-motion experiment](../scripts/jarcrac_arbiter_bounded_motion.py)
+uses a synthetic command request, an in-process watchdog and Gazebo
+ground-truth pose in a separate test world. Its live-run report and the
+monitor's report are absent from the branch. Independent process-level
+stop protection, swept-path clearance, autonomous detour and route rejoining
+remain open.

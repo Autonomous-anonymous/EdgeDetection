@@ -173,13 +173,19 @@ r2100_lidar_perception.py
 r2100_aeb_controller.py
 ```
 
-The normal Ruskotunturi profile is:
+The repository's default Ruskotunturi profile is:
 
 ```text
 edge-path-project/hil/config/ruskotunturi_hil.json
 ```
 
-It defines the current bench mapping:
+The native build generates the packaged `config/ruskotunturi_hil.json` from
+`config/ruskotunturi_aeb_interface.json`. The R2100 loads the deployed profile at
+startup. `R2100_HIL_CONFIG` selects an alternate profile for the managed
+runtime. The staged runner generates a local HIL mapping for its scenario run.
+Deployment and profile selection on the R2100 are separate steps.
+
+The default bench mapping is:
 
 ```text
 gateway / perception interface : can0
@@ -392,7 +398,8 @@ edge-path-project/hil/NATIVE_DEPLOYMENT_ACCEPTANCE.md
 The deploy script deliberately consumes an **already-built ARM64 package**. It refuses non-ARM64 artifacts and packages that still declare a Python runtime requirement:
 
 ```bash
-edge-path-project/hil/deployment/deploy_r2100_hil.sh <R2100_IP>
+read -r -p "Reachable R2100 IP address or hostname: " R2100_IP
+edge-path-project/hil/deployment/deploy_r2100_hil.sh "$R2100_IP"
 ```
 
 The deploy script creates a versioned archive, transfers it to the R2100, extracts it into a timestamped release directory, runs the deployed `r2100_hil check`, and updates the `current` symlink only after successful validation.
@@ -407,21 +414,26 @@ The resulting target layout is:
     └── ...
 ```
 
-The deployed runtime is controlled with:
+For hardware acceptance, substitute the name of the verified native release
+on the R2100. The 2026-11-05 run used
+`~/r2100_hil/releases/r2100_hil_ci_46b51c5_20261105`. A manual CI artifact
+deployment can leave `current` pointing at an earlier release. See the
+[accepted release and hashes](NATIVE_DEPLOYMENT_ACCEPTANCE.md#source-and-exact-deployed-artifact).
 
 ```bash
-~/r2100_hil/current/r2100_hil check
-~/r2100_hil/current/r2100_hil preflight
-~/r2100_hil/current/start_hil.sh
-~/r2100_hil/current/status_hil.sh
-~/r2100_hil/current/stop_hil.sh
+cd "$HOME/r2100_hil/releases/<NATIVE_RELEASE>"
+./r2100_hil check
+./r2100_hil preflight
+./start_hil.sh
+./status_hil.sh
 ```
 
-A non-default profile can be selected for the managed runtime with `R2100_HIL_CONFIG`, for example:
+After testing, run `./stop_hil.sh` from the same release directory.
+
+To start with the alternate scaling profile from that release directory, run:
 
 ```bash
-R2100_HIL_CONFIG=~/r2100_hil/current/config/ruskotunturi_hil_alt_scaling.json \
-  ~/r2100_hil/current/start_hil.sh
+R2100_HIL_CONFIG="$PWD/config/ruskotunturi_hil_alt_scaling.json" ./start_hil.sh
 ```
 
 The start script records process IDs and creates a dedicated log directory. The stop script terminates the AEB, gateway and perception processes in a controlled order. The native entry point preserves the existing component shutdown path so managed termination can execute the controller's final fail-safe brake transmission logic before normal exit.
@@ -432,10 +444,10 @@ The earlier 2026-11-02 fresh-checkout acceptance used the historical Python zipa
 
 ## Deployment Preflight
 
-The standalone executable includes an R2100-specific readiness check:
+From the verified native release directory on the R2100:
 
 ```bash
-~/r2100_hil/current/r2100_hil preflight
+./r2100_hil preflight
 ```
 
 The preflight loads the selected mapping profile and verifies the runtime prerequisites that can be checked locally before the HIL processes start:
@@ -639,11 +651,9 @@ CAN0_L <-> CAN1_L
 
 ## HIL-10 offline validation
 
-Before hardware execution, run the preflight and HIL-10 software tests from the repository root:
+Run the focused HIL-10 software tests from the repository root:
 
 ```bash
-cd ~/edge-path-project-git
-python3 edge-path-project/gazebo/scripts/hil10_preflight.py
 python3 -m unittest discover -s tests -p 'test_hil10*.py' -v
 ```
 
@@ -655,6 +665,10 @@ OK
 ```
 
 The tests cover freshness, stale cached speed, duplicate/reordered replies, source timestamps, stop verification, fail-closed behavior and HIL-10 execution/adaptor logic.
+
+The [historical baseline check](../../VALIDATION.md#historical-baseline-integrity-check)
+compares source files with the original HIL-10 snapshot. For live startup use the
+[target-side deployment preflight](#deployment-preflight).
 
 ## Standard HIL-10 three-terminal workflow
 
@@ -670,21 +684,27 @@ The HIL-10 B test starts its own raw LiDAR sender, so a fourth LiDAR process is 
 
 ### Terminal 1 - WSL / Gazebo
 
+Start from the root of your `camino` checkout.
+
 ```bash
-cd ~/edge-path-project-git
 export GZ_SIM_RESOURCE_PATH="$PWD/edge-path-project/gazebo/models${GZ_SIM_RESOURCE_PATH:+:$GZ_SIM_RESOURCE_PATH}"
 
 gz sim -r \
   edge-path-project/gazebo/worlds/ruskotunturi_phase6_two_vehicle_world.sdf
 ```
 
+For AEB mode, use the dedicated
+[shared emergency-braking world and runner](../gazebo/README.md#common-silhil-emergency-braking-scenario).
+
 ### Terminal 2 - R2100 / deployed runtime
 
-Restart all three R2100 processes between test runs because the AEB latch and test state must start cleanly.
+Stop the previous managed run from its release directory before starting a new
+one. Substitute the verified native release name below.
 
 ```bash
-~/r2100_hil/current/start_hil.sh
-~/r2100_hil/current/status_hil.sh
+cd "$HOME/r2100_hil/releases/<NATIVE_RELEASE>"
+./start_hil.sh
+./status_hil.sh
 ```
 
 `start_hil.sh` runs the R2100 deployment preflight automatically and starts the three runtime components only after it passes.
@@ -693,8 +713,9 @@ For a non-default profile, set `R2100_HIL_CONFIG` before invoking the same start
 
 ### Terminal 3 - WSL / HIL-10
 
+Start from the root of your `camino` checkout.
+
 ```bash
-cd ~/edge-path-project-git
 read -r -p "R2100 IP address: " R2100_IP
 
 python3 -u edge-path-project/gazebo/scripts/ruskotunturi_hil10_b_test.py \
@@ -731,11 +752,12 @@ Each fault run required the vehicle to move before injection, detect the expecte
 
 ## Manual physical CAN interruption and recovery validation
 
-A manual robustness test was also performed by physically interrupting the CAN0-CAN1 bench connection while Vehicle B was driving.
+The operator reported a manual trial that physically interrupted the CAN0-CAN1
+bench connection while simulated Vehicle B was driving.
 
 The first experiment exposed `ENOBUFS` handling in the AEB transmit path. The controller was hardened so transient CAN transmit errors (`ENOBUFS`, `EAGAIN` and `EWOULDBLOCK`) are treated as dropped frames instead of fatal process errors. The brake rolling counter advances only after successful CAN transmission.
 
-The repeated test verified:
+The operator recorded the following sequence on the repeat trial:
 
 ```text
 normal driving
@@ -749,6 +771,11 @@ normal driving
  -> new route run completed without restarting the R2100 processes
  -> PASS
 ```
+
+This is one reported bench recovery trial. The raw trace and exact release are
+unavailable in the branch. The observed CAN bus-off/error state belongs to that
+trial. A separate repeatable bus-off acceptance test and broader CAN fault
+coverage remain open.
 
 ## HIL-10 result evidence
 
@@ -834,7 +861,11 @@ The current validation still does **not** cover every possible hardware or syste
 - PC power loss,
 - broader multi-node CAN fault cases beyond the current two-interface bench loop.
 
-Forced HIL-runner termination is already covered by the independent command-watchdog test, and the standalone native executable has been accepted on the physical R2100. Manual physical CAN interruption and recovery has also been exercised on the current two-interface bench loop.
+The [committed process-termination result](../gazebo/results/hil10/hil_process_termination_20261102T115256Z.json)
+covers loss of the HIL runner while WSL remains running. The
+[native AEB acceptance](NATIVE_DEPLOYMENT_ACCEPTANCE.md) and the
+[operator-reported manual CAN recovery](#manual-physical-can-interruption-and-recovery-validation)
+are separate bench runs.
 
 The scalar codec currently supports `uint16_le`; structured `brake_command_v1` remains a specialized codec rather than a fully generic schema-driven payload description.
 
@@ -844,7 +875,7 @@ The deployment preflight verifies local R2100 readiness but does not verify that
 
 If a test remains in a fail-safe state at startup, check the printed **HIL startup readiness** report first, then verify that:
 
-- `~/r2100_hil/current/r2100_hil preflight` passes,
+- `./r2100_hil preflight` passes from the verified native release directory before runtime startup,
 - the correct Gazebo world is running,
 - `can0` and `can1` are UP at 500 kbit/s,
 - all three R2100 processes were started with the same mapping profile,
@@ -877,7 +908,7 @@ Gazebo ADAS SIL
  -> independent HIL-runner process-termination watchdog validation
 ```
 
-Current evidence:
+Recorded milestones:
 
 ```text
 HIL-10 offline software validation       : 42 / 42 PASS
@@ -889,7 +920,7 @@ diagnostics-integrated HIL route         : PASS / route_complete
 original signal-mapping offline tests    : 12 / 12 PASS
 mapping + deployment offline tests       : 19 / 19 PASS
 codec work-package regression            : 37 / 37 PASS
-current signal regression                : 30 / 30 PASS
+signal regression at mapping milestone  : 30 / 30 PASS
 deployment tests                         : 8 / 8 PASS
 deployment preflight unit tests          : 4 / 4 PASS
 R2100 deployment preflight               : PASS
@@ -910,14 +941,16 @@ native HIL 2026-11-05 clearance         : 1.236 m (minimum 1.0 m)
 native HIL JSON/CSV evidence             : committed
 physical R2100 native architecture       : ARM aarch64 ELF
 physical R2100 native userspace          : Debian 12 / glibc 2.36
-common SIL/HIL emergency-braking         : SIL PASS / HIL PASS
+common SIL/HIL emergency-braking         : SIL operator-reported PASS / HIL committed PASS
 HIL runner SIGKILL fail-safe             : PASS
-full repository offline suite            : 190 / 190 PASS
 versioned SSH/SCP deployment workflow    : implemented
 start / stop / status control            : PASS
 release rollback model                   : retained
 wired Ethernet transport                 : validated
 alternate reachable network path         : validated
 physical CAN loop                        : validated
-manual CAN interruption + recovery       : PASS
+manual CAN interruption + recovery       : operator-reported PASS
 ```
+
+See [offline validation and packaging](../../VALIDATION.md#offline-validation-and-packaging)
+for the dated branch-wide CI result.

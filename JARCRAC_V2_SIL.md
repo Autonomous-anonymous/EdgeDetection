@@ -1,6 +1,6 @@
 # CAMINO — JARCRAC v2 front 3D LiDAR AEB (SIL)
 
-This experiment is a new, independent Gazebo Harmonic **software-in-the-loop** demonstration on the `camino` branch. It does **not** execute the current AEB algorithm on the R2100. For the separately validated physical CAN HIL reference, use the [R2100 HIL guide](edge-path-project/hil/README.md). JARCRAC v2 itself has **not** been validated on the R2100.
+This guide covers the wheel-based JARCRAC v2 **software-in-the-loop** experiment in Gazebo Harmonic. See the [tracked-model handoff](edge-path-project/gazebo/docs/CAMINO_JARCRAC_HANDOFF.md) for the separate native-track model. The [physical CAN HIL reference](edge-path-project/hil/README.md) uses Ruskotunturi Vehicle B. JARCRAC-specific R2100 HIL remains open.
 
 ## Implementation
 

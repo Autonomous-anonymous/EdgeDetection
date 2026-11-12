@@ -76,7 +76,7 @@ The duplicated SIL/HIL AEB constants are protected against drift by
 `tests/test_aeb_threshold_consistency.py`, which compares TTC threshold,
 emergency distance, sensor timeout, control period and minimum TTC speed.
 
-Verified SIL result on 2026-11-02:
+Operator-reported SIL result from 2026-11-02:
 
 ```text
 STAGED SCENARIO RESULT: PASS
@@ -88,15 +88,16 @@ Trigger TTC: 1.617 s
 Ground-truth clearance: 1.253 m
 ```
 
-For the HIL target, first ensure the R2100 runtime has passed its target-side
-preflight and all managed HIL processes are running. With the same Gazebo world
-running, execute:
+For the HIL target, start the runtime from the
+[verified native release](../hil/README.md#embedded-deployment) on the R2100.
+With the same Gazebo world running, execute:
 
 ```bash
+read -r -p "Reachable R2100 IP address or hostname: " R2100_IP
 python3 -u edge-path-project/gazebo/scripts/run_staged_scenario.py \
   --scenario emergency_braking \
   --target hil \
-  --r2100-host <R2100_IP>
+  --r2100-host "$R2100_IP"
 ```
 
 The HIL backend is the validated `ruskotunturi_hil10_b_test.py --mode aeb` path.
@@ -120,14 +121,19 @@ edge-path-project/gazebo/results/hil10/hil10_aeb_20261102T102033_e21c05af.csv
 ```
 
 The JSON records `passed=true`, `stop_verified=true`, `aeb_reason=ttc_threshold`
-and 1.189 m recorded clearance against the 1.000 m requirement. The common runner
-currently selects and validates the execution target but intentionally leaves
-Gazebo and R2100 runtime lifecycle management explicit.
+and 1.189 m clearance against the 1.000 m requirement. The later
+[2026-11-05 native HIL acceptance](../hil/NATIVE_DEPLOYMENT_ACCEPTANCE.md#full-native-executable-hil-aeb-acceptance--2026-11-05)
+recorded 1.236 m clearance on the CI-built ARM64 release `46b51c5`.
+
+The runner generates a mapping from the shared interface. The SIL adapter
+applies its mapping at launch. For HIL, the R2100 uses the CAN profile loaded
+when its deployed runtime starts. The operator starts Gazebo and the R2100
+runtime separately.
 
 Offline coverage for the common scenario is:
 
 ```bash
-python3 -m unittest tests.test_staged_scenario -v
+python3 -m unittest discover -s tests -p 'test_staged_scenario.py' -v
 ```
 
 Verified result:
@@ -140,7 +146,7 @@ OK
 AEB threshold-consistency coverage is:
 
 ```bash
-python3 -m unittest tests.test_aeb_threshold_consistency -v
+python3 -m unittest discover -s tests -p 'test_aeb_threshold_consistency.py' -v
 ```
 
 Verified result:
@@ -150,8 +156,8 @@ Ran 5 tests
 OK
 ```
 
-With all current offline tests included, the complete repository suite passes
-**168 / 168**.
+See [offline validation and packaging](../../VALIDATION.md#offline-validation-and-packaging)
+for the dated full-suite CI result.
 
 ## Independent HIL process-termination fail-safe
 
@@ -231,9 +237,11 @@ The ground-truth oracle uses conservative planar projections, not a full 3-D
 terrain/contact analysis. Camera confirmation is a controlled orange-target
 detector, and simulator poses supply ideal localization. Controller/watchdog
 simultaneous failure still needs an actuator-side timeout for a stronger design.
-The WSL-side HIL watchdog is independent of the HIL runner process but not of the
-PC/WSL host; PC power loss, physical CAN disconnection and CAN bus-off remain
-outside the demonstrated coverage.
+The WSL-side HIL watchdog test covers loss of the runner process while WSL stays
+up. The HIL guide records a separate
+[manual CAN interruption and recovery trial](../hil/README.md#manual-physical-can-interruption-and-recovery-validation)
+on the two-interface bench loop. PC power loss and broader CAN fault cases
+remain open.
 
 ## Evidence and regression tests
 
@@ -286,9 +294,8 @@ full CAMINO digital-twin/WSMS functionality.
 
 ## Scope boundary
 
-The current project deliverable validates the staged **SIL -> HIL** path. A
-Vehicle-in-the-Loop (VIL) stage is not implemented and is explicitly outside the
-current deliverable scope.
+The current project deliverable validates the staged **SIL → HIL** path.
+Vehicle-in-the-Loop (VIL) is out of scope.
 
 ## Documentation and local cleanup
 
@@ -307,6 +314,10 @@ independent flat-world AEB test. Follow the root
 A short read-only IMU/map-LiDAR comparison during controlled terrain motion
 also passed; it still relies on simulator-exact XYZ localization and does not
 establish terrain AEB.
+
+The [detailed tracked JARCRAC handoff](docs/CAMINO_JARCRAC_HANDOFF.md) covers a
+separate model, its generated worlds, and the recorded experimental motion,
+LiDAR, contact and stop-and-hold trials.
 
 ## Optional wheel loader
 

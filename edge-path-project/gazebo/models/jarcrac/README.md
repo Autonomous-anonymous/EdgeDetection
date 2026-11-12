@@ -177,11 +177,13 @@ assumption), not by Mevea's brake model.
 
 ## Status
 
-Verified offline (`tests/test_jarcrac_model.py`, 28 tests): well-formed SDF,
-joint and plugin consistency, symmetry, level ground contact, mass and inertia
-(composite, parallel-axis), belt geometry, mesh placement, regeneration
-reproducibility including the `--keep-source-radii` mode.
-**Subsequent Gazebo SIL evidence (2026-11-06):** The revised front-mounted
+The [2026-11-12 CI run](../../../../VALIDATION.md#offline-validation-and-packaging)
+reported 24 passes and two skips in `tests/test_jarcrac_model.py`. The passing
+checks cover SDF, joints and plugins, symmetry, level ground contact, mass and
+inertia, belt geometry and mesh placement. The regeneration and
+`--keep-source-radii` checks require local Mevea source XML.
+
+**Gazebo SIL evidence from 2026-11-06.** The revised front-mounted
 32-layer LiDAR detected the flat-world obstacle and the experimental AEB
 reported PASS at 0.35, 0.70 and 1.00 m/s. A separate deliberate collision
 verified the contact sensor. Map-assisted perception and simulated IMU controls
@@ -191,6 +193,9 @@ terrain AEB or real-vehicle calibration. A separate 2026-11-09 low-speed
 eight moving paired samples, final speed zero). It did not include an obstacle
 while moving and does not validate terrain AEB. See the repository-root
 `JARCRAC_V2_SIL.md` for measured results, scripts and limits.
+
+The [detailed native-track model](../../docs/CAMINO_JARCRAC_HANDOFF.md) is a
+separate experimental variant.
 
 Still to verify against real dynamics: wheel/track response, turning behaviour,
 hydraulic braking, uneven-terrain driving, and JARCRAC-specific R2100 HIL.
