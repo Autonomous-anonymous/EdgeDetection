@@ -1,0 +1,33 @@
+{
+  "passed": true,
+  "failure": null,
+  "scenario": "compact",
+  "state_source": "gazebo-odometry",
+  "wall_elapsed_s": 305.905,
+  "geometry_passed": true,
+  "started_at_spawns": true,
+  "pose_samples": 1943,
+  "goals_stopped": true,
+  "coverage_gap": false,
+  "tilt_violation": false,
+  "duration_sim_s": 168.342,
+  "minimum_vehicle_footprint_gap_m": 3.9607642208153795,
+  "minimum_obstacle_footprint_gap_m": 1.3702056300010923,
+  "merge_order": [
+    "A",
+    "B"
+  ],
+  "dual_merge_occupancy_samples": 0,
+  "b_held_near_crossing": true,
+  "b_resumed_after_crossing": true,
+  "moving_obstacle_completed": true,
+  "moving_obstacle_error": null,
+  "a_detour_departure_observed": true,
+  "a_rejoin_verified": true,
+  "a_aligned_progress_m": 1.5042690691649225,
+  "a_aligned_progress_s": 6.144999999999996,
+  "a_stop_wait_start_detour": true,
+  "b_stop_wait_resume": true,
+  "a_stationary_hold_s": 5.032000000000004,
+  "b_stationary_hold_s": 15.198
+}
