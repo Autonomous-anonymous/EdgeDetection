@@ -10,7 +10,7 @@ Demon tavoitteena on näyttää, miten kaksi autonomista työkoneen mallia voiva
 - **Ajoneuvo B** on toinen Gazebon ajoneuvomalli, joka käyttää Ackermann-tyyppistä ohjausta.
 - **A lähtee pääreitiltä liittymän läheltä** ja etenee liittymän läpi ensin. **B lähtee sivuhaaran puolelta**, antaa A:lle tietä ja liittyy sen jälkeen samalle reitille A:n taakse. Ajoneuvot eivät siis aja toisiaan vastaan.
 - B seuraa A:ta yhteisellä reitillä. Edessä oleva este saa A:n jarruttamaan ja B:n pysähtymään sen taakse.
-- A pysähtyy, varmistaa esteen ja aloittaa sen kiertämisen. B voi edetä hitaasti turvalliseksi arvioituun odotuskohtaan, mutta aloittaa oman väistönsä vasta A:n vapautettua väistöalueen. Molemmat palaavat reitille ja pysähtyvät omille kuormauspaikoilleen.
+- A pysähtyy, varmistaa että este ei liiku ja aloittaa sen kiertämisen. B voi edetä hitaasti turvalliseksi arvioituun odotuskohtaan, mutta aloittaa oman väistönsä vasta A:n vapautettua väistöalueen. Molemmat palaavat reitille ja pysähtyvät omille kuormauspaikoilleen.
 
 Kyseessä on ohjelmiston ja simuloitujen ajoneuvojen **SIL-testi**, ei kahden oikean koneen kenttäkoe tai turvallisuussertifioitu autonominen järjestelmä.
 
