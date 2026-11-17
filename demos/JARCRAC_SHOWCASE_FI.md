@@ -78,8 +78,6 @@ python3 -u edge-path-project/gazebo/scripts/jarcrac_convoy_trial.py loop \
 
 Komento toistaa `showcase`-skenaariota peräkkäin. **Onnistuneen kierroksen jälkeen Gazebo suljetaan ja käynnistetään uudelleen**; kyseessä ei siis ole saumaton videolooppi. Keskeytä `Ctrl+C`:llä. Silmukka pysähtyy myös epäonnistuneeseen kierrokseen. Käytä jokaisessa erillisessä käynnistyksessä uutta `--out`-hakemistoa.
 
-Ennen esittelyä kannattaa tehdä vielä muutaman peräkkäisen kierroksen harjoitus **samalla tietokoneella ja samoilla GUI-asetuksilla**. Varmuuskopioksi kannattaa tallentaa onnistuneesta kierroksesta video.
-
 Käynnistyskomento edellyttää projektin Gazebo-riippuvuuksia ja showcase-skriptejä. Pelkkä tämä Markdown-tiedosto ei sisällä simulaation toteutusta.
 
 ## Usein kysytyt kysymykset
