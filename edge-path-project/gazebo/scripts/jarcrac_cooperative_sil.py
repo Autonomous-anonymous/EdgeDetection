@@ -41,10 +41,11 @@ def add(element, key, value=None, **attributes):
     return item
 
 
-def insert_vehicles(world, terrain, starts, yaws, frame=LOCAL_FRAME, b_lidar=None):
+def insert_vehicles(world, terrain, starts, yaws, frame=LOCAL_FRAME, b_lidar=None, *, vehicle_indices=None):
     footprints = model_footprints()
-    for index, (source, name, start, yaw) in enumerate(zip(
-            MODEL_NAMES, NAMES, starts, yaws)):
+    indices = range(len(starts)) if vehicle_indices is None else vehicle_indices
+    for index, start, yaw in zip(indices, starts, yaws):
+        source, name = MODEL_NAMES[index], NAMES[index]
         model = ET.parse(MODELS / source / "model.sdf").getroot().find("model")
         model.set("name", name)
         add(model, "pose", " ".join(map(str, spawn_pose(terrain, footprints[index], start, yaw, frame))))

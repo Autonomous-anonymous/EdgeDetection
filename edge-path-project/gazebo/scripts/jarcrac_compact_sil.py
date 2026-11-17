@@ -70,13 +70,14 @@ def prepare(output, obstacle, scenario=COMPACT):
         tree.write(stream, encoding="utf-8", xml_declaration=True)
 
 
-def relay(ready, scenario):
+def relay(ready, scenario, *, vehicle_indices=None):
     from gz.msgs10.double_v_pb2 import Double_V
     from gz.msgs10.twist_pb2 import Twist
     from gz.transport13 import Node
 
     node, lock, ending = Node(), threading.Lock(), threading.Event()
-    pubs = tuple(node.advertise(topic, Twist) for topic in ACTUATORS[:len(scenario.starts)])
+    indices = range(len(scenario.starts)) if vehicle_indices is None else vehicle_indices
+    pubs = {i: node.advertise(ACTUATORS[i], Twist) for i in indices}
     commands, receipt = (STOP, STOP), -math.inf
 
     def receive(message):
@@ -89,7 +90,8 @@ def relay(ready, scenario):
             receipt = time.monotonic()
 
     def send(pair):
-        for pub, command in zip(pubs, pair):
+        for i, pub in pubs.items():
+            command = pair[i]
             msg = Twist()
             msg.linear.x, msg.angular.z = command.speed, command.yaw_rate
             pub.publish(msg)
@@ -209,12 +211,12 @@ def control(scenario, source, trace, processes, deadline):
             time.sleep(.05)
 
 
-def reap(process):
+def reap(process, *, grace=4.0):
     if process is None or process.poll() is not None:
         return
     try:
         os.killpg(process.pid, signal.SIGTERM)
-        process.wait(timeout=4.0)
+        process.wait(timeout=grace)
     except subprocess.TimeoutExpired:
         os.killpg(process.pid, signal.SIGKILL)
         process.wait()

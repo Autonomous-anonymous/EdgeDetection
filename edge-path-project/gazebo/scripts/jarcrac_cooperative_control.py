@@ -92,16 +92,18 @@ class Decision:
 
 
 class MergeCoordinator:
-    def __init__(self, a_footprint, b_footprint, *, conflict=CONFLICT, exit_half_width=1.65, tilt_limit=TILT_LIMIT):
+    def __init__(self, a_footprint, b_footprint, *, conflict=CONFLICT, exit_half_width=1.65,
+                 tilt_limit=TILT_LIMIT, exit_x=EXIT_X, exit_length=None):
         self.footprints = {"A": a_footprint, "B": b_footprint}
         self.brakes = {"A": Braking(0.18, 0.45, a_footprint.radius),
                        "B": Braking(0.35, 0.65, b_footprint.radius)}
         self.conflict, self.tilt_limit = conflict, tilt_limit
+        self.exit_x = exit_x
         # Leave room for the longer body and its clearance beyond the junction.
         lengths = (high-low for (low, high), _, _ in (a_footprint.bounds(), b_footprint.bounds()))
-        exit_end = EXIT_X + max(lengths) + CLEARANCE + 0.50
-        self.exit_corridor = ((EXIT_X, -exit_half_width), (exit_end, -exit_half_width),
-                              (exit_end, exit_half_width), (EXIT_X, exit_half_width))
+        exit_end = exit_x + (max(lengths) + CLEARANCE + 0.50 if exit_length is None else exit_length)
+        self.exit_corridor = ((exit_x, -exit_half_width), (exit_end, -exit_half_width),
+                              (exit_end, exit_half_width), (exit_x, exit_half_width))
         self.owner = None
         self.committed = False
         self.entered = False
@@ -109,9 +111,8 @@ class MergeCoordinator:
     def reserve(self, vehicle, *, committed=False, entered=False):
         self.owner, self.committed, self.entered = vehicle, committed, entered
 
-    @staticmethod
-    def outbound(state, polygon):
-        return (min(x for x, _ in polygon) > EXIT_X + GEOMETRY_MARGIN and
+    def outbound(self, state, polygon):
+        return (min(x for x, _ in polygon) > self.exit_x + GEOMETRY_MARGIN and
                 abs(state.y) <= 0.65 and math.cos(state.yaw) >= 0.85 and
                 state.vx >= -STOP_SPEED and abs(state.vy) <= 0.10 and abs(state.omega) <= 0.08)
 
@@ -238,11 +239,12 @@ class Curve:
 class ObstacleNavigator:
     """Stop and dwell, then search observable local segments and return to the route."""
     def __init__(self, footprint, *, destination=A_GOAL, approach_end=CONFLICT[0][0],
-                 cruise=A_CRUISE, padding=.32, tilt_limit=TILT_LIMIT):
+                 cruise=A_CRUISE, padding=.32, tilt_limit=TILT_LIMIT, follow_preview=2.80):
         self.footprint = footprint
         self.brakes = Braking(0.18, 0.45, footprint.radius)
         self.destination, self.approach_end, self.cruise = destination, approach_end, cruise
         self.padding, self.tilt_limit = padding, tilt_limit
+        self.follow_preview = follow_preview
         self.phase = "follow"
         self.goal = None
         self.curve = None
@@ -448,7 +450,7 @@ class ObstacleNavigator:
         preview = .65
         if self.phase == "follow":
             excess = self.brakes.translation(max(state.speed, command.speed))-self.brakes.translation(.20)
-            preview = 2.80+max(0., excess)
+            preview = self.follow_preview+max(0., excess)
         lookahead = min(end, progress + max(stopping+.30, preview))
         if self.verified_end(scan, curve, progress, lookahead) != lookahead:
             return self.brake("path_clearance_unverified")
