@@ -80,27 +80,18 @@ Komento toistaa `showcase`-skenaariota peräkkäin. **Onnistuneen kierroksen jä
 
 Käynnistyskomento edellyttää projektin Gazebo-riippuvuuksia ja showcase-skriptejä. Pelkkä tämä Markdown-tiedosto ei sisällä simulaation toteutusta.
 
-## Usein kysytyt kysymykset
+## Muuta
 
-**Onko tämä oikeasti kaksi autonomista konetta?**  
-Ei. Tässä käytetään kahden ajoneuvon virtuaalisia malleja ja ohjelmallisia ohjaimia Gazebossa. Menetelmän tavoite on kokeilla käyttäytymistä ennen oikeiden laitteiden käyttöä.
+Tässä käytetään kahden ajoneuvon virtuaalisia malleja ja ohjelmallisia ohjaimia Gazebossa. Menetelmän tavoite on kokeilla käyttäytymistä ennen oikeiden laitteiden käyttöä.
 
-**Miksi toinen ajoneuvo odottaa niin kauan?**  
 Ajoneuvot jakavat kapean reitin ja esteen ohitusalueen. Järjestelmä sallii väistön yhdelle ajoneuvolle kerrallaan ja varmistaa pysähtymisen sekä etenemistilan ennen seuraavaa vaihetta.
 
-**Miksi ajoneuvo pysähtyy, vaikka se näyttäisi voivan ajaa eteenpäin?**  
 Ohjain ei perusta päätöstä vain näytöllä näkyvään vapaaseen tilaan. Jos anturimittaus, ajoura tai paluu reitille ei ole riittävän varmasti tarkistettu, ajoneuvo jarruttaa ja odottaa.
 
-**Mitä SIL tarkoittaa?**  
 *Software-in-the-Loop*: ohjausohjelmistoa testataan simulaatiossa virtuaalisilla ajoneuvoilla, antureilla ja ympäristöllä.
 
-**Onko Raspberry Pi / CAN / HIL mukana tässä demossa?**  
-Ei tässä nimenomaisessa showcase-ajossa. Kurssin laajempi tavoite kattaa myös SIL–HIL-siirtymän, sulautetun ohjaimen ja CAN-signaalit. Projektin muut HIL-testit dokumentoidaan erikseen; tätä SIL-demoa ei pidä esittää HIL-todisteena.
-
-**Todistaako PASS, että ratkaisu on turvallinen oikealla työmaalla?**  
-Ei. PASS tarkoittaa, että tämän skenaarion määritetyt simulaatiokriteerit täyttyivät kyseisellä ajokerralla. Todellisen koneen käyttö vaatii erillistä validointia ja turvallisuusarviointia.
-
-**Miksi ei ajeta suuremmalla nopeudella?**  
+PASS tarkoittaa, että tämän skenaarion määritetyt simulaatiokriteerit täyttyivät kyseisellä ajokerralla. Todellisen koneen käyttö vaatii erillistä validointia ja turvallisuusarviointia.
+  
 RTF 2,0 -kokeessa B:n väistö jäi kesken. Esitykseen valittiin nopeampi **kahdesti onnistunut** RTF 1,5 -asetus. Lisäksi fysiikka-askeleen kasvattaminen vaikuttaisi simuloinnin tarkkuuteen ja pitäisi testata erikseen.
 
 ## Keskeiset projektitiedostot
