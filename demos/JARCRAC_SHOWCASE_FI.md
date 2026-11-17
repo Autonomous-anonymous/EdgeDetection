@@ -8,9 +8,9 @@ Demon tavoitteena on näyttää, miten kaksi autonomista työkoneen mallia voiva
 
 - **Ajoneuvo A (JARCRAC)** on telaketjullisen maastoajoneuvon simulaatiomalli.
 - **Ajoneuvo B** on toinen Gazebon ajoneuvomalli, joka käyttää Ackermann-tyyppistä ohjausta.
-- Ajoneuvot lähtevät eri suunnista, kohtaavat liittymässä ja jatkavat yhteisellä reitillä.
-- B väistää A:ta liittymässä ja seuraa tätä. Reitillä oleva este aiheuttaa jarrutuksen ja odottamisen.
-- Ajoneuvot kiertävät esteen **vuorotellen**, palaavat suunnitellulle reitille ja pysähtyvät omille kuormauspaikoilleen.
+- **A lähtee pääreitiltä liittymän läheltä** ja etenee liittymän läpi ensin. **B lähtee sivuhaaran puolelta**, antaa A:lle tietä ja liittyy sen jälkeen samalle reitille A:n taakse. Ajoneuvot eivät siis aja toisiaan vastaan.
+- B seuraa A:ta yhteisellä reitillä. Edessä oleva este saa A:n jarruttamaan ja B:n pysähtymään sen taakse.
+- A pysähtyy, varmistaa esteen ja aloittaa sen kiertämisen. B voi edetä hitaasti turvalliseksi arvioituun odotuskohtaan, mutta aloittaa oman väistönsä vasta A:n vapautettua väistöalueen. Molemmat palaavat reitille ja pysähtyvät omille kuormauspaikoilleen.
 
 Kyseessä on ohjelmiston ja simuloitujen ajoneuvojen **SIL-testi**, ei kahden oikean koneen kenttäkoe tai turvallisuussertifioitu autonominen järjestelmä.
 
@@ -18,11 +18,11 @@ Kyseessä on ohjelmiston ja simuloitujen ajoneuvojen **SIL-testi**, ei kahden oi
 
 | Vaihe | Mitä ruudulla näkyy? | Miksi se on tärkeää? |
 | --- | --- | --- |
-| 1. Liittymä | A etenee ensin, B antaa tietä ja liittyy sen jälkeen samalle reitille. | Yhteensovitus ja kulkujärjestys |
+| 1. Liittymä | A ajaa pääreitillä liittymän läpi ensin. B odottaa sivuhaaralla ja liittyy pääreitille A:n jälkeen. | Yhteensovitus ja kulkujärjestys |
 | 2. Seuraaminen | B liikkuu A:n takana. | Ajoneuvojen välinen koordinointi |
 | 3. Esteen havaitseminen | Ajoneuvot hidastavat, jarruttavat ja pysähtyvät esteen vuoksi. | Virtuaalisten anturien käyttö ja turvallinen pysähtyminen |
-| 4. A:n väistö | A odottaa pysähtyneenä ja kiertää esteen. B odottaa sille varatun liikealueen vapautumista. | Esteenväistö ja liikealueen varaaminen |
-| 5. B:n väistö | B tekee oman väistönsä ja palaa reitille. | Turvalliseksi tarkistetun reitin suunnittelu ja uudelleen liittyminen |
+| 4. A:n väistö | A pysähtyy ja odottaa vähintään viisi simuloitua sekuntia ennen esteen kiertämistä. B pysyy poissa A:n väistöalueelta; A:n edetessä se voi siirtyä hitaasti lähemmäs omaa odotuskohtaansa. | Esteenväistö ja liikealueen varaaminen |
+| 5. B:n väistö | Kun A on vapauttanut väistöalueen ja B:n oma pysähtymisjakso on täyttynyt, B kiertää esteen ja palaa reitille. | Turvalliseksi tarkistetun reitin suunnittelu ja uudelleen liittyminen |
 | 6. Saapuminen | Molemmat ajoneuvot pysähtyvät omille merkityille kuormauspaikoilleen. | Tehtävän onnistumisen arviointi |
 
 Yhden testiajon sisällä on myös pitkiä odotusjaksoja: ne kuuluvat demon toimintaan, eivät välttämättä tarkoita ohjelman jumiutumista. **Jos väistöreittiä ei voida varmistaa turvalliseksi, ohjain pysäyttää ajoneuvon.**
@@ -45,7 +45,7 @@ Simulaatio tuottaa jokaiselta kierrokselta lokit ja erillisen arviointiraportin:
 - `evaluation.json`: esimerkiksi liittymisjärjestys, ajoneuvojen ja esteen väliset etäisyydet, reitille palaaminen sekä pysähtyminen tavoitteisiin.
 - `control.jsonl`: ohjainten vaiheet, nopeuskomennot, pysähtymisen syyt ja väistövuorot.
 
-Arvioinnissa tarkastetaan muun muassa, että A liittyy ensin, ajoneuvot eivät varaa liittymää yhtä aikaa, molempien väistöt ja reitille paluut toteutuvat, ajoneuvot saavuttavat pysähtyneinä tavoitteensa ja mitatuissa jalanjälkietäisyyksissä säilyy vähintään **1 metrin** vaadittu väli. Pysähtymis- ja reitillepaluuvaatimukset tarkistetaan myös mittausten perusteella.
+Arvioinnissa tarkastetaan muun muassa, että A kulkee liittymäalueen läpi ennen B:tä, ajoneuvot eivät varaa liittymää yhtä aikaa, molempien väistöt ja reitille paluut toteutuvat, ajoneuvot saavuttavat pysähtyneinä tavoitteensa ja mitatuissa jalanjälkietäisyyksissä säilyy vähintään **1 metrin** vaadittu väli. Pysähtymis- ja reitillepaluuvaatimukset tarkistetaan myös mittausten perusteella.
 
 ### Esityskoneella mitatut testiajot (17.11.2026)
 
@@ -80,7 +80,7 @@ Komento toistaa `showcase`-skenaariota peräkkäin. **Onnistuneen kierroksen jä
 
 Ennen esittelyä kannattaa tehdä vielä muutaman peräkkäisen kierroksen harjoitus **samalla tietokoneella ja samoilla GUI-asetuksilla**. Varmuuskopioksi kannattaa tallentaa onnistuneesta kierroksesta video.
 
-Tämä käynnistyskomento edellyttää, että kokeellisen showcase-version skriptit ja niiden riippuvuudet on lisätty paikalliseen työpuuhun. Pelkkä tämä Markdown-tiedosto ei sisällä simulaation toteutusta.
+Käynnistyskomento edellyttää projektin Gazebo-riippuvuuksia ja showcase-skriptejä. Pelkkä tämä Markdown-tiedosto ei sisällä simulaation toteutusta.
 
 ## Usein kysytyt kysymykset
 
