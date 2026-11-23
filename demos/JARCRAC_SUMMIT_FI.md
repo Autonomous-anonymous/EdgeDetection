@@ -61,23 +61,28 @@ PASS-tuloksen edellytyksiä ovat muun muassa:
 | Tavoite | Ajoneuvo saavuttaa huipun ja pysähtyy |
 | Aikarajat | Enintään 150 s simulaatioaikaa ja 300 s todellista aikaa esittelykriteerin mukaan |
 
-### Työpöytäkoneella mitattu Gazebo-koe (23.11.2026)
+### Työpöytäkoneella mitatut Gazebo-ajot (23.11.2026)
 
-| Mittari | Toteutunut tulos |
-| --- | ---: |
-| Koko kierros | **PASS** |
-| Simulaatioaika | 102,212 s |
-| Nousukorkeus | 1,981 m |
-| Pienin etäisyys kannosta | 1,965 m |
-| Suurin pituuskallistuma (pitch) | 7,264° |
-| Suurin poikittaiskallistuma (roll) | 5,646° |
-| Todennettu pysähtyminen | 5,378 s |
-| Todennettu reitille paluun etenemä | 1,524 m / 5,572 s |
-| Huipputavoite saavutettu | Kyllä |
+Yksi erillinen kierros ja sen jälkeen **kaksi peräkkäistä loop-kierrosta onnistuivat (3/3 PASS)**. Kaikissa käytettiin fysiikka-askelta **0,002 s** ja tavoite-RTF-arvoa **1,5**. Kummankin loop-kierroksen jälkeen Gazebo käynnistettiin erikseen uudelleen.
 
-Koe tehtiin asetuksilla **fysiikka-askel 0,002 s** ja **tavoite-RTF 1,5**. Ajoneuvo suoritti kannon väistön, palasi reitille ja pysähtyi huipputavoitteeseen.
+| Mittari | Erillinen ajo | Loop 1 | Loop 2 |
+| --- | ---: | ---: | ---: |
+| Tulos | **PASS** | **PASS** | **PASS** |
+| Simulaatioaika | 102,212 s | 102,054 s | 102,086 s |
+| Nousukorkeus | 1,981 m | 1,980 m | 1,981 m |
+| Pienin etäisyys kannosta | 1,965 m | 1,963 m | 1,964 m |
+| Suurin pitch | 7,264° | 7,270° | 7,263° |
+| Suurin roll | 5,646° | 5,646° | 5,646° |
+| Todennettu paikallaan pysyminen | 5,378 s | 5,388 s | 5,338 s |
+| Todennettu reitille paluun etenemä | 1,524 m | 1,509 m | 1,502 m |
+| Reitille paluu todennettu | Kyllä | Kyllä | Kyllä |
+| Huipputavoite saavutettu | Kyllä | Kyllä | Kyllä |
 
-**Tämä on yksi raportoitu onnistunut live-Gazebo-kierros, ei vielä toistettavuustakuu.** Erityisesti suurin pitch (7,264°) on melko lähellä 8° rajaa, ja reitille paluun etenemä (1,524 m) on lähellä 1,5 m hyväksymisrajaa. Lisäkierrokset sekä alkuperäisen päädemon regressiotesti ovat tarpeen ennen näyttelykäyttöä.
+Ensimmäisen erillisen ajon **todellinen kesto oli 76,981 sekuntia**; peräkkäisten loop-kierrosten seinäkelloaikoja ei ole tässä raportissa. Molemmat loop-ajot tuottivat omat `result.json`- ja `summit-reports.zip`-raporttinsa.
+
+**Myös alkuperäisen kahden ajoneuvon showcase-demon regressioajo onnistui (PASS)** summit-kokeiden jälkeen samalla työpöytäkoneella ja asetuksilla 0,002 s / RTF 1,5. Showcase saavutti molempien ajoneuvojen `arrived`-tilan noin **168,276 simuloidussa sekunnissa**. Tämä tukee demojen rinnakkaista käytettävyyttä: summit ajettiin erillisestä ZIP-ohjelmasta eikä päädemon lähdekoodia muutettu.
+
+**Rajaukset:** Kolme peräkkäisten kokeiden onnistumista ei takaa virheetöntä toimintaa näyttelyssä. Suurin mitattu pitch (7,270°) jää alle 8° rajan, mutta viimeisen summit-kierroksen reitille paluun etenemä oli vain **1,502 m** suhteessa 1,5 m hyväksymisrajaan. Marginaali on noin **2 mm**, joten reitille paluun mittaus kannattaa tarkistaa tulevissakin toistoissa.
 
 ## Demon käynnistys WSL Ubuntu -ympäristössä
 
@@ -122,7 +127,7 @@ Kierrosten välissä Gazebo suljetaan ja käynnistetään uudelleen. Sarja pysä
 
 ## Kokeilun rajaukset ja seuraavat testit
 
-- Tämän version **offline-replay** käyttää yksinkertaistettua ajoneuvoliikettä. Varsinainen 23.11.2026 PASS on tärkeämpi osoitus Gazebossa tapahtuvasta käyttäytymisestä, mutta edelleen vain yksi ajo.
+- Tämän version **offline-replay** käyttää yksinkertaistettua ajoneuvoliikettä. Päivän 23.11.2026 kolmessa live-Gazebo-ajossa saatiin PASS, mutta rajallinen otos ei yksin osoita pitkäaikaista toimintavarmuutta.
 - Toista summit useita kertoja samalla esitystietokoneella ja asetuksilla. Tarkista jokaisesta `result.json`-tiedostosta `passed`, kallistumat, kannon etäisyys ja reitille paluu.
 - Aja tämän jälkeen kahden ajoneuvon showcase uudelleen ja varmista, että se tuottaa PASS-tuloksen.
 - Tämän SIL-demon ajossa ei käytetä oikeaa R2100-ohjainta, CAN-väylää eikä HIL-kytkentää. Ne kuuluvat projektin erillisiin kokeisiin.
