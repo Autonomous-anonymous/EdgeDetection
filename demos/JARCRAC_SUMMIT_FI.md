@@ -2,7 +2,7 @@
 
 **Varademo 30.11.2026 — Software-in-the-Loop (SIL)**
 
-Tämä on **erillinen yhden ajoneuvon esittelydemo**, joka täydentää [kahden ajoneuvon yhteistyödemoon](JARCRAC_SHOWCASE_FI.md) liittyvää toteutusta. Päädemo näyttää ajoneuvojen keskinäistä koordinointia; tässä demossa painopiste on **maaston kaltevuudessa, esteen havaitsemisessa, väistössä ja reitille palaamisessa**.
+Tämä on **erillinen yhden ajoneuvon esittelydemo**, joka täydentää [kahden ajoneuvon yhteistyödemoa](JARCRAC_SHOWCASE_FI.md). Päädemo näyttää ajoneuvojen keskinäistä koordinointia; tässä demossa painopiste on **maaston kaltevuudessa, esteen havaitsemisessa, väistössä ja reitille palaamisessa**.
 
 ## Lyhyesti: mitä demossa tapahtuu?
 
@@ -11,7 +11,7 @@ Gazebo Harmonic -simulaatiossa yksi telaketjullisen **JARCRACin yksityiskohtaise
 - Ajoneuvo käynnistyy reitin alkupäästä ja odottaa aluksi hetken, jotta simuloidun ajoneuvon asento ehtii tasaantua.
 - Reitillä on puunkantoa esittävä **sylinterimäinen este**, jonka halkaisija on **0,64 m** ja korkeus **0,58 m**.
 - JARCRAC havaitsee esteen eteenpäin katsovalla LiDAR-anturilla, jarruttaa ja pysähtyy. Se odottaa vähintään **viisi simuloitua sekuntia** ennen väistön aloittamista.
-- Ohjain etsii ajettavaksi arvioidun väistöreitin, kiertää kannon, palaa suunnitellulle kaartuvalla reitille ja jatkaa ylämäkeen.
+- Ohjain etsii ajettavaksi arvioidun väistöreitin, kiertää kannon, palaa suunnitellulle kaartuvalle reitille ja jatkaa ylämäkeen.
 - Lopuksi JARCRAC pysähtyy **vihreällä renkaalla merkittyyn huipputavoitteeseen**.
 
 Kyseessä on **SIL-simulaatio**, ei oikean JARCRAC-ajoneuvon maastokoe, eikä tulos yksin osoita järjestelmän soveltuvuutta turvallisuuskriittiseen käyttöön.
