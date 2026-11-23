@@ -38,16 +38,16 @@ Kyseessä on **SIL-simulaatio**, ei oikean JARCRAC-ajoneuvon maastokoe, eikä tu
 - Simulaation hyväksymisrajana on **enintään 8° kallistuma** sekä pituus- että poikittaissuunnassa (*pitch* ja *roll*). Tämä on ohjelmiston testiraja, **ei vahvistettu oikean koneen valmistajaraja**.
 - Riippumaton arviointi käyttää Gazebon simuloituja ajoneuvon asentoja; kyseessä ei ole riippumaton tosimaailman paikannusvalidointi.
 
-Haluttaessa Gazebon **Visualize Lidar** -näkymässä voi valita aiheen \`/camino/cooperative/a/lidar\`. LiDAR-säteiden näyttäminen ruudulla on valinnainen visualisointi.
+Haluttaessa Gazebon **Visualize Lidar** -näkymässä voi valita aiheen `/camino/cooperative/a/lidar`. LiDAR-säteiden näyttäminen ruudulla on valinnainen visualisointi.
 
 ## Miten onnistuminen tarkistetaan?
 
 Kukin kierros tuottaa tulostiedostot:
 
-- \`result.json\` — koko testin tulos (\`passed\`), mahdollinen epäonnistumisen syy, simulaatio- ja seinäkelloaika sekä yhteenvetomittarit.
-- \`evaluation.json\` — riippumattomasta simuloidusta pose-tiedosta johdetut etäisyydet, kallistumat, reitille paluu, nousu ja tavoitepysähdys.
-- \`control.jsonl\` — ohjaimen vaiheet, komennot ja pysähtymisen syyt.
-- \`summit-reports.zip\` — keskeiset raportit samassa siirrettävässä arkistossa.
+- `result.json` — koko testin tulos (`passed`), mahdollinen epäonnistumisen syy, simulaatio- ja seinäkelloaika sekä yhteenvetomittarit.
+- `evaluation.json` — riippumattomasta simuloidusta pose-tiedosta johdetut etäisyydet, kallistumat, reitille paluu, nousu ja tavoitepysähdys.
+- `control.jsonl` — ohjaimen vaiheet, komennot ja pysähtymisen syyt.
+- `summit-reports.zip` — keskeiset raportit samassa siirrettävässä arkistossa.
 
 PASS-tuloksen edellytyksiä ovat muun muassa:
 
@@ -81,59 +81,59 @@ Koe tehtiin asetuksilla **fysiikka-askel 0,002 s** ja **tavoite-RTF 1,5**. Ajone
 
 ## Demon käynnistys WSL Ubuntu -ympäristössä
 
-Summit toteutetaan **itsenäisenä Pythonilla ajettavana ZIP-pakettina** nimeltä \`camino-summit-climb.zip\`. Se hyödyntää saman projektin Gazebo-malleja ja ohjelmistoriippuvuuksia mutta ei edellytä päädemon skriptien muokkaamista.
+Summit toteutetaan **itsenäisenä Pythonilla ajettavana ZIP-pakettina** nimeltä `camino-summit-climb.zip`. Se hyödyntää saman projektin Gazebo-malleja ja ohjelmistoriippuvuuksia mutta ei edellytä päädemon skriptien muokkaamista.
 
-Kun ZIP on lisätty tämän dokumentin rinnalle hakemistoon \`demos/\`, käynnistä yksi kierros projektin juuresta:
+Kun ZIP on lisätty tämän dokumentin rinnalle hakemistoon `demos/`, käynnistä yksi kierros projektin juuresta:
 
-\`\`\`bash
+```bash
 cd ~/camino-desktop
-python3 demos/camino-summit-climb.zip demo \\
-  --physics-step 0.002 \\
-  --target-rtf 1.5 \\
+python3 demos/camino-summit-climb.zip demo \
+  --physics-step 0.002 \
+  --target-rtf 1.5 \
   --wall-timeout 900
-\`\`\`
+```
 
 Jos ZIP on toistaiseksi vain paikallisessa kotihakemistossa, käytä jo testattua muotoa:
 
-\`\`\`bash
+```bash
 cd ~/camino-desktop
-python3 ~/camino-summit-climb.zip demo \\
-  --physics-step 0.002 \\
-  --target-rtf 1.5 \\
+python3 ~/camino-summit-climb.zip demo \
+  --physics-step 0.002 \
+  --target-rtf 1.5 \
   --wall-timeout 900
-\`\`\`
+```
 
-Paketti luo oletusarvoisesti uuden tuloshakemiston \`/tmp/camino-summit-climb-.../lap\` ja tulostaa raporttien polut konsoliin. **RTF on tavoite**, ei lupaus todellisesta suoritusnopeudesta.
+Paketti luo oletusarvoisesti uuden tuloshakemiston `/tmp/camino-summit-climb-.../lap` ja tulostaa raporttien polut konsoliin. **RTF on tavoite**, ei lupaus todellisesta suoritusnopeudesta.
 
 ### Kahden kierroksen harjoitus
 
-\`\`\`bash
+```bash
 cd ~/camino-desktop
-python3 demos/camino-summit-climb.zip loop \\
-  --laps 2 \\
-  --physics-step 0.002 \\
-  --target-rtf 1.5 \\
+python3 demos/camino-summit-climb.zip loop \
+  --laps 2 \
+  --physics-step 0.002 \
+  --target-rtf 1.5 \
   --wall-timeout 900
-\`\`\`
+```
 
-Kierrosten välissä Gazebo suljetaan ja käynnistetään uudelleen. Sarja pysähtyy ensimmäiseen epäonnistumiseen; \`Ctrl+C\` keskeyttää ajon. Ilman \`--laps\`-valintaa silmukka jatkuu onnistuneiden kierrosten jälkeen.
+Kierrosten välissä Gazebo suljetaan ja käynnistetään uudelleen. Sarja pysähtyy ensimmäiseen epäonnistumiseen; `Ctrl+C` keskeyttää ajon. Ilman `--laps`-valintaa silmukka jatkuu onnistuneiden kierrosten jälkeen.
 
 **Päädemo säilyy erillisenä:** sen käynnistyskomento löytyy tiedostosta [JARCRAC_SHOWCASE_FI.md](JARCRAC_SHOWCASE_FI.md). Summit-paketti ei muuta kahden ajoneuvon ohjainta tai esittelyskenaariota.
 
 ## Kokeilun rajaukset ja seuraavat testit
 
 - Tämän version **offline-replay** käyttää yksinkertaistettua ajoneuvoliikettä. Varsinainen 23.11.2026 PASS on tärkeämpi osoitus Gazebossa tapahtuvasta käyttäytymisestä, mutta edelleen vain yksi ajo.
-- Toista summit useita kertoja samalla esitystietokoneella ja asetuksilla. Tarkista jokaisesta \`result.json\`-tiedostosta \`passed\`, kallistumat, kannon etäisyys ja reitille paluu.
+- Toista summit useita kertoja samalla esitystietokoneella ja asetuksilla. Tarkista jokaisesta `result.json`-tiedostosta `passed`, kallistumat, kannon etäisyys ja reitille paluu.
 - Aja tämän jälkeen kahden ajoneuvon showcase uudelleen ja varmista, että se tuottaa PASS-tuloksen.
 - Tämän SIL-demon ajossa ei käytetä oikeaa R2100-ohjainta, CAN-väylää eikä HIL-kytkentää. Ne kuuluvat projektin erillisiin kokeisiin.
 - Tallenna onnistuneen esittelyajon videotallenne varalle.
 
 ## Keskeiset tiedostot
 
-- \`demos/camino-summit-climb.zip\` — erillinen suoritettava Python ZIP -demo, **kun paketti on toimitettu GitHubiin**.
-- \`src/jarcrac_summit_mission.py\` (ZIP-paketissa) — JARCRACin esteenväistö, nousu ja reitille paluu.
-- \`src/jarcrac_summit_route.py\` ja \`src/jarcrac_summit_knots.py\` (ZIP-paketissa) — mitoitettu kaartuva reitti ja maastogeometria.
-- \`src/jarcrac_summit_scene.py\` (ZIP-paketissa) — kanto, maalimerkinnät ja kameranäkymä.
-- \`src/jarcrac_summit_score.py\` (ZIP-paketissa) — riippumaton mittaus ja hyväksymiskriteerit.
-- \`src/jarcrac_summit_trial.py\` (ZIP-paketissa) — simulaation käynnistys ja raportointi.
+- `demos/camino-summit-climb.zip` — erillinen suoritettava Python ZIP -demo, **kun paketti on toimitettu GitHubiin**.
+- `src/jarcrac_summit_mission.py` (ZIP-paketissa) — JARCRACin esteenväistö, nousu ja reitille paluu.
+- `src/jarcrac_summit_route.py` ja `src/jarcrac_summit_knots.py` (ZIP-paketissa) — mitoitettu kaartuva reitti ja maastogeometria.
+- `src/jarcrac_summit_scene.py` (ZIP-paketissa) — kanto, maalimerkinnät ja kameranäkymä.
+- `src/jarcrac_summit_score.py` (ZIP-paketissa) — riippumaton mittaus ja hyväksymiskriteerit.
+- `src/jarcrac_summit_trial.py` (ZIP-paketissa) — simulaation käynnistys ja raportointi.
 - [Kahden ajoneuvon päädemon kuvaus](JARCRAC_SHOWCASE_FI.md) — alkuperäinen näyttelydemo.
