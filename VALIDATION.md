@@ -1,6 +1,6 @@
 # Validation and documentation index
 
-The **CAMINO branch** intentionally includes Gazebo SIL and R2100 HIL only, with no earlier CARLA scripts, CSV evidence or videos in its checked-out tree.
+The `main` branch contains the CAMINO Gazebo SIL and R2100 HIL baselines. The earlier CARLA prototype is available on the original branches.
 
 This file identifies the current SIL/HIL baselines, the role of the different preflight checks, and the evidence that should be used for current reporting.
 
@@ -18,6 +18,10 @@ Committed evidence:
 - `edge-path-project/gazebo/results/final_sil_v6_4_trace_20261026T133025_782767.csv`
 
 The committed v6.4 result is `PASS` with `end_reason=final_demo_complete` and no failed checks. It records both vehicle mission states, camera-assisted static avoidance, moving-obstacle interaction, coordination and loading-zone safety checks.
+
+### Presentation demo evidence
+
+The [presentation index](README.md#presentation-demos) links all five launchers in running order. The Finnish guides record the presentation-machine runs for [Showcase](demos/JARCRAC_SHOWCASE_FI.md), [Summit](demos/JARCRAC_SUMMIT_FI.md) and [Native Hill](demos/JARCRAC_NATIVE_HILL_FI.md). For Safety Supervisor and Single Lane the repository also includes summaries transcribed from the operator's console output. The original per-run logs and pose traces for those two demos are separate from the summaries. [Safety Supervisor results](demos/camino-safety-supervisor-v2-live-results.json) · [Single Lane results](demos/camino-single-lane-physics-rtf-live-results.json)
 
 ### Hardware-in-the-Loop
 
@@ -41,7 +45,9 @@ edge-path-project/hil/NATIVE_DEPLOYMENT_ACCEPTANCE.md
 
 ### Offline validation and packaging
 
-The [2026-11-12 GitHub Actions run](https://github.com/Autonomous-anonymous/EdgeDetection/actions/runs/43185855454) tested `camino` at `51f6f139`. The offline suite reported **422 passed and 3 skipped out of 425**. The three skips require local Mevea inputs for model regeneration or generator options. Deployment-design tests and the Debian 12 ARM64 package build and smoke test also passed.
+On **2026-11-25**, GitHub Actions tested `main` at `62029a2`. The offline suite collected **466 tests, with 463 passed and 3 skipped**. The deployment-design checks and the Debian 12 ARM64 build and smoke test also passed. Live Gazebo demo runs are recorded separately above. [Workflow run](https://github.com/Autonomous-anonymous/EdgeDetection/actions/runs/45634116823) · [Offline test log](https://github.com/Autonomous-anonymous/EdgeDetection/actions/runs/45634116823/job/139274849008)
+
+The earlier run on 2026-11-12 tested `camino` at `51f6f139` and recorded 422 passed and 3 skipped out of 425. The three skips required local Mevea inputs. Deployment-design checks and the ARM64 build and smoke test also passed. [Historical workflow run](https://github.com/Autonomous-anonymous/EdgeDetection/actions/runs/43185855454)
 
 These CI results cover software tests and packaging. The [2026-11-05 physical AEB acceptance](edge-path-project/hil/NATIVE_DEPLOYMENT_ACCEPTANCE.md#full-native-executable-hil-aeb-acceptance--2026-11-05) used release `46b51c5`.
 
@@ -189,7 +195,7 @@ stop_verified          true
 AEB reason             ttc_threshold
 final speed            ~0.000 m/s
 observer stop samples  4
-recorded clearance     1.189 m
+stop clearance         1.189 m along the route
 required clearance     1.000 m
 fault                   null
 ```
@@ -343,7 +349,7 @@ This complements the R2100 deployment preflight: the target preflight checks the
 | HIL runner `SIGKILL` fail-safe | PASS / committed raw evidence | `hil_process_termination_20261102T115256Z.json`; watchdog zero at 0.261 s after SIGKILL, 17 stop samples, source clean. |
 | Standalone ARM64 deployment and native functional AEB | PASS / committed JSON/CSV on 2026-11-05 | Physical R2100: Debian 12 ARM64 CI executable, artifact SHA-256 matched on target, `check`/`preflight`/managed runtime PASS, full physical-CAN `emergency_braking` HIL-10 PASS, `aeb_stop_verified`, 1.236 m clearance, 4 stop samples, no fault. Committed evidence: `edge-path-project/gazebo/results/hil10/hil10_aeb_20261105T070006_b18e73a4.json/.csv`; see `edge-path-project/hil/NATIVE_DEPLOYMENT_ACCEPTANCE.md`. |
 | Manual CAN interruption and recovery | Operator-reported PASS | One two-interface bench trial. The [HIL guide](edge-path-project/hil/README.md#manual-physical-can-interruption-and-recovery-validation) records the sequence. The raw trace and exact release are unavailable in the branch. |
-| GitHub Actions offline validation | 422 passed, 3 skipped on 2026-11-12 | [CI for `51f6f139`](#offline-validation-and-packaging) also passed the native ARM64 build, smoke test and deployment-design checks. |
+| GitHub Actions offline validation | 463 passed, 3 skipped on 2026-11-25 | The native ARM64 build, smoke test and deployment-design checks also passed. [CI for `62029a2`](#offline-validation-and-packaging) |
 | Fresh-checkout R2100 acceptance | PASS | Historical zipapp baseline: clean checkout -> build -> deploy -> preflight -> managed runtime -> physical-CAN route; `route_complete`. |
 | Verified baseline tag | complete | `r2100-hil-verified-2026-11-02`; closes the pre-common-scenario R2100 acceptance baseline. |
 

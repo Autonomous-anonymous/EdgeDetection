@@ -35,7 +35,7 @@ Alussa voi näkyä tiloja `SENSOR_FAIL_SAFE` ja `STATE_FAIL_SAFE`, kun kellon, a
 Kolme toimintoa pidetään tarkoituksella erillisinä:
 
 1. **Reitinohjain (RouteFollower)**: muodostaa nimellisen telakomennon ajoneuvon odometrian ja reitin perusteella. Se ei näe esteen komentoreittiä.
-2. **Turvavalvoja (SafetySupervisor)**: tarkistaa ajoneuvon asennon ja mittausten tuoreuden sekä maastosta suodatetut LiDAR-estehavainnot. Se voi korvata normaalin komennon STOP-komennolla. Suojatarkasteluun kuuluu noin **5,6 m** eteenpäin reitin suunnassa ja **1,85 m** sivuttaissuuntainen käytävä.
+2. **Turvavalvoja (SafetySupervisor)**: tarkistaa ajoneuvon asennon ja mittausten tuoreuden sekä maastosta suodatetut LiDAR-estehavainnot. Se voi korvata normaalin komennon STOP-komennolla. Valvoja tarkistaa estehavainnot **0,35–5,6 m** ajoneuvon edellä reitin suunnassa. Käytävä ulottuu **1,85 m reitin keskilinjan kummallekin puolelle**, joten sen kokonaisleveys on **3,70 m**.
 3. **Liikkuvan esteen ohjain ja erillinen arvioija**: esteen kulkua ohjataan Gazebon `set_pose_vector`- tai `set_pose`-palvelun avulla. Ohjain vahvistaa palveluvastauksen **ja** tarkistaa siirretyn esteen havaitun pose-arvon Gazebon mittausaiheesta. Riippumaton arvioija käyttää ajoneuvon ja esteen mitattuja Gazebo-maailma-asentoja, ei pelkästään turvavalvojan omia tilailmoituksia.
 
 Turvavalvoja ei saa arvioijan käyttämää esteen tarkkaa paikkaa. Arvioija puolestaan mittaa todellisen simulaatiossa toteutuneen etäisyyden ajoneuvon jalanjäljen ja esteen välillä.
@@ -103,22 +103,11 @@ Tavoite-RTF on pyydetty simulaation nopeus, **ei** mitattu todellinen suoritusai
 
 ## Demon käynnistys WSL Ubuntu -ympäristössä
 
-Kun testattu ZIP on tallennettu projektin `demos/`-hakemistoon:
+Aja [Safety Supervisor V2 -paketin](camino-safety-supervisor-v2.zip) offline-testit ja yksi Gazebo-kierros projektin juurihakemistosta.
 
 ```bash
-cd ~/camino-desktop
 python3 demos/camino-safety-supervisor-v2.zip test
 python3 demos/camino-safety-supervisor-v2.zip demo \
-  --physics-step 0.002 \
-  --target-rtf 1.5 \
-  --wall-timeout 900
-```
-
-Jos ZIP on toistaiseksi vain WSL-kotihakemistossa, voit käyttää samaa jo live-testattua ajotapaa:
-
-```bash
-cd ~/camino-summit-test
-python3 ~/camino-safety-supervisor-v2.zip demo \
   --physics-step 0.002 \
   --target-rtf 1.5 \
   --wall-timeout 900
@@ -127,7 +116,6 @@ python3 ~/camino-safety-supervisor-v2.zip demo \
 Kahden peräkkäisen kierroksen toisto:
 
 ```bash
-cd ~/camino-desktop
 python3 demos/camino-safety-supervisor-v2.zip loop \
   --laps 2 \
   --physics-step 0.002 \
@@ -139,13 +127,19 @@ Ohjelma luo tuoreen `/tmp/camino-safety-.../`-hakemiston. Jokaisella `loop`-kier
 
 Paketti tarvitsee saman CAMINO-projektin Python-moduulit, Gazebo Harmonic -asennuksen ja JARCRAC-mallit kuin aiemmat demot. `prepare`-toiminnolla voi luoda erillisen maailmatiedoston tarkastelua varten, mutta se ei käynnistä liikkuvan esteen ohjainta.
 
-**Kokeen julkaiseminen:** Tämän dokumentin lisäksi GitHubin `main`-haaraan on lisättävä juuri testattu suoritettava ZIP, `demos/camino-safety-supervisor-v2.zip`. Testatun paketin SHA-256-tarkistussumma on:
+### Testatun paketin tarkistussumma
+
+Aja projektin juurihakemistossa seuraava komento. Vertaa tulosta live-ajojen yhteenvetoon. [Mittaustulokset ja tarkistussumma](camino-safety-supervisor-v2-live-results.json)
+
+```bash
+sha256sum demos/camino-safety-supervisor-v2.zip
+```
 
 ```text
 e3eb4db942a22357840b59aabfd6e81bb9840e3cbf72a51ef9d4a82067cc4cba
 ```
 
-Koska kyse on jo mitatusta ZIP-versiosta, sen sisäistä `README.md`-tekstiä ei päivitetä jälkikäteen: se kuvaa paketin luontihetken alustavaa validointitilaa. Tämä dokumentti sisältää sen jälkeen tehdyt live-Gazebo-tulokset.
+Paketin sisäinen `README.md` kuvaa testitilannetta paketin tekohetkellä. Siinä ja `--help`-tulosteessa on aiempi tiedostonimi `camino-safety-supervisor.zip`. Käytä yllä olevissa komennoissa julkaistun V2-paketin nimeä.
 
 ## Demojen erot
 
@@ -158,7 +152,7 @@ Koska kyse on jo mitatusta ZIP-versiosta, sen sisäistä `README.md`-tekstiä ei
 
 ## Keskeiset tiedostot
 
-- `demos/camino-safety-supervisor-v2.zip` — erillinen Python ZIP -sovellus, **kun tiedosto on lisätty GitHubiin**.
+- [camino-safety-supervisor-v2.zip](camino-safety-supervisor-v2.zip) — live-ajoissa käytetty turvavalvojademo.
 - `src/camino_safety_logic.py` (ZIP:n sisällä) — normaali reitinohjain ja erillinen turvavalvoja.
 - `src/camino_safety_hazard.py` (ZIP:n sisällä) — liikkuvan esteen Gazebo-palvelukomennot ja vahvistukset.
 - `src/camino_safety_scene.py` (ZIP:n sisällä) — Ruskotunturin reitti, liikkuva este ja näkymä.

@@ -51,11 +51,9 @@ Jos paritetut tilamittaukset puuttuvat, ovat vanhentuneita tai ristiriitaisia, o
 
 ## Miten onnistuminen tarkistetaan?
 
-Ohjelman `lane_score.py` käyttää **Gazebon maailman malliasentoja**, jotka arvioidaan erillään ajovuorojen ohjauspäätöksistä. Jokaiselle kierrokselle tallennetaan:
+Ohjelman `lane_score.py` käyttää **Gazebon maailman malliasentoja**, jotka arvioidaan erillään ajovuorojen ohjauspäätöksistä. Käynnistin kirjoittaa jokaisen ajetun kierroksen `result.json`-tiedostoon tuloksen (PASS/FAIL) ja sen syyn. Mitatulta kierrokselta raportti sisältää myös saapumis- ja portinylitysajat, odotuksen keston ja ajoneuvojen pienimmän etäisyyden. `poses.csv` sisältää tallennetut sijainnit ja asennot, kun asentonäytteitä on saatavilla.
 
-- `result.json` — PASS/FAIL, syy, saapumis- ja portinylitysajat, odotuksen kesto sekä ajoneuvojen pienin etäisyys.
-- `poses.csv` — kahden ajoneuvon tallennetut sijainnit ja asennot.
-- `watch.html` — selaimessa avattava, tallennetuista poseista muodostettu katseluympäristö.
+Koko ajolla on yksi selainkatselu, `watch.html`, tuloshakemiston juuressa. Käynnistin luo sen ensimmäisen onnistuneen kierroksen jälkeen ja päivittää sen seuraavan onnistuessa. Jos ensimmäinen kierros epäonnistuu, ajo päättyy ennen katselutiedoston luontia. Jos toinen epäonnistuu, ensimmäisen onnistuneen kierroksen katselu on yhä käytettävissä.
 
 PASS-tulokseen vaaditaan muun muassa:
 
@@ -110,10 +108,9 @@ Offline-replay käyttää yksinkertaistettua liike- ja maastomallia. Näitä luk
 
 Tämä demo on muista ohjelmista erillinen suoritettava Python ZIP. Se sisältää Ruskotunturin mallin, molemmat ajoneuvomallit, ohjaimen, arvioijan ja selainkatselun. Käynnistys ei edellytä toimivien showcase-, summit-, native-hill- tai safety-supervisor-ohjaimien muokkaamista.
 
-Kun ZIP on lisätty tämän dokumentin rinnalle GitHubin `demos/`-hakemistoon, voit ajaa yhden **JARCRAC ensin** -kierroksen:
+Aja [Single Lane -paketilla](camino-single-lane-physics-rtf.zip) yksi **JARCRAC ensin** -kierros projektin juurihakemistosta.
 
 ```bash
-cd ~/camino-desktop
 python3 demos/camino-single-lane-physics-rtf.zip demo \
   --first a \
   --physics-step 0.002 \
@@ -124,7 +121,6 @@ python3 demos/camino-single-lane-physics-rtf.zip demo \
 Koko kahden ajovuorojärjestyksen esittely:
 
 ```bash
-cd ~/camino-desktop
 python3 demos/camino-single-lane-physics-rtf.zip demo \
   --first both \
   --physics-step 0.002 \
@@ -132,28 +128,9 @@ python3 demos/camino-single-lane-physics-rtf.zip demo \
   --wall-timeout 1200
 ```
 
-Jos ZIP on toistaiseksi WSL-kotihakemistossa, **jo live-testattu** komento toimii kokeilu-worktreestä:
+`--first a` luo kierroshakemiston `first-a/` ja `--first b` hakemiston `first-b/`. Oletusvalinta `--first both` käynnistää ensin A:n kierroksen ja sen onnistuessa B:n kierroksen uudessa Gazebo-simulaatiossa. Ajo pysähtyy ensimmäiseen epäonnistumiseen. Voit keskeyttää sen painamalla Ctrl+C.
 
-```bash
-cd ~/camino-summit-test
-python3 ~/camino-single-lane-physics-rtf.zip demo \
-  --first both \
-  --physics-step 0.002 \
-  --target-rtf 1.5 \
-  --wall-timeout 1200
-```
-
-Voit testata vain B ensin -tilanteen vaihtamalla `--first both` → `--first b`.
-
-Paketin toiminta kirjoittaa erillisen hakemiston `/tmp/camino-single-lane-.../` ja luo siellä `first-a/`, `first-b/` ja `watch.html` -tiedostot. **Aja katselu** avaamalla esimerkiksi:
-
-```bash
-explorer.exe /tmp/camino-single-lane-e6ci6u9h/watch.html
-```
-
-Tuo polku on yhden onnistuneen testikierroksen tallenteeseen; uuden kierroksen hakemistopolku vaihtuu. `--first both` käynnistää **tuoreen Gazebo-simulaation kumpaakin vuorojärjestystä varten**. Kierrosten vaihto ei ole saumaton animaatiolooppi. Pysäytä ajaminen `Ctrl+C`:llä.
-
-Pelkkä tämä Markdown ei ole suoritettava demo. Testattu ZIP on tallennettava sen rinnalle polkuun `demos/camino-single-lane-physics-rtf.zip`.
+Ohjelma tulostaa ajokohtaisen tuloshakemiston polun rivillä `Output directory:`. Avaa onnistuneen kierroksen jälkeen selaimessa sen juuresta `watch.html`. Paketin mukana tuleva valmis katselu perustuu kinemaattiseen offline-toistoon.
 
 ### Testatun paketin tarkistussumma
 
@@ -161,7 +138,7 @@ Pelkkä tämä Markdown ei ole suoritettava demo. Testattu ZIP on tallennettava 
 SHA-256: d24191dc62aad239db25d5a399ff707bb41ede0e1c16d1d0c285708a1879ef2e
 ```
 
-Tarkista tiedosto WSL:ssä esimerkiksi komennolla `sha256sum ~/camino-single-lane-physics-rtf.zip`. ZIP-paketin oma `README.md` voi edelleen mainita, ettei live-Gazebo-ajokertoja ollut suoritettu **paketin tekohetkellä**. Tämä dokumentti kirjaa sen jälkeen tehdyt kolme onnistunutta live-koetta muuttamatta testatun ZIP:n sisältöä.
+Tarkista tiedosto projektin juurihakemistossa komennolla `sha256sum demos/camino-single-lane-physics-rtf.zip`. Paketin sisäinen `README.md` kuvaa tilannetta ennen live-ajoja ja käyttää vanhaa tiedostonimeä `camino-single-lane.zip`. Käytä yllä olevissa komennoissa julkaistua nimeä `camino-single-lane-physics-rtf.zip`. [Kolmen live-ajon mittaukset ja tarkistussumma](camino-single-lane-physics-rtf-live-results.json)
 
 ## Miten tämä eroaa muista CAMINO-demoista?
 
@@ -177,7 +154,7 @@ Demon kannalta tärkeintä on, että **oikeus käyttää jaettua työmaa-aluetta
 
 ## Keskeiset paketin tiedostot
 
-- `demos/camino-single-lane-physics-rtf.zip` — itsenäinen live-Gazebo- ja offline-replay-paketti **kun ZIP on lisätty GitHubiin**.
+- [camino-single-lane-physics-rtf.zip](camino-single-lane-physics-rtf.zip) — live-Gazebo-ajojen ja offline-toistojen suoritettava paketti.
 - `__main__.py` (ZIP:n sisällä) — komentorivivalinnat, ajovuorojärjestykset ja kierrosten käynnistys.
 - `lane_course.py` — portit, odotusalueet, saapumisen tulkinta, reitinohjain ja ajovuorojen jako.
 - `lane_gazebo.py` — Gazebo-maailma, ajoneuvot, fysiikkaparametrit, ajokierrokset ja pose-tallennus.

@@ -1,6 +1,6 @@
 # CAMINO — Gazebo SIL and R2100 Hardware-in-the-Loop
 
-This `camino` branch documents the **CAMINO Software-in-the-Loop (SIL) → Hardware-in-the-Loop (HIL)** workflow. It contains **Gazebo Harmonic** vehicle simulations, Ruskotunturi worlds and models, scenario runners, recorded results, and the software for the **Seeed Studio reComputer Industrial R2100** controller with physical CAN.
+The `main` branch documents the **CAMINO Software-in-the-Loop (SIL) → Hardware-in-the-Loop (HIL)** workflow. It contains **Gazebo Harmonic** vehicle simulations, Ruskotunturi worlds and models, scenario runners, recorded results, and the software for the **Seeed Studio reComputer Industrial R2100** controller with physical CAN.
 
 This branch intentionally excludes the earlier CARLA prototype, its standalone scripts and CSV results, and its input/output videos. Those assets remain on the original repository branches. Gazebo result CSV/JSON/trace files are retained as SIL/HIL evidence, including historical failed/diagnostic runs identified as such.
 
@@ -14,16 +14,30 @@ This branch intentionally excludes the earlier CARLA prototype, its standalone s
 | R2100 physical HIL | Perception → physical CAN → embedded AEB → returned brake state |
 | Native embedded release | Debian 12 ARM64 CI-built ELF, verified hashes and physical R2100 `check` / `preflight` / runtime startup |
 | Native functional acceptance | **2026-11-05 PASS** on release `46b51c5`. `aeb_stop_verified`, `ttc_threshold`, 1.236 m clearance, four stop-confirmation samples, no fault. |
-| Regression coverage | [2026-11-12 CI](VALIDATION.md#offline-validation-and-packaging) on `51f6f139` recorded 422 passed and 3 skipped out of 425. ARM64 packaging and deployment checks passed. |
+| Regression coverage | On 2026-11-25, 463 of 466 offline tests passed and 3 were skipped on `main` at `62029a2`. ARM64 packaging and deployment-design checks also passed. [CI record](VALIDATION.md#offline-validation-and-packaging) |
 | Boundary | **SIL → HIL**. Vehicle-in-the-Loop (VIL) is out of scope. |
 
 The final SIL demo uses **path-clearance-based LiDAR hold/resume** for the moving obstacle. The separate `emergency_braking` scenario demonstrates TTC-based emergency braking.
+
+## Presentation demos
+
+Run the five Gazebo demos from the repository root. The Finnish guides give the launch commands, explain what to watch for and list the measured results.
+
+| Demo and Finnish guide | What to watch for | Launcher |
+| --- | --- | --- |
+| 1. [Showcase](demos/JARCRAC_SHOWCASE_FI.md) | Two vehicles merge, take turns passing an obstacle and park in separate loading bays. | [Convoy trial script](edge-path-project/gazebo/scripts/jarcrac_convoy_trial.py), `demo --scenario showcase` |
+| 2. [Summit](demos/JARCRAC_SUMMIT_FI.md) | JARCRAC steers around a stump on a climbing route. | [camino-summit-climb.zip](demos/camino-summit-climb.zip) |
+| 3. [Native Hill](demos/JARCRAC_NATIVE_HILL_FI.md) | JARCRAC climbs a steeper slope on the original Ruskotunturi terrain. | [camino-native-hill-fixed.zip](demos/camino-native-hill-fixed.zip) |
+| 4. [Safety Supervisor](demos/JARCRAC_SAFETY_SUPERVISOR_FI.md) | A separate supervisor stops JARCRAC for a moving obstacle. | [camino-safety-supervisor-v2.zip](demos/camino-safety-supervisor-v2.zip) |
+| 5. [Single Lane](demos/JARCRAC_SINGLE_LANE_FI.md) | Two vehicles approach from opposite ends and take turns on a single-lane road. | [camino-single-lane-physics-rtf.zip](demos/camino-single-lane-physics-rtf.zip) |
 
 ## Experimental JARCRAC SIL
 
 The Mevea-derived JARCRAC is the primary experimental forestry vehicle. The [v2 wheel-based model](JARCRAC_V2_SIL.md) has recorded flat-world AEB passes at **0.35, 0.70 and 1.00 m/s**, with a separate positive chassis-contact control. Ruskotunturi tests cover stationary perception, sensitivity to pose errors and simulated IMU calibration. The [2026-11-09 terrain diagnostic](edge-path-project/gazebo/results/jarcrac/imu_dynamic_clear_diagnostic.json) recorded 0.3605 m of travel at a 0.10 m/s command, eight moving LiDAR/IMU comparisons, 0.0059° maximum orientation error and a final speed of zero.
 
-The separate [detailed tracked model](edge-path-project/gazebo/docs/CAMINO_JARCRAC_HANDOFF.md) and its meshes are committed. Its [results](edge-path-project/gazebo/results/jarcrac/README.md) cover short motion, contact checks and an experimental TTC stop-and-hold with a known static obstacle. The watchdog and bounded-motion scripts are available, with their live-run reports still absent from the branch. These experiments use Gazebo ground-truth position and receive-time sensor pairing. Independent localization, calibrated terrain AEB, autonomous detour and route rejoining, and JARCRAC-specific R2100 HIL remain unverified.
+The detailed tracked JARCRAC drove around a static obstacle, rejoined its route and stopped at its goal in two live Gazebo trials using simulator odometry. The solo trial measured 1.502 m of aligned travel after the bypass. In the two-vehicle trial JARCRAC and Vehicle B both parked. [Solo report](edge-path-project/gazebo/results/jarcrac/jarcrac_compact_rejoin_laptop_pass.json) · [Two-vehicle report](edge-path-project/gazebo/results/jarcrac/jarcrac_compact_two_vehicle_laptop_pass.json)
+
+Independent localization, calibrated terrain AEB and JARCRAC-specific R2100 HIL remain unverified. The two experimental scripts described in the 12 November handoff also lack live reports. The project records the source of the Mevea-derived meshes. Independent confirmation of redistribution rights is still outstanding. [Results index](edge-path-project/gazebo/results/jarcrac/README.md) · [Historical developer handoff](edge-path-project/gazebo/docs/CAMINO_JARCRAC_HANDOFF.md) · [JARCRAC attribution](edge-path-project/gazebo/models/jarcrac/NOTICE.md) · [Tracked mesh provenance](edge-path-project/gazebo/models/jarcrac_detailed_tracks/PROVENANCE.txt)
 
 ## Optional wheel loader for teammate use
 
@@ -39,6 +53,7 @@ From `edge-path-project/gazebo/`, run the world with `GZ_SIM_RESOURCE_PATH="$PWD
 ├── REQUIREMENTS.md                   # CAMINO/course requirements traceability
 ├── VALIDATION.md                     # Evidence catalogue and test history
 ├── .github/workflows/                # Offline and Debian 12 ARM64 CI
+├── demos/                            # Finnish demo guides, launch archives and live-result summaries
 ├── tests/                            # SIL, HIL, mapping and deployment tests
 └── edge-path-project/
     ├── gazebo/
@@ -69,7 +84,7 @@ From `edge-path-project/gazebo/`, run the world with `GZ_SIM_RESOURCE_PATH="$PWD
 
 The standalone R2100 executable does **not** require the development Python virtual environment on the embedded device. Build it in Debian 12 **ARM64** (as in GitHub Actions), not in x86-64 WSL. The CI release contains a provenance file recording its source commit and artifact SHA-256 digests.
 
-Start each WSL terminal in the root of your `camino` checkout.
+Start each WSL terminal in the root of your `main` checkout.
 
 ## Run the final Gazebo SIL v6.4 demo
 
@@ -177,6 +192,7 @@ Results generated by tests can be ignored by Git unless deliberately force-added
 
 ## Documentation and scope boundaries
 
+- [Five presentation demos, launchers and Finnish guides](#presentation-demos)
 - [JARCRAC v2 3D LiDAR AEB (experimental SIL)](JARCRAC_V2_SIL.md)
 - [Gazebo SIL guide](edge-path-project/gazebo/README.md)
 - [R2100 HIL guide](edge-path-project/hil/README.md)

@@ -1,12 +1,11 @@
 # CAMINO — JARCRAC Development Handoff
 
-Updated 2026-11-12.
+**Historical developer note, 2026-11-12.** The experiments and open questions below describe the tracked model on that date. Subsequent live Gazebo trials recorded autonomous detours, route rejoining and stopped goals. [Current Compact guide](JARCRAC_COMPACT_SIL.md) · [Solo result](../results/jarcrac/jarcrac_compact_rejoin_laptop_pass.json) · [Two-vehicle result](../results/jarcrac/jarcrac_compact_two_vehicle_laptop_pass.json)
 
 ## Repository and environment
 
 - Repository: Autonomous-anonymous/EdgeDetection
 - Development branch: camino
-- Local path: ~/edge-path-project-git
 - Platform: WSL Ubuntu
 - Gazebo: Harmonic, Gazebo Sim 8.15.0
 - Python transport: gz.transport13
@@ -15,12 +14,9 @@ Updated 2026-11-12.
   safe detour around obstacle, then route rejoining
 - Scope: experimental Software-in-the-Loop (SIL)
 
-## Important rules
+## Experimental setup constraints
 
 - Do not modify the original JARCRAC model.
-- Do not push changes without explicit user approval.
-- Test changes locally before committing.
-- Prefer complete WSL shell blocks and Python heredocs.
 - Use one Gazebo simulation and one velocity publisher at a time.
 - Do not authorize obstacle detours from geometry screening alone.
 
@@ -120,7 +116,7 @@ scenes. The original model still uses the original sampling grid.
 - Sensor pairing is based on receive time, not exact
   simulation-timestamp synchronization.
 - No verified full-corridor occupancy or tracked-object TTC.
-- No autonomous detour or route rejoining demonstrated.
+- The trials completed by 12 November covered detour geometry only.
 - All driving limits are experimental SIL limits.
 
 ## Recreate the experimental worlds
@@ -222,6 +218,6 @@ sensor freshness and contact status. The
 [bounded-motion experiment](../scripts/jarcrac_arbiter_bounded_motion.py)
 uses a synthetic command request, an in-process watchdog and Gazebo
 ground-truth pose in a separate test world. Its live-run report and the
-monitor's report are absent from the branch. Independent process-level
-stop protection, swept-path clearance, autonomous detour and route rejoining
-remain open.
+monitor's report are absent from the branch. At the time of this handoff,
+independent process-level stop protection, swept-path clearance, autonomous
+detour and route rejoining were open for these experiments.

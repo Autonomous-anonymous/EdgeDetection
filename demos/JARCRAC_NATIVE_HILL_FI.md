@@ -91,23 +91,10 @@ Tavoite-RTF kuvaa haluttua simulaation nopeutta, ei mitattua seinäkelloaikaa. N
 
 ## Demon käynnistys WSL Ubuntu -ympäristössä
 
-Tämä versio on oma suoritettava Python ZIP -pakettinsa: **`camino-native-hill-fixed.zip`**. Se käyttää CAMINO-projektin Gazebo-malleja ja yhteisiä Python-moduuleja, mutta ei edellytä päädemon lähdekoodin muuttamista.
-
-Kun paketti on tallennettu tämän dokumentin rinnalle GitHubin `demos/`-hakemistoon, voit käynnistää sen projektin juurihakemistosta:
+[Native Hill -paketti](camino-native-hill-fixed.zip) käyttää projektin Gazebo-malleja ja yhteisiä Python-moduuleja. Aja yksi kierros projektin juurihakemistosta.
 
 ```bash
-cd ~/camino-desktop
 python3 demos/camino-native-hill-fixed.zip demo \
-  --physics-step 0.002 \
-  --target-rtf 1.5 \
-  --wall-timeout 900
-```
-
-Vaihtoehtoisesti jo testattu, kotihakemistossa oleva ZIP toimii myös kokeilu-worktreestä:
-
-```bash
-cd ~/camino-summit-test
-python3 ~/camino-native-hill-fixed.zip demo \
   --physics-step 0.002 \
   --target-rtf 1.5 \
   --wall-timeout 900
@@ -116,7 +103,6 @@ python3 ~/camino-native-hill-fixed.zip demo \
 ### Kahden peräkkäisen kierroksen testaus
 
 ```bash
-cd ~/camino-desktop
 python3 demos/camino-native-hill-fixed.zip loop \
   --laps 2 \
   --physics-step 0.002 \
@@ -126,7 +112,7 @@ python3 demos/camino-native-hill-fixed.zip loop \
 
 Ohjelma tekee uuden tuloshakemiston `/tmp/camino-native-hill-.../` ja tulostaa raporttien sijainnit. `--wall-timeout 900` on prosessin enimmäisodotus, **ei** esittelysuorituksen 300 sekunnin PASS-aikarajan korotus. `loop` sulkee ja käynnistää Gazebon kierrosten välillä; ohjelma ei ole saumaton videotoisto. `Ctrl+C` keskeyttää ajon.
 
-Voit myös avata pelkän esikatselun komennolla `python3 demos/camino-native-hill-fixed.zip preview`. Koodin ZIP-paketti pitää ensin lisätä GitHubiin; pelkkä Markdown ei käynnistä simulaatiota.
+Voit myös avata pelkän esikatselun komennolla `python3 demos/camino-native-hill-fixed.zip preview`.
 
 ## Kolmen demon erot ja turvallisuusrajaukset
 
@@ -142,7 +128,7 @@ Native-hill-demossa ei ole kahden työkoneen yhteistyötä, CAN-väylän fyysist
 
 ## Keskeiset tiedostot ja linkit
 
-- `demos/camino-native-hill-fixed.zip` — tämän demon suoritettava paketti **ZIP-tiedoston GitHubiin lisäämisen jälkeen**.
+- [camino-native-hill-fixed.zip](camino-native-hill-fixed.zip) — suoritettava Native Hill -demo.
 - `src/jarcrac_summit_knots.py` (ZIP:n sisällä) — Ruskotunturin alkuperäiseen maastoon sidotut reittipisteet.
 - `src/jarcrac_summit_route.py` (ZIP:n sisällä) — reitin geometria, maastoprofiili ja kokeelliset kallistusrajat.
 - `src/jarcrac_summit_mission.py` (ZIP:n sisällä) — nousu, jarrutus, kannon kierto ja reitille palaaminen.

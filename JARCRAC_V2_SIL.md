@@ -1,6 +1,6 @@
 # CAMINO — JARCRAC v2 front 3D LiDAR AEB (SIL)
 
-This guide covers the wheel-based JARCRAC v2 **software-in-the-loop** experiment in Gazebo Harmonic. See the [tracked-model handoff](edge-path-project/gazebo/docs/CAMINO_JARCRAC_HANDOFF.md) for the separate native-track model. The [physical CAN HIL reference](edge-path-project/hil/README.md) uses Ruskotunturi Vehicle B. JARCRAC-specific R2100 HIL remains open.
+This guide covers the wheel-based JARCRAC v2 **software-in-the-loop** experiment in Gazebo Harmonic. The native-track model has its own [trial results](edge-path-project/gazebo/results/jarcrac/README.md#detailed-tracked-model) and [historical handoff](edge-path-project/gazebo/docs/CAMINO_JARCRAC_HANDOFF.md). The [physical CAN HIL reference](edge-path-project/hil/README.md) uses Ruskotunturi Vehicle B. JARCRAC-specific R2100 HIL remains open.
 
 ## Implementation
 
@@ -13,12 +13,11 @@ This guide covers the wheel-based JARCRAC v2 **software-in-the-loop** experiment
 
 ## Quick start
 
-From a clean checkout of the `camino` branch with Gazebo Harmonic and Python `gz.transport13` / `gz.msgs10`:
+Open both terminals at the root of the `main` checkout. Use Gazebo Harmonic and a Python interpreter with `gz.transport13` and `gz.msgs10`.
 
 **Terminal 1** (close other JARCRAC worlds first):
 
 ```bash
-cd ~/edge-path-project-git
 export GZ_SIM_RESOURCE_PATH="$PWD/edge-path-project/gazebo/models${GZ_SIM_RESOURCE_PATH:+:$GZ_SIM_RESOURCE_PATH}"
 gz sim -r edge-path-project/gazebo/worlds/jarcrac_v2_front_aeb_world.sdf
 ```
@@ -26,9 +25,10 @@ gz sim -r edge-path-project/gazebo/worlds/jarcrac_v2_front_aeb_world.sdf
 **Terminal 2:**
 
 ```bash
-cd ~/edge-path-project-git
+run_dir="$(mktemp -d)"
+echo "AEB results: $run_dir"
 python3 -u edge-path-project/gazebo/scripts/jarcrac_v2_3d_aeb_sil.py \
-  --report edge-path-project/gazebo/results/jarcrac/v2_front_3d_aeb_first_trial.json
+  --report "$run_dir/v2_front_3d_aeb.json"
 ```
 
 **Offline tests:**
@@ -69,11 +69,11 @@ The local WSL/Gazebo test output supplied by the operator reported:
 
 The prior no-motion LiDAR probe received 100 scans, `layers=32`, `horizontal=721`, `possible_self_pts=0`, with `nearest_forward` approximately 6.02 m. These are operator-provided console observations, not a simulation rerun in the environment used to prepare this integration.
 
-**Preserve the original generated evidence from WSL**, `edge-path-project/gazebo/results/jarcrac/v2_front_3d_aeb_first_trial.json` and matching `.csv`, when committing to Git. Do not substitute this summary for raw measurements.
+The quick start writes a JSON report and matching CSV trace in the new run directory. Compare those files with the recorded first trial. [Original JSON](edge-path-project/gazebo/results/jarcrac/v2_front_3d_aeb_first_trial.json) · [Original CSV](edge-path-project/gazebo/results/jarcrac/v2_front_3d_aeb_first_trial.csv)
 
 ## Additional operator-reported validation (2026-11-06)
 
-The following results were obtained in the operator's WSL / Gazebo Harmonic environment. The raw measurements originate from the recorded trials, not a fresh simulation performed by this documentation update. The experimental Python sources, test worlds, regression tests and recorded diagnostics are now committed on `camino`.
+The operator obtained the following results in WSL with Gazebo Harmonic. The sources, test worlds, regression tests and recorded diagnostics are available on `main`.
 
 ### Flat-world AEB at three speeds
 
@@ -156,18 +156,23 @@ Evidence is in
 [`imu_dynamic_clear_diagnostic.json`](edge-path-project/gazebo/results/jarcrac/imu_dynamic_clear_diagnostic.json);
 offline tests in `tests/test_jarcrac_imu_dynamic.py`.
 
-Reproduce the test only in a clear, visually inspected Gazebo scene, with
-no competing velocity publishers:
+Start both terminals at the repository root. In terminal 1, launch the clear-terrain world with no competing velocity publishers.
 
 ```bash
-cd ~/edge-path-project-git
-python3 edge-path-project/gazebo/scripts/jarcrac_imu_dynamic.py prepare
+world_dir="$(mktemp -d)"
+python3 edge-path-project/gazebo/scripts/jarcrac_imu_dynamic.py prepare \
+  --output "$world_dir/jarcrac_imu_dynamic_clear.sdf"
 export GZ_SIM_RESOURCE_PATH="$PWD/edge-path-project/gazebo/models${GZ_SIM_RESOURCE_PATH:+:$GZ_SIM_RESOURCE_PATH}"
-# In terminal 1:
-gz sim -r ~/jarcrac_imu_experiment/jarcrac_imu_dynamic_clear.sdf
-# In terminal 2, from the project root:
+gz sim -r "$world_dir/jarcrac_imu_dynamic_clear.sdf"
+```
+
+After confirming the scene is clear, run the diagnostic in terminal 2.
+
+```bash
+run_dir="$(mktemp -d)"
+echo "IMU report: $run_dir"
 python3 -u edge-path-project/gazebo/scripts/jarcrac_imu_dynamic.py drive \
-  --report edge-path-project/gazebo/results/jarcrac/imu_dynamic_clear_diagnostic.json
+  --report "$run_dir/imu_dynamic_clear.json"
 ```
 
 This result verifies **one short low-speed simulated movement on clear terrain**.
@@ -177,9 +182,9 @@ and bias are not representative of physical hardware. This is **not**
 obstacle-detection-under-motion acceptance, terrain AEB, a real brake
 calibration or JARCRAC-specific physical HIL.
 
-**Next milestone:** a separate controlled, low-speed dynamic obstacle
-perception test, without enabling terrain AEB; then simulation-timestamp
-alignment and uncertainty injection.
+### Low-speed approach to a known static obstacle
+
+A separate Gazebo perception trial passed. JARCRAC moved 0.3551 m toward a stationary obstacle at a commanded 0.10 m/s. The diagnostic recorded eight paired LiDAR/IMU samples while the vehicle was moving, and a final speed of 0.0 m/s. The distance limit ended the run. Terrain braking, simulation-timestamp alignment and the effects of injected localization uncertainty remain open for this moving-vehicle test. [Diagnostic script](edge-path-project/gazebo/scripts/jarcrac_imu_dynamic_obstacle.py) · [Recorded result](edge-path-project/gazebo/results/jarcrac/jarcrac_dynamic_obstacle_recheck.json)
 
 ## Validation boundaries
 
