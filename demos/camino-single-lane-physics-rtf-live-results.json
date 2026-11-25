@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "demonstration": "camino_single_lane_right_of_way",
+  "date_local": "2026-11-25",
+  "source_type": "operator_shared_live_gazebo_console_transcription",
+  "source_note": "This is a curated transcription of the operator's console outputs. It is not the unmodified original result.json or poses.csv produced by Gazebo. Preserve the original run directories as primary evidence.",
+  "tested_artifact": "demos/camino-single-lane-physics-rtf.zip",
+  "tested_artifact_sha256": "d24191dc62aad239db25d5a399ff707bb41ede0e1c16d1d0c285708a1879ef2e",
+  "configuration": {
+    "physics_step_s": 0.002,
+    "requested_rtf": 1.5,
+    "wall_timeout_s_per_lap": 1200
+  },
+  "status": "3/3 PASS",
+  "runs": [
+    {
+      "run": "standalone-first-a",
+      "first_vehicle": "JARCRAC",
+      "status": "PASS",
+      "result_reason": "both parked",
+      "result_path": "/tmp/camino-single-lane-coojtsfp/first-a/result.json",
+      "min_vehicle_clearance_m_reported": 2.92,
+      "stationary_wait_s_reported": 87.9
+    },
+    {
+      "run": "both-mode-first-a",
+      "first_vehicle": "JARCRAC",
+      "status": "PASS",
+      "result_reason": "both parked",
+      "result_path": "/tmp/camino-single-lane-e6ci6u9h/first-a/result.json",
+      "min_vehicle_clearance_m_reported": 2.92,
+      "stationary_wait_s_reported": 87.8
+    },
+    {
+      "run": "both-mode-first-b",
+      "first_vehicle": "Vehicle B",
+      "status": "PASS",
+      "result_reason": "both parked",
+      "result_path": "/tmp/camino-single-lane-e6ci6u9h/first-b/result.json",
+      "min_vehicle_clearance_m_reported": 2.94,
+      "stationary_wait_s_reported": 63.8
+    }
+  ],
+  "note": "Vehicle B-first has one live PASS; JARCRAC-first has two. The three runs do not establish statistical reliability. These reported waiting times are simulation seconds. Actual elapsed simulation times and per-gate timestamps have not been transcribed."
+}
