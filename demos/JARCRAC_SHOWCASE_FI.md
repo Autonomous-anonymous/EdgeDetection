@@ -68,12 +68,12 @@ Nopeammassa RTF 2,0 -kokeessa B:n reitille paluu ei varmistunut ja se pysähtyi 
 Aja WSL Ubuntu -terminaalissa projektin juuresta:
 
 ```bash
-cd ~/camino-integrated-showcase
+run_dir="$(mktemp -d)"
 python3 -u edge-path-project/gazebo/scripts/jarcrac_convoy_trial.py loop \
   --physics-step 0.002 \
   --target-rtf 1.5 \
   --wall-timeout 900 \
-  --out /tmp/camino-exhibition-live
+  --out "$run_dir/showcase-loop"
 ```
 
 Komento toistaa `showcase`-skenaariota peräkkäin. **Onnistuneen kierroksen jälkeen Gazebo suljetaan ja käynnistetään uudelleen**; kyseessä ei siis ole saumaton videolooppi. Keskeytä `Ctrl+C`:llä. Silmukka pysähtyy myös epäonnistuneeseen kierrokseen. Käytä jokaisessa erillisessä käynnistyksessä uutta `--out`-hakemistoa.

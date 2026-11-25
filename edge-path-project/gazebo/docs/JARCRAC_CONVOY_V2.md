@@ -2,28 +2,17 @@
 
 Use `convoy` to test two consecutive detours around a persistent obstacle on a shared lane. JARCRAC and the original Gazebo Vehicle B start in order on a surveyed stretch of Ruskotunturi downstream of a merge. The compact showcase exercises the merge separately. Use `b-private` to isolate Vehicle B's planner on a parallel approach with room to turn before rejoining.
 
-## Apply the patch locally
-
-The patch is based on `c5e8a857813628171aadaea653257b56e839a939` on the `camino` branch. Apply it in a fresh worktree to keep experimental patches separate.
-
-```bash
-git worktree add --detach ../camino-convoy-v2 c5e8a85
-cd ../camino-convoy-v2
-git apply --check /path/to/camino-jarcrac-convoy-v2.patch
-git apply /path/to/camino-jarcrac-convoy-v2.patch
-python3 -m unittest discover -s tests -p 'test_jarcrac_convoy_v2.py' -v
-```
-
 ## Run a trial
 
-Use the Gazebo Harmonic environment and Python bindings for the [compact SIL demo](JARCRAC_COMPACT_SIL.md).
+Start at the root of the `main` checkout with Gazebo Harmonic and the Python bindings `gz.transport13` and `gz.msgs10`. Use a separate output path for each scenario.
 
 ```bash
+run_dir="$(mktemp -d)"
 python3 edge-path-project/gazebo/scripts/jarcrac_convoy_trial.py demo \
-  --scenario convoy --out /tmp/camino-convoy-run1
+  --scenario convoy --out "$run_dir/convoy"
 
 python3 edge-path-project/gazebo/scripts/jarcrac_convoy_trial.py demo \
-  --scenario b-private --obstacle 5.0 -0.12 --out /tmp/camino-b-private-run1
+  --scenario b-private --obstacle 5.0 -0.12 --out "$run_dir/b-private"
 ```
 
 Use a fresh output directory for each run. Add `--headless` for server-only rendering on a compatible setup. `--obstacle X Y` moves the box in route-local metres, and `prepare` writes a world without launching Gazebo. The default wall-clock timeout is 600 seconds. Both commands write `world.sdf`, `control.jsonl`, `evaluation.json` and `result.json` during a complete run. Read `passed` and `wall_elapsed_s` in `result.json` to check the outcome and presentation time.
@@ -40,6 +29,12 @@ JARCRAC receives its existing front 180° LiDAR scan. Vehicle B uses its roof-mo
 The default `--state-source gazebo-odometry` uses the simulation's explicit odometry topics. `--state-source external` uses only `/camino/cooperative/a/state` and `/camino/cooperative/b/state` as appropriate for the scenario. The messages must use the `camino_map` parent frame, the model name as child frame, and timestamps synchronized with the simulation clock. The controller rejects stale or inconsistent pose pairs. Gazebo's world-pose evaluator is independent of this choice.
 
 ## Validation status
+
+Run the convoy regression tests from the repository root.
+
+```bash
+python3 -m unittest discover -s tests -p 'test_jarcrac_convoy_v2.py' -v
+```
 
 Offline acceptance covers the B-only detour, the two sequential convoy detours, a stopped leader, a moving crossing, blocked bypasses, and an obstruction inserted during B's detour. The inserted obstruction clears before B verifies its replacement path. Additional checks cover stale localization, Ackermann curvature after slowing, and the generated sensor configuration.
 

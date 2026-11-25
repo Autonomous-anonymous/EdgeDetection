@@ -1,6 +1,6 @@
 # Sanitised course and project requirements map
 
-This CAMINO-branch document summarises the project objectives derived from the course material and CAMINO introduction without reproducing environment-specific connection details or credentials.
+This document maps the course and CAMINO project objectives to the implementation on `main`.
 
 This branch retains only Gazebo SIL and R2100 HIL assets/evidence; earlier CARLA prototype files and videos are excluded.
 
@@ -156,10 +156,11 @@ Ground-truth clearance: 1.253 m
 HIL verification, with the same world running and the R2100 runtime ready:
 
 ```bash
+read -r -p "Reachable R2100 IP address or hostname: " R2100_IP
 python3 edge-path-project/gazebo/scripts/run_staged_scenario.py \
   --scenario emergency_braking \
   --target hil \
-  --r2100-host <R2100_IP>
+  --r2100-host "$R2100_IP"
 ```
 
 Verified 2026-11-02 result:
@@ -177,7 +178,7 @@ edge-path-project/gazebo/results/hil10/hil10_aeb_20261102T102033_e21c05af.json
 edge-path-project/gazebo/results/hil10/hil10_aeb_20261102T102033_e21c05af.csv
 ```
 
-The JSON records `passed=true`, `stop_verified=true`, `aeb_reason=ttc_threshold` and 1.189 m minimum recorded clearance against the 1.000 m requirement. Commit `c2c91d6` added the result pair and `b445c716` normalized the CSV line endings without changing measurement content.
+The JSON records `passed=true`, `stop_verified=true` and `aeb_reason=ttc_threshold`. At the verified stop, the evaluator measured **1.189 m of longitudinal clearance along the simulated route**, meeting the 1.000 m requirement. Commit `c2c91d6` added the result pair and `b445c716` normalized the CSV line endings without changing measurement content.
 
 This demonstrates a common scenario and target selection for AEB. Gazebo startup and the deployed R2100 runtime remain explicit steps. The backends retain their own result formats.
 
@@ -200,8 +201,9 @@ edge-path-project/gazebo/scripts/hil_process_termination_test.py
 With the Phase 6 Gazebo world active and the R2100 runtime ready, run:
 
 ```bash
+read -r -p "Reachable R2100 IP address or hostname: " R2100_IP
 python3 -u edge-path-project/gazebo/scripts/hil_process_termination_test.py \
-  --r2100-host <R2100_IP>
+  --r2100-host "$R2100_IP"
 ```
 
 Final committed 2026-11-02 result:

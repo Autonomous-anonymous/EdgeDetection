@@ -129,13 +129,14 @@ The R2100 runtime log directory was:
 /home/recomputer/hil_test_logs/r2100_hil_20261105T065838Z
 ```
 
-On WSL, the operator ran the same shared HIL scenario used for the earlier zipapp tests:
+The operator ran the shared HIL scenario from WSL. To reproduce the command, enter the address of your R2100.
 
 ```bash
+read -r -p "Reachable R2100 IP address or hostname: " R2100_IP
 python3 -u edge-path-project/gazebo/scripts/run_staged_scenario.py \
   --scenario emergency_braking \
   --target hil \
-  --r2100-host <R2100_IP>
+  --r2100-host "$R2100_IP"
 ```
 
 The stage runner reported raw LiDAR transport to the R2100, Vehicle B motion at 0.850 m/s, and an AEB zero-speed command with reason `ttc_threshold`.

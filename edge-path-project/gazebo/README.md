@@ -1,6 +1,6 @@
 # CAMINO Gazebo SIL baseline: v6.4
 
-This guide describes the v6.4 SIL baseline preserved in the **CAMINO Gazebo SIL/HIL branch**. Earlier scripts,
+This guide describes the CAMINO v6.4 SIL baseline preserved on `main`. Earlier scripts,
 worlds and CSV results remain available as development evidence. The preserved v6.4 reference implementation remains independent of the newer
 experimental Mevea-derived JARCRAC v2 model. The later HIL stage uses a real reComputer Industrial R2100
 with physical CAN while Gazebo remains the virtual world and vehicle-dynamics source.
@@ -121,7 +121,7 @@ edge-path-project/gazebo/results/hil10/hil10_aeb_20261102T102033_e21c05af.csv
 ```
 
 The JSON records `passed=true`, `stop_verified=true`, `aeb_reason=ttc_threshold`
-and 1.189 m clearance against the 1.000 m requirement. The later
+and 1.189 m of longitudinal clearance at the verified stop against the 1.000 m requirement. The later
 [2026-11-05 native HIL acceptance](../hil/NATIVE_DEPLOYMENT_ACCEPTANCE.md#full-native-executable-hil-aeb-acceptance--2026-11-05)
 recorded 1.236 m clearance on the CI-built ARM64 release `46b51c5`.
 

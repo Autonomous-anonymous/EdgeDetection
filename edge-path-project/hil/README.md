@@ -2,7 +2,7 @@
 
 This directory documents the Hardware-in-the-Loop implementation used to extend the Gazebo SIL baseline onto a real embedded controller and physical CAN link.
 
-On the **CAMINO-only** branch, the repository retains Gazebo SIL and physical R2100 HIL assets, results and validation; earlier unrelated prototype scripts, results and videos are excluded. The embedded platform is a **Seeed Studio reComputer Industrial R2100**. Gazebo Harmonic runs in WSL and provides the virtual vehicles, terrain, LiDAR and odometry. The R2100 receives simulation data over UDP, maps the relevant signals onto physical CAN, executes the AEB decision, and returns the brake state to the simulator.
+The `main` branch contains the CAMINO Gazebo SIL and physical R2100 HIL assets and validation records. The embedded platform is a **Seeed Studio reComputer Industrial R2100**. Gazebo Harmonic runs in WSL and provides the virtual vehicles, terrain, LiDAR and odometry. The R2100 receives simulation data over UDP, maps the relevant signals onto physical CAN, executes the AEB decision, and returns the brake state to the simulator.
 
 The current HIL platform is **Ruskotunturi R2100 HIL**. Its validated functional test suite is **HIL-10 Freshness and Fault Validation**. The HIL path also includes hardware-validated **Configurable Signal Mapping**, **Configuration-driven Signal Codec**, **Standalone Native Deployment**, **Deployment Preflight** and **HIL Startup Readiness Diagnostics** work packages.
 
@@ -63,7 +63,7 @@ Default gateway   : not required
 DNS               : not required
 ```
 
-These addresses are only an example private RFC1918 lab subnet. They are not a project requirement. Use the actual reachable R2100 address in commands via `<R2100_IP>` or a shell variable. Later deployment, codec-regression and startup-diagnostics runs also confirmed that the same HIL scripts work over another reachable management/overlay path when the selected R2100 address is used consistently.
+These addresses are only an example private RFC1918 lab subnet. They are not a project requirement. Enter the reachable R2100 address when a command prompts for it. The examples use the shell variable `$R2100_IP`. Later deployment, codec-regression and startup-diagnostics runs also confirmed that the same HIL scripts work over another reachable management/overlay path when the selected R2100 address is used consistently.
 
 ## Main files
 
@@ -399,7 +399,7 @@ The deploy script deliberately consumes an **already-built ARM64 package**. It r
 
 ```bash
 read -r -p "Reachable R2100 IP address or hostname: " R2100_IP
-edge-path-project/hil/deployment/deploy_r2100_hil.sh "$R2100_IP"
+bash edge-path-project/hil/deployment/deploy_r2100_hil.sh "$R2100_IP"
 ```
 
 The deploy script creates a versioned archive, transfers it to the R2100, extracts it into a timestamped release directory, runs the deployed `r2100_hil check`, and updates the `current` symlink only after successful validation.
@@ -684,7 +684,7 @@ The HIL-10 B test starts its own raw LiDAR sender, so a fourth LiDAR process is 
 
 ### Terminal 1 - WSL / Gazebo
 
-Start from the root of your `camino` checkout.
+Start from the root of your `main` checkout.
 
 ```bash
 export GZ_SIM_RESOURCE_PATH="$PWD/edge-path-project/gazebo/models${GZ_SIM_RESOURCE_PATH:+:$GZ_SIM_RESOURCE_PATH}"
@@ -713,7 +713,7 @@ For a non-default profile, set `R2100_HIL_CONFIG` before invoking the same start
 
 ### Terminal 3 - WSL / HIL-10
 
-Start from the root of your `camino` checkout.
+Start from the root of your `main` checkout.
 
 ```bash
 read -r -p "R2100 IP address: " R2100_IP

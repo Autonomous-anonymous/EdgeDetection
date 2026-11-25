@@ -86,23 +86,10 @@ Ensimmäisen erillisen ajon **todellinen kesto oli 76,981 sekuntia**; peräkkäi
 
 ## Demon käynnistys WSL Ubuntu -ympäristössä
 
-Summit toteutetaan **itsenäisenä Pythonilla ajettavana ZIP-pakettina** nimeltä `camino-summit-climb.zip`. Se hyödyntää saman projektin Gazebo-malleja ja ohjelmistoriippuvuuksia mutta ei edellytä päädemon skriptien muokkaamista.
-
-Kun ZIP on lisätty tämän dokumentin rinnalle hakemistoon `demos/`, käynnistä yksi kierros projektin juuresta:
+[Summit-paketti](camino-summit-climb.zip) käyttää projektin Gazebo-malleja ja Python-moduuleja. Aja yksi kierros projektin juurihakemistosta.
 
 ```bash
-cd ~/camino-desktop
 python3 demos/camino-summit-climb.zip demo \
-  --physics-step 0.002 \
-  --target-rtf 1.5 \
-  --wall-timeout 900
-```
-
-Jos ZIP on toistaiseksi vain paikallisessa kotihakemistossa, käytä jo testattua muotoa:
-
-```bash
-cd ~/camino-desktop
-python3 ~/camino-summit-climb.zip demo \
   --physics-step 0.002 \
   --target-rtf 1.5 \
   --wall-timeout 900
@@ -113,7 +100,6 @@ Paketti luo oletusarvoisesti uuden tuloshakemiston `/tmp/camino-summit-climb-...
 ### Kahden kierroksen harjoitus
 
 ```bash
-cd ~/camino-desktop
 python3 demos/camino-summit-climb.zip loop \
   --laps 2 \
   --physics-step 0.002 \
@@ -135,7 +121,7 @@ Kierrosten välissä Gazebo suljetaan ja käynnistetään uudelleen. Sarja pysä
 
 ## Keskeiset tiedostot
 
-- `demos/camino-summit-climb.zip` — erillinen suoritettava Python ZIP -demo, **kun paketti on toimitettu GitHubiin**.
+- [camino-summit-climb.zip](camino-summit-climb.zip) — suoritettava Summit-demo.
 - `src/jarcrac_summit_mission.py` (ZIP-paketissa) — JARCRACin esteenväistö, nousu ja reitille paluu.
 - `src/jarcrac_summit_route.py` ja `src/jarcrac_summit_knots.py` (ZIP-paketissa) — mitoitettu kaartuva reitti ja maastogeometria.
 - `src/jarcrac_summit_scene.py` (ZIP-paketissa) — kanto, maalimerkinnät ja kameranäkymä.

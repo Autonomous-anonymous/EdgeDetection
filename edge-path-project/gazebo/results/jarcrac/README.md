@@ -17,7 +17,7 @@ chassis–obstacle contact-sensor control. It is **not** AEB acceptance evidence
 The committed `terrain_*.json`, `map_*.json` and `imu_*.json` files include
 terrain, map-assisted perception, localization sensitivity and simulated IMU
 diagnostics. The [dynamic clear-terrain result](imu_dynamic_clear_diagnostic.json)
-records limited motion and sensor comparisons.
+records limited motion and sensor comparisons. In the [moving-vehicle obstacle diagnostic](jarcrac_dynamic_obstacle_recheck.json), JARCRAC advanced 0.3551 m toward a known static obstacle and recorded eight paired samples during motion.
 
 See the [JARCRAC v2 SIL guide](../../../../JARCRAC_V2_SIL.md) for the
 wheel-based model's reproduction steps and limits.
@@ -34,8 +34,7 @@ wheel-based model's reproduction steps and limits.
   simulated contact checks.
 - [Detour preview](jarcrac_detailed_detour_preview.json) records a read-only
   geometry check.
+- [Solo detour and rejoin](jarcrac_compact_rejoin_laptop_pass.json) records a live Gazebo PASS. After driving around the obstacle, JARCRAC travelled 1.502 m aligned with the route over 7.622 simulated seconds and stopped at its goal.
+- [Two-vehicle compact trial](jarcrac_compact_two_vehicle_laptop_pass.json) records a live Gazebo PASS. JARCRAC rejoined with 1.504 m of aligned travel over 6.145 simulated seconds. Vehicle B stopped for the crossing, resumed and reached its goal. Both vehicles finished stopped.
 
-The [tracked-model handoff](../../docs/CAMINO_JARCRAC_HANDOFF.md) documents
-the watchdog and bounded-motion scripts added on 2026-11-12. Their live-run
-reports are absent from this branch. Calibrated terrain AEB, autonomous detour
-and route rejoining, and JARCRAC-specific HIL remain open.
+Both compact trials used Gazebo odometry. Independent localization, calibrated terrain AEB and JARCRAC-specific R2100 HIL remain open. Live reports are also unavailable for the two watchdog and bounded-motion experiments described in the 12 November handoff. [Compact trial guide](../../docs/JARCRAC_COMPACT_SIL.md) · [Historical handoff](../../docs/CAMINO_JARCRAC_HANDOFF.md)

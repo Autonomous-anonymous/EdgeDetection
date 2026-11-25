@@ -6,36 +6,18 @@ Ruskotunturi terrain. The vehicles approach the original v6.4 merge at
 climb. JARCRAC detours around a static obstacle and Vehicle B stops for the
 moving crossing fixture. Both waits start after the vehicle is stationary.
 
-## Set up a separate worktree
-
-The patch is based on clean `camino` commit
-`fefabc531b48ed9e37f1f9ea0ea7223ed9591028`. Use a new worktree for this
-experiment. The earlier cooperative trial and this patch contain several
-of the same paths.
-
-```bash
-git worktree add --detach ../camino-jarcrac-compact fefabc531
-cd ../camino-jarcrac-compact
-git apply --check /path/to/camino-jarcrac-compact.patch
-git apply /path/to/camino-jarcrac-compact.patch
-```
-
 ## Run on Gazebo Harmonic
 
-The launcher uses the Python bindings `gz.transport13` and `gz.msgs10`.
-Run it from the repository root with a new output directory for each trial.
+Start at the root of the `main` checkout with the Python bindings `gz.transport13` and `gz.msgs10`. The two-vehicle trial on the reference laptop took 305.905 wall-clock seconds. Give it a longer budget than the 285-second default when reproducing that run.
 
 ```bash
+run_dir="$(mktemp -d)"
 python3 edge-path-project/gazebo/scripts/jarcrac_compact_sil.py demo \
-  --out /tmp/camino-compact-run
+  --scenario compact --wall-timeout 600 --out "$run_dir/compact"
 ```
 
 Add `--headless` to run the OGRE2 server with EGL rendering. The compact
-world targets a real-time factor of 1.0. The offline mission takes about
-three simulated minutes. A slower simulator will take longer on the wall
-clock. The launcher allows 285 wall-clock seconds for setup and the mission,
-then stops and writes a result. The result includes `wall_elapsed_s` and
-`duration_sim_s`.
+world targets a real-time factor of 1.0. Both scenarios default to 285 wall-clock seconds for setup and the mission. `--wall-timeout` sets the budget for a run. The result records wall time in `wall_elapsed_s` and simulated time in `duration_sim_s`.
 
 | Scenario | JARCRAC command ceiling | Vehicle B command ceiling | Goals |
 | --- | --- | --- | --- |
@@ -47,11 +29,12 @@ commands would exceed the model's track-speed limit. Vehicle B slows for
 braking, holds and its goal. The moving fixture keeps the original crossing
 trajectory and uses a 1.85 m box for visibility to B's planar LiDAR.
 
-For the isolated detour trial, use a different output directory.
+For the isolated detour trial, start with a fresh output path.
 
 ```bash
+run_dir="$(mktemp -d)"
 python3 edge-path-project/gazebo/scripts/jarcrac_compact_sil.py demo \
-  --scenario rejoin --out /tmp/camino-rejoin-run
+  --scenario rejoin --out "$run_dir/rejoin"
 ```
 
 Append `--static-obstacle 8.8 34.4` to exercise another placement. Both
@@ -97,5 +80,13 @@ python3 -m unittest discover -s tests -p 'test_jarcrac_compact_sil.py' -v
 
 Offline tests use the committed models and terrain with synthetic ranges
 and kinematic motion. They include a relocated box and an injected
-lateral and heading error. Live Gazebo steering, stopping and wall-clock
-duration require a run on the target machine.
+lateral and heading error.
+
+## Recorded live Gazebo trials
+
+Both laptop runs used Gazebo odometry. The evaluator recorded the detour, measured JARCRAC's aligned travel after rejoining, and verified stopped goals.
+
+| Scenario and report | Wall time | Simulated time | Aligned travel after bypass | Stopped goals |
+| --- | ---: | ---: | ---: | --- |
+| [Solo rejoin](../results/jarcrac/jarcrac_compact_rejoin_laptop_pass.json) | 190.708 s | 145.389 s | 1.502 m over 7.622 s | JARCRAC |
+| [Two-vehicle compact](../results/jarcrac/jarcrac_compact_two_vehicle_laptop_pass.json) | 305.905 s | 168.342 s | 1.504 m over 6.145 s | JARCRAC and Vehicle B |
