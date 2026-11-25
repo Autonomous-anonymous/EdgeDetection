@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "scenario": "independent_safety_moving_hazard",
+  "status": "3_of_3_pass",
+  "evidence_type": "operator_console_transcription",
+  "notes": "Values transcribed from three live Gazebo console outputs shared by the operator; these are not original unmodified result.json files. Retain the original per-lap safety-reports.zip archives.",
+  "executable": "demos/camino-safety-supervisor-v2.zip",
+  "executable_sha256": "e3eb4db942a22357840b59aabfd6e81bb9840e3cbf72a51ef9d4a82067cc4cba",
+  "physics_step_s": 0.002,
+  "requested_rtf": 1.5,
+  "wall_timeout_s": 900,
+  "runs": [
+    {
+      "id": "standalone",
+      "status": "PASS",
+      "source_result_path": "/tmp/camino-safety-7483rss7/lap/result.json",
+      "duration_sim_s": 122.518,
+      "minimum_hazard_footprint_gap_m": 1.995906390760162,
+      "max_abs_pitch_deg": 7.498770778452567,
+      "max_abs_roll_deg": 5.645722842627375,
+      "hazard_stop_verified": true,
+      "resumption_verified": true,
+      "goal_stopped": true,
+      "hazard_override_count": 357,
+      "hazard_pose_verified": 39,
+      "phase_transitions_sim_s": {
+        "emergency_brake": 25.724,
+        "clearance_hold": 42.74,
+        "navigation_resumed": 43.972
+      }
+    },
+    {
+      "id": "loop-001",
+      "status": "PASS",
+      "source_result_path": "/tmp/camino-safety-v49cgq2n/laps/lap-001/result.json",
+      "duration_sim_s": 118.71000000000001,
+      "minimum_hazard_footprint_gap_m": 1.6109396421095779,
+      "max_abs_pitch_deg": 7.499910752742744,
+      "max_abs_roll_deg": 5.645722842627375,
+      "hazard_stop_verified": true,
+      "resumption_verified": true,
+      "goal_stopped": true,
+      "hazard_override_count": 270,
+      "hazard_pose_verified": 41,
+      "phase_transitions_sim_s": {
+        "emergency_brake": 27.058,
+        "clearance_hold": 40.624,
+        "navigation_resumed": 41.828
+      }
+    },
+    {
+      "id": "loop-002",
+      "status": "PASS",
+      "source_result_path": "/tmp/camino-safety-v49cgq2n/laps/lap-002/result.json",
+      "duration_sim_s": 120.198,
+      "minimum_hazard_footprint_gap_m": 1.962273548208369,
+      "max_abs_pitch_deg": 7.498694521878496,
+      "max_abs_roll_deg": 5.645954022978525,
+      "hazard_stop_verified": true,
+      "resumption_verified": true,
+      "goal_stopped": true,
+      "hazard_override_count": 304,
+      "hazard_pose_verified": 41,
+      "phase_transitions_sim_s": {
+        "emergency_brake": 25.746,
+        "clearance_hold": 41.03,
+        "navigation_resumed": 42.234
+      }
+    }
+  ]
+}
